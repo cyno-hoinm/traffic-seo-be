@@ -37,10 +37,10 @@ User.init(
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    //   references: {
-    //     model: Role,
-    //     key: "id",
-    //   },
+      references: {
+        model: Role,
+        key: "id",
+      },
       defaultValue: 1, // Customer
     },
     createdAt: {
