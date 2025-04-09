@@ -16,7 +16,7 @@ const dbHost = process.env.DB_HOST ?? "localhost";
 const dbPort = parseInt(process.env.DB_PORT ?? "5432", 10);
 
 // Initialize Sequelize with PostgreSQL
-const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
+export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
   dialect: "postgres",
@@ -32,8 +32,8 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
 // Export connect and disconnect functions
 export const connectDB = async (): Promise<void> => {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // Sync models with the database
+    await sequelizeSystem.authenticate();
+    await sequelizeSystem.sync({ alter: true }); // Sync models with the database
     logger.info("Connected to PostgreSQL");
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL:", error);
@@ -43,7 +43,7 @@ export const connectDB = async (): Promise<void> => {
 
 export const disconnectDB = async (): Promise<void> => {
   try {
-    await sequelize.close();
+    await sequelizeSystem.close();
     logger.info("Disconnected from PostgreSQL");
   } catch (error) {
     logger.error("Failed to disconnect from PostgreSQL:", error);
@@ -51,4 +51,4 @@ export const disconnectDB = async (): Promise<void> => {
   }
 };
 
-export default sequelize;
+export default sequelizeSystem;

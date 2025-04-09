@@ -9,6 +9,7 @@ import { logger } from "./config/logger.config";
 import { connectDB } from "./database/connect";
 import { gracefulShutdown } from "./utils/utils";
 import { ExtendedWorker } from "./types/Worker.type";
+import { configureRoutes } from "./routes/index.route";
 dotenv.config();
 
 // PORT and Environment
@@ -41,10 +42,7 @@ if (cluster.isPrimary && !isDev) {
   // Configure middleware
   // configureMiddleware(app);
   // // Configure routes
-  // configureRoutes(app);
-  app.get("/", (req, res) => {
-    res.send("Min Hhoi Pro vip");
-  });
+  configureRoutes(app);
   const server = app.listen(PORT, async () => {
     try {
       debugApp(`Worker ${process.pid} attempting to connect to DB and Redis`);
