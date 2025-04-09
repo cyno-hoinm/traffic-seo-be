@@ -1,16 +1,21 @@
-import { Optional } from "sequelize";
+import { CampaignStatus } from "../enums/campaign.enum";
 
 export interface CampaignAttributes {
-  id: number;
-  adminId: number | null;
-  seoerId: number | null;
+  id?: number;
+  userId: number;
+  countryId: number;
+  name: string;
   type: string;
+  device: string;
+  timeCode: string;
   startDate: Date;
   endDate: Date;
-  status: string;
+  totalTraffic: number;
+  cost: number;
+  domain: string;
+  search: string;
+  keyword: string;
+  status: CampaignStatus;
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-export interface CampaignCreationAttributes
-  extends Optional<CampaignAttributes, "id" | "createdAt" | "updatedAt"> {}
