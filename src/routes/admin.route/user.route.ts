@@ -1,7 +1,14 @@
 // src/routes/userRoutes.ts
 import express from "express";
-import { createUser, deleteUser, getAllUsers, getUserById, searchUserList, updateUser, updateUserOneField } from "../../controllers/user.controller";
-
+import {
+  createUser,
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  searchUserList,
+  updateUser,
+  updateUserOneField,
+} from "../../controllers/user.controller";
 
 const router = express.Router();
 
@@ -585,4 +592,7 @@ router.get("/search", searchUserList);
  */
 router.delete("/:id", deleteUser);
 
+router.get("/profile", (req, res) => {
+  res.json([{ id: "1", name: "Admin User" }]);
+});
 export default router;

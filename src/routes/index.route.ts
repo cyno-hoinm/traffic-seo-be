@@ -1,8 +1,11 @@
 import express from "express";
-import adminRoute from "./admin.route/index.route";
-import clientRoute from "./client.route/index.route";
+import { setupSwaggerDocs } from "../swagger";
+import { routeConfig } from "./route.config";
+
 export const configureRoutes = (app: express.Application) => {
-  // API Routes
-  app.use("/api/admin", adminRoute);
-  // app.use("/api/client", clientRoute);
+  routeConfig.forEach(({ docsPath, apiPath, spec, route }) => {
+    setupSwaggerDocs(app, docsPath, spec); // Swagger docs
+    console.log(apiPath)
+    app.use(apiPath, route); // API routes
+  });
 };
