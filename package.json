@@ -1,0 +1,36 @@
+{
+  "name": "traffic-seo-be",
+  "version": "1.0.0",
+  "description": "Cyno Traffic SEO System Backend",
+  "main": "index.js",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.9",
+    "pg": "^8.14.1",
+    "qs": "^6.14.0",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
+    "build": "npx tsc --build",
+    "start": "cross-env NODE_ENV=production node dist/app.js",
+    "deploy": "pm2 start dist/app.js --name traffic-seo-be --watch --ignore-watch node_modules --env production",
+    "debug": "cross-env NODE_ENV=development nodemon --exec 'node --inspect -r ts-node/register src/app.ts'",
+    "debug:prod": "cross-env NODE_ENV=production node --inspect dist/app.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
