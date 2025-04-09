@@ -5,7 +5,7 @@ export class ErrorType extends Error {
   constructor(
     name: string,
     message: string,
-    code : number,
+    code? : number,
     statusCode?: number,
     additionalProperties?: { [key: string]: any }
   ) {

@@ -1,7 +1,11 @@
 import express from "express";
+import userRoute from "./user.route";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "../../swagger";
 
-const router = express.Router();
+const adminRouter = express.Router();
 
-router.get("/");
+adminRouter.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+adminRouter.use("/users", userRoute);
 
-export default router;
+export default adminRouter;

@@ -7,7 +7,6 @@ import {
   socketTimeoutMS,
 } from "../config/database.config";
 import dotenv from "dotenv";
-import { initAssociations } from "../models/associations";
 dotenv.config();
 // Validate and parse environment variables
 const dbName = process.env.DB_NAME ?? "seo_traffic";
@@ -21,7 +20,7 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
   dialect: "postgres",
-  logging: (msg: any) => logger.info(msg),
+  // logging: (msg: any) => logger.info(msg),
   pool: {
     max: maxPoolSize,
     min: minPoolSize,

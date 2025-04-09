@@ -43,7 +43,7 @@ if (cluster.isPrimary && !isDev) {
   // Configure middleware
   configureMiddleware(app);
   // // Configure routes
-  // configureRoutes(app);
+  configureRoutes(app);
   const server = app.listen(PORT, async () => {
     try {
       debugApp(`Worker ${process.pid} attempting to connect to DB and Redis`);

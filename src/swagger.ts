@@ -30,7 +30,7 @@ const swaggerOptions = {
       bearerAuth: [], // Apply Bearer token globally
     },
   ],
-  apis: ["./src/routes/*.ts"], // Path to your route files with Swagger comments
+  apis: ["./src/routes/admin.route/*.ts"], // Path to your route files with Swagger comments
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
