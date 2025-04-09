@@ -1,8 +1,7 @@
 import express from "express";
-import { getListAdmin } from "../../controllers/Admin.controller";
 
 const router = express.Router();
 
-router.get("/", getListAdmin);
+router.get("/");
 
 export default router;

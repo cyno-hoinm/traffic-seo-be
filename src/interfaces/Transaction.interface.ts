@@ -1,16 +1,11 @@
-import { Optional } from "sequelize";
+import { TransactionStatus } from "../enums/transactionStatus.enum";
 
 export interface TransactionAttributes {
-  id: number;
-  adminId: number | null;
-  seoerId: number | null;
+  id?: number;
+  walletId: number;
   amount: number;
-  txId: string;
-  type: string;
-  status: string;
+  status: TransactionStatus;
+  date: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-export interface TransactionCreationAttributes
-  extends Optional<TransactionAttributes, "id" | "createdAt" | "updatedAt"> {}

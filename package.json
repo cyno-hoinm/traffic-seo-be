@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/compression": "^1.7.5",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.0",
@@ -46,7 +47,6 @@
     "debug:prod": "cross-env NODE_ENV=production node --inspect dist/app.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "prepare": "husky",
     "lint-staged": "lint-staged"
   },
   "keywords": [],

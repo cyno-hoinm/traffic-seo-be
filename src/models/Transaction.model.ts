@@ -1,25 +1,20 @@
 import { DataTypes, Model } from "sequelize";
-import {
-  TransactionAttributes,
-  TransactionCreationAttributes,
-} from "../interfaces/Transaction.interface";
-import Admin from "./Admin.model";
-import SEOer from "./SEOer.model";
+import { TransactionAttributes } from "../interfaces/Transaction.interface";
 import sequelizeSystem from "../database/connect";
+import { TransactionStatus } from "../enums/transactionStatus.enum";
+import Wallet from "./Wallet.model";
 
 class Transaction
-  extends Model<TransactionAttributes, TransactionCreationAttributes>
+  extends Model<TransactionAttributes>
   implements TransactionAttributes
 {
   public id!: number;
-  public adminId!: number | null;
-  public seoerId!: number | null;
+  public walletId!: number;
   public amount!: number;
-  public txId!: string;
-  public type!: string;
-  public status!: string;
-  public createdAt!: Date;
-  public updatedAt!: Date;
+  public status!: TransactionStatus;
+  public date!: Date;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Transaction.init(
@@ -29,19 +24,11 @@ Transaction.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    adminId: {
+    walletId: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
-        model: Admin,
-        key: "id",
-      },
-    },
-    seoerId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: SEOer,
+        model: Wallet,
         key: "id",
       },
     },
@@ -49,24 +36,26 @@ Transaction.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
-    txId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    type: {
-      type: DataTypes.ENUM("deposit"),
-      allowNull: false,
-    },
     status: {
-      type: DataTypes.ENUM("pending", "completed", "failed"),
-      defaultValue: "pending",
+      type: DataTypes.ENUM(...Object.values(TransactionStatus)),
+      allowNull: false,
     },
-    createdAt: DataTypes.DATE,
-    updatedAt: DataTypes.DATE,
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize: sequelizeSystem,
+    modelName: "Transaction",
     tableName: "transactions",
     timestamps: true,
   }
