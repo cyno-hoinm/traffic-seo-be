@@ -4,6 +4,8 @@
   "description": "Cyno Traffic SEO System Backend",
   "main": "index.js",
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
@@ -22,9 +24,13 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.5",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },

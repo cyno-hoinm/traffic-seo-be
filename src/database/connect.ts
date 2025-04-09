@@ -20,12 +20,12 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
   dialect: "postgres",
-  logging: (msg: any) => logger.info(msg), // Log SQL queries using Winston
+  logging: (msg: any) => logger.info(msg), 
   pool: {
     max: maxPoolSize,
     min: minPoolSize,
-    acquire: socketTimeoutMS, // Maximum time (ms) to acquire a connection
-    idle: connectTimeoutMS, // Maximum time (ms) a connection can be idle
+    acquire: socketTimeoutMS, 
+    idle: connectTimeoutMS, 
   },
 });
 
