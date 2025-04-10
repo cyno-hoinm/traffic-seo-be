@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { NotificationAttributes } from "../interfaces/Notification.interface";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import User from "./User.model";
 
 class Notification

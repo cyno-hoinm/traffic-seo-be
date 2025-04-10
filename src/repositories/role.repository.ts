@@ -1,7 +1,6 @@
-
 import { RoleAttributes } from "../interfaces/Role.interface";
-import Role from "../models/Role.model";
-import { ErrorType } from '../types/Error.type';
+import { Role } from "../models/index.model";
+import { ErrorType } from "../types/Error.type";
 
 // Create a new role
 export const createRoleRepo = async (
@@ -29,10 +28,10 @@ export const getRoleByIdRepo = async (id: number): Promise<Role | null> => {
 export const getRoleByNameRepo = async (name: string): Promise<Role | null> => {
   try {
     const role = await Role.findOne({
-      where: { 
+      where: {
         name,
-        isDelete: false 
-      }
+        isDelete: false,
+      },
     });
     return role;
   } catch (error: any) {
@@ -45,8 +44,8 @@ export const getAllRolesRepo = async (): Promise<Role[]> => {
   try {
     const roles = await Role.findAll({
       where: {
-        isDelete: false
-      }
+        isDelete: false,
+      },
     });
     return roles;
   } catch (error: any) {
@@ -57,14 +56,16 @@ export const getAllRolesRepo = async (): Promise<Role[]> => {
 // Update role
 export const updateRoleRepo = async (
   id: number,
-  roleData: Partial<Omit<RoleAttributes, "id" | "createdAt" | "updatedAt" | "isDelete">>
+  roleData: Partial<
+    Omit<RoleAttributes, "id" | "createdAt" | "updatedAt" | "isDelete">
+  >
 ): Promise<Role | null> => {
   try {
     const role = await Role.findByPk(id);
     if (!role || role.isDelete) {
       return null;
     }
-    
+
     await role.update(roleData);
     return role;
   } catch (error: any) {
@@ -79,7 +80,7 @@ export const deleteRoleRepo = async (id: number): Promise<boolean> => {
     if (!role || role.isDelete) {
       return false;
     }
-    
+
     await role.update({ isDelete: true });
     return true;
   } catch (error: any) {

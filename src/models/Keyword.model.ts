@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import Campaign from "./Campaign.model";
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 

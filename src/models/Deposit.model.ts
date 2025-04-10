@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { DepositStatus } from "../enums/depositStatus.enum";
 import Voucher from "./Voucher.model";
 import User from "./User.model";

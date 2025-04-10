@@ -14,7 +14,7 @@ const adminSwaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}`,
+        url: `http://localhost:${process.env.PORT || 3000}/api/admin`,
         description: "Admin Development Server",
       },
     ],
@@ -42,7 +42,7 @@ const clientSwaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}`,
+        url: `http://localhost:${process.env.PORT || 3000}/api/client`,
         description: "Client Development Server",
       },
     ],

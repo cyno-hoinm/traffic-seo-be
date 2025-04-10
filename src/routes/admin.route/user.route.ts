@@ -13,7 +13,51 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/admin/users/search:
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - username
+ *         - password
+ *         - email
+ *         - roleId
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The auto-generated ID of the user
+ *         username:
+ *           type: string
+ *           description: The username of the user
+ *         password:
+ *           type: string
+ *           description: The hashed password of the user (not returned in responses)
+ *         email:
+ *           type: string
+ *           description: The email address of the user
+ *         roleId:
+ *           type: integer
+ *           description: The ID of the role assigned to the user
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp (UTC+7)
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp (UTC+7)
+ *       example:
+ *         id: 1
+ *         username: "john_doe"
+ *         email: "john@example.com"
+ *         roleId: 1
+ *         createdAt: "2025-04-10T14:00:00.000+07:00"
+ *         updatedAt: "2025-04-10T14:00:00.000+07:00"
+ */
+
+/**
+ * @swagger
+ * /users/search:
  *   get:
  *     summary: Search users by key (email and username) with pagination
  *     tags: [Users]
@@ -110,7 +154,7 @@ router.get("/search", searchUserList);
 
 /**
  * @swagger
- * /api/admin/users:
+ * /users:
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
@@ -202,7 +246,7 @@ router.post("/", createUser);
 
 /**
  * @swagger
- * /api/admin/users/{id}:
+ * /users/{id}:
  *   get:
  *     summary: Get a user by ID
  *     tags: [Users]
@@ -278,7 +322,7 @@ router.get("/:id", getUserById);
 
 /**
  * @swagger
- * /api/admin/users:
+ * /users:
  *   get:
  *     summary: Get all users
  *     tags: [Users]
@@ -327,7 +371,7 @@ router.get("/", getAllUsers);
 
 /**
  * @swagger
- * /api/admin/users/{id}:
+ * /users/{id}:
  *   put:
  *     summary: Update a user by ID
  *     tags: [Users]
@@ -433,7 +477,7 @@ router.put("/:id", updateUser);
 
 /**
  * @swagger
- * /api/admin/users/{id}:
+ * /users/{id}:
  *   patch:
  *     summary: Update a single field of a user by ID
  *     tags: [Users]
@@ -534,7 +578,7 @@ router.patch("/:id", updateUserOneField);
 
 /**
  * @swagger
- * /api/admin/users/{id}:
+ * /users/{id}:
  *   delete:
  *     summary: Delete a user by ID
  *     tags: [Users]

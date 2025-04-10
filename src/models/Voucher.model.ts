@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem } from "./../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { VoucherStatus } from "../enums/voucherStatus.enum";
 import { VoucherAttributes } from "../interfaces/Voucher.interface";
 class Voucher extends Model<VoucherAttributes> implements VoucherAttributes {

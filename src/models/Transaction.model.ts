@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { TransactionAttributes } from "../interfaces/Transaction.interface";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
 import Wallet from "./Wallet.model";
 

@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
 import User from "./User.model";
 import { CampaignAttributes } from "../interfaces/Campaign.interface";
@@ -101,22 +101,22 @@ Campaign.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue('createdAt') as Date;
+        const rawValue = this.getDataValue("createdAt") as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace('Z', '+07:00');
+        return adjustedDate.toISOString().replace("Z", "+07:00");
       },
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue('updatedAt') as Date;
+        const rawValue = this.getDataValue("updatedAt") as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace('Z', '+07:00');
+        return adjustedDate.toISOString().replace("Z", "+07:00");
       },
     },
   },

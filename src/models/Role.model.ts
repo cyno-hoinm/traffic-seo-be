@@ -1,7 +1,6 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { RoleAttributes } from "../interfaces/Role.interface";
-
 class Role extends Model<RoleAttributes> implements RoleAttributes {
   public id!: number;
   public name!: string;
@@ -99,4 +98,4 @@ Role.init(
   await Role.initializeRoles();
 })();
 
-export default Role;
+export default Role

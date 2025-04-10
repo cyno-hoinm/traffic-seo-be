@@ -1,7 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
-import Permission from "./Permission.model";
-import Role from "./Role.model";
+import { sequelizeSystem } from "./index.model";
 import { RolePermissionAttributes } from "../interfaces/RolePermission.interface";
 
 class RolePermission
@@ -25,18 +23,10 @@ RolePermission.init(
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Role,
-        key: "id",
-      },
     },
     permissionId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Permission,
-        key: "id",
-      },
     },
     createdAt: {
       type: DataTypes.DATE,

@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { LinkStatus } from "../enums/linkStatus.enum";
 import Campaign from "./Campaign.model";
 import { LinkAttributes } from "../interfaces/Link.interface";

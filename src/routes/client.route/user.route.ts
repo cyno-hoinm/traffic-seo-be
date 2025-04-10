@@ -6,7 +6,51 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/client/users:
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - username
+ *         - password
+ *         - email
+ *         - roleId
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The auto-generated ID of the user
+ *         username:
+ *           type: string
+ *           description: The username of the user
+ *         password:
+ *           type: string
+ *           description: The hashed password of the user (not returned in responses)
+ *         email:
+ *           type: string
+ *           description: The email address of the user
+ *         roleId:
+ *           type: integer
+ *           description: The ID of the role assigned to the user
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp (UTC+7)
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp (UTC+7)
+ *       example:
+ *         id: 1
+ *         username: "john_doe"
+ *         email: "john@example.com"
+ *         roleId: 1
+ *         createdAt: "2025-04-10T14:00:00.000+07:00"
+ *         updatedAt: "2025-04-10T14:00:00.000+07:00"
+ */
+
+/**
+ * @swagger
+ * /users:
  *   get:
  *     summary: Get all users
  *     tags: [Client Users]

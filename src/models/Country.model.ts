@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "./index.model";
 import { CountryAttributes } from "../interfaces/Country.interface";
 
 class Country extends Model<CountryAttributes> implements CountryAttributes {

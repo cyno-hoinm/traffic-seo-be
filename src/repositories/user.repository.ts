@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { UserAttributes } from "../interfaces/User.interface";
-import User from "../models/User.model";
+import { User, Role } from "../models/index.model";
 import { ErrorType } from "../types/Error.type";
 
 // Create a new user
@@ -52,7 +52,9 @@ export const findUserByUsernameRepo = async (
 // Find all users
 export const findAllUsersRepo = async (): Promise<User[]> => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      include: [{ model: Role, as: "role" }],
+    });
     return users;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
