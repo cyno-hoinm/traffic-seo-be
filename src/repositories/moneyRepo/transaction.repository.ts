@@ -1,7 +1,7 @@
-import { TransactionStatus } from "../enums/transactionStatus.enum";
-import { sequelizeSystem, Transaction, Wallet } from "../models/index.model";
+import { TransactionStatus } from "../../enums/transactionStatus.enum";
+import { sequelizeSystem, Transaction, Wallet } from "../../models/index.model";
 import { Op } from "sequelize";
-import { ErrorType } from "../types/Error.type";
+import { ErrorType } from "../../types/Error.type";
 import { Transaction as SequelizeTransaction } from "sequelize";
 // Create a new transaction and update wallet balance
 export const createTransactionRepo = async (
@@ -10,7 +10,7 @@ export const createTransactionRepo = async (
     amount: number;
     status: TransactionStatus;
   },
-  transaction?: SequelizeTransaction
+  _transaction?: SequelizeTransaction
 ): Promise<Transaction> => {
   try {
     const wallet = await Wallet.findByPk(data.walletId);

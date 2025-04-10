@@ -1,5 +1,5 @@
-import { Wallet } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { Wallet } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Get all wallets
 export const getAllWalletsRepo = async (): Promise<Wallet[]> => {

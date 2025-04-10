@@ -1,5 +1,5 @@
-import { Permission } from "../models/index.model";
-import { PermissionAttributes } from "../interfaces/Permission.interface";
+import { Permission } from "../../models/index.model";
+import { PermissionAttributes } from "../../interfaces/Permission.interface";
 
 // Create a new permission
 export const createPermissionRepo = async (

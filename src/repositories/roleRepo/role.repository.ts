@@ -1,6 +1,6 @@
-import { RoleAttributes } from "../interfaces/Role.interface";
-import { Role } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { RoleAttributes } from "../../interfaces/Role.interface";
+import { Role } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Create a new role
 export const createRoleRepo = async (

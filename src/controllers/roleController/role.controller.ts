@@ -1,26 +1,29 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode";
-import { 
+import statusCode from "../../constants/statusCode";
+import {
   createRoleRepo,
   getRoleByIdRepo,
   getRoleByNameRepo,
   getAllRolesRepo,
   updateRoleRepo,
-  deleteRoleRepo 
-} from "../repositories/role.repository";
-import { RoleAttributes } from "../interfaces/Role.interface";
-import { ResponseType } from "../types/Response.type";
+  deleteRoleRepo,
+} from "../../repositories/roleRepo/role.repository";
+import { RoleAttributes } from "../../interfaces/Role.interface";
+import { ResponseType } from "../../types/Response.type";
 
 // Create a new role
-export const createRole = async (req: Request, res: Response<ResponseType<RoleAttributes>>): Promise<void> => {
+export const createRole = async (
+  req: Request,
+  res: Response<ResponseType<RoleAttributes>>
+): Promise<void> => {
   try {
     const { name } = req.body;
-    
+
     if (!name) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Role name is required",
-        error: "Missing required field"
+        error: "Missing required field",
       });
       return;
     }
@@ -30,7 +33,7 @@ export const createRole = async (req: Request, res: Response<ResponseType<RoleAt
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Role with this name already exists",
-        error: "Duplicate role name"
+        error: "Duplicate role name",
       });
       return;
     }
@@ -43,20 +46,23 @@ export const createRole = async (req: Request, res: Response<ResponseType<RoleAt
         id: role.id,
         name: role.name,
         createdAt: role.createdAt,
-        updatedAt: role.updatedAt
-      }
+        updatedAt: role.updatedAt,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error creating role",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 // Get all roles
-export const getAllRoles = async (req: Request, res: Response<ResponseType<RoleAttributes>>): Promise<void> => {
+export const getAllRoles = async (
+  req: Request,
+  res: Response<ResponseType<RoleAttributes>>
+): Promise<void> => {
   try {
     const roles = await getAllRolesRepo();
     res.status(statusCode.OK).json({
@@ -66,20 +72,23 @@ export const getAllRoles = async (req: Request, res: Response<ResponseType<RoleA
         id: role.id,
         name: role.name,
         createdAt: role.createdAt,
-        updatedAt: role.updatedAt
-      }))
+        updatedAt: role.updatedAt,
+      })),
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error fetching roles",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 // Get role by ID
-export const getRoleById = async (req: Request, res: Response<ResponseType<RoleAttributes>>): Promise<void> => {
+export const getRoleById = async (
+  req: Request,
+  res: Response<ResponseType<RoleAttributes>>
+): Promise<void> => {
   try {
     const { id } = req.params;
     const role = await getRoleByIdRepo(Number(id));
@@ -88,7 +97,7 @@ export const getRoleById = async (req: Request, res: Response<ResponseType<RoleA
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Role not found",
-        error: "Resource not found"
+        error: "Resource not found",
       });
       return;
     }
@@ -100,20 +109,23 @@ export const getRoleById = async (req: Request, res: Response<ResponseType<RoleA
         id: role.id,
         name: role.name,
         createdAt: role.createdAt,
-        updatedAt: role.updatedAt
-      }
+        updatedAt: role.updatedAt,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error fetching role",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 // Update role
-export const updateRole = async (req: Request, res: Response<ResponseType<RoleAttributes>>): Promise<void> => {
+export const updateRole = async (
+  req: Request,
+  res: Response<ResponseType<RoleAttributes>>
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { name } = req.body;
@@ -122,7 +134,7 @@ export const updateRole = async (req: Request, res: Response<ResponseType<RoleAt
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Role name is required",
-        error: "Missing required field"
+        error: "Missing required field",
       });
       return;
     }
@@ -133,7 +145,7 @@ export const updateRole = async (req: Request, res: Response<ResponseType<RoleAt
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Role not found",
-        error: "Resource not found"
+        error: "Resource not found",
       });
       return;
     }
@@ -145,20 +157,23 @@ export const updateRole = async (req: Request, res: Response<ResponseType<RoleAt
         id: role.id,
         name: role.name,
         createdAt: role.createdAt,
-        updatedAt: role.updatedAt
-      }
+        updatedAt: role.updatedAt,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error updating role",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 // Delete role
-export const deleteRole = async (req: Request, res: Response<ResponseType<RoleAttributes>>): Promise<void> => {
+export const deleteRole = async (
+  req: Request,
+  res: Response<ResponseType<RoleAttributes>>
+): Promise<void> => {
   try {
     const { id } = req.params;
     const success = await deleteRoleRepo(Number(id));
@@ -167,20 +182,20 @@ export const deleteRole = async (req: Request, res: Response<ResponseType<RoleAt
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Role not found",
-        error: "Resource not found"
+        error: "Resource not found",
       });
       return;
     }
 
     res.status(statusCode.OK).json({
       status: true,
-      message: "Role deleted successfully"
+      message: "Role deleted successfully",
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error deleting role",
-      error: error.message
+      error: error.message,
     });
   }
 };

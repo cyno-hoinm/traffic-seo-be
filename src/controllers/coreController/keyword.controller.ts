@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getKeywordListRepo,
   createKeywordRepo,
   getKeywordByIdRepo,
-} from "../repositories/keyword.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { KeywordAttributes } from "../interfaces/Keyword.interface";
-import { DistributionType } from "../enums/distribution.enum";
+} from "../../repositories/coreRepo/keyword.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { KeywordAttributes } from "../../interfaces/Keyword.interface";
+import { DistributionType } from "../../enums/distribution.enum";
 
 // Get keyword list with filters
 export const getKeywordList = async (

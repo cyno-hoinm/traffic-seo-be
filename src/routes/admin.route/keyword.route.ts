@@ -3,7 +3,7 @@ import {
   getKeywordList,
   createKeyword,
   getKeywordById,
-} from "../../controllers/keyword.controller"; // Adjust path
+} from "../../controllers/coreController/keyword.controller"; // Adjust path
 
 const router = express.Router();
 

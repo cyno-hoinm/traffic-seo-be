@@ -5,7 +5,7 @@ import {
   getAllRoles,
   updateRole,
   deleteRole,
-} from "../../controllers/role.controller"; // Adjust path to your Role controller
+} from "../../controllers/roleController/role.controller"; // Adjust path to your Role controller
 
 const router = express.Router();
 

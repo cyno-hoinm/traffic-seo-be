@@ -1,4 +1,4 @@
-import { hashedPasswordString } from "./../utils/utils";
+import { hashedPasswordString } from "../../utils/utils";
 import { Request, Response } from "express";
 import {
   createUserRepo,
@@ -10,10 +10,10 @@ import {
   updateUserOneFieldRepo,
   searchUserListRepo,
   deleteUserRepo,
-} from "../repositories/user.repository";
-import { UserAttributes } from "../interfaces/User.interface";
-import statusCode from "../constants/statusCode";
-import { ResponseType } from "../types/Response.type";
+} from "../../repositories/commonRepo/user.repository";
+import { UserAttributes } from "../../interfaces/User.interface";
+import statusCode from "../../constants/statusCode";
+import { ResponseType } from "../../types/Response.type";
 
 // Create a new user
 export const createUser = async (

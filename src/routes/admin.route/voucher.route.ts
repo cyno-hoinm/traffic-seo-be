@@ -6,7 +6,7 @@ import {
   updateVoucher,
   deleteVoucher,
   getVoucherByCode,
-} from "../../controllers/voucher.controller"; // Adjust path
+} from "../../controllers/moneyController/voucher.controller"; // Adjust path
 
 const router = express.Router();
 

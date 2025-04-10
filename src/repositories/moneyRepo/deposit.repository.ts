@@ -1,9 +1,9 @@
-import { Deposit, Wallet } from "../models/index.model"; // Adjust path
-import { DepositStatus } from "../enums/depositStatus.enum";
-import { sequelizeSystem } from "../models/index.model";
+import { Deposit, Wallet } from "../../models/index.model"; // Adjust path
+import { DepositStatus } from "../../enums/depositStatus.enum";
+import { sequelizeSystem } from "../../models/index.model";
 import { Op } from "sequelize";
-import { createTransactionRepo } from "./transaction.repository";
-import { TransactionStatus } from "../enums/transactionStatus.enum";
+import { createTransactionRepo } from "././transaction.repository";
+import { TransactionStatus } from "../../enums/transactionStatus.enum";
 
 // Custom error class
 class ErrorType extends Error {

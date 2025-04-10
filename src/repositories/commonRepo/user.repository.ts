@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
-import { UserAttributes } from "../interfaces/User.interface";
-import { User, Role } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { UserAttributes } from "../../interfaces/User.interface";
+import { User, Role } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Create a new user
 export const createUserRepo = async (

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ResponseType } from "../types/Response.type";
-import { findUserByEmailRepo } from "../repositories/user.repository";
-import { comparePassword, signToken } from "../utils/utils";
-import statusCode from "../constants/statusCode";
+import { ResponseType } from "../../types/Response.type";
+import { findUserByEmailRepo } from "../../repositories/commonRepo/user.repository";
+import { comparePassword, signToken } from "../../utils/utils";
+import statusCode from "../../constants/statusCode";
 
 export const loginUser = async (
   req: Request,

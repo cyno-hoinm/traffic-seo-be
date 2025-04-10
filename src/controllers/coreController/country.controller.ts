@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createCountryRepo,
   getAllCountriesRepo,
@@ -7,9 +7,9 @@ import {
   getCountryByNameRepo,
   updateCountryRepo,
   deleteCountryRepo,
-} from "../repositories/country.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { CountryAttributes } from "../interfaces/Country.interface";
+} from "../../repositories/coreRepo/country.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { CountryAttributes } from "../../interfaces/Country.interface";
 
 // Create a new country
 export const createCountry = async (

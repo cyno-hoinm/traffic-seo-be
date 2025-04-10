@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode";
-import { ResponseType } from "../types/Response.type";
-import { PermissionAttributes } from "../interfaces/Permission.interface";
+import statusCode from "../../constants/statusCode";
+import { ResponseType } from "../../types/Response.type";
+import { PermissionAttributes } from "../../interfaces/Permission.interface";
 import {
   createPermissionRepo,
   findPermissionByIdRepo,
   findAllPermissionsRepo,
   updatePermissionRepo,
   deletePermissionRepo,
-} from "../repositories/permission.repository";
+} from "../../repositories/roleRepo/permission.repository";
 
 // Create a new permission
 export const createPermission = async (

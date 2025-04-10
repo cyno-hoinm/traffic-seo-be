@@ -5,7 +5,7 @@ import {
   getAllRolePermissions,
   updateRolePermission,
   deleteRolePermission,
-} from "../../controllers/role-permission.controller";
+} from "../../controllers/roleController/role-permission.controller";
 
 const router = express.Router();
 

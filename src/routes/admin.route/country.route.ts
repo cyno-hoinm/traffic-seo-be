@@ -5,7 +5,7 @@ import {
   getCountryById,
   updateCountry,
   deleteCountry,
-} from "../../controllers/country.controller"; // Adjust path
+} from "../../controllers/coreController/country.controller"; // Adjust path
 
 const router = express.Router();
 

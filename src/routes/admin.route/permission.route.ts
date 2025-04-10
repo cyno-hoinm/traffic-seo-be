@@ -5,7 +5,7 @@ import {
   getAllPermissions,
   updatePermission,
   deletePermission,
-} from "../../controllers/permission.controller"; // Adjust path to your Permission controller
+} from "../../controllers/roleController/permission.controller"; // Adjust path to your Permission controller
 
 const router = express.Router();
 

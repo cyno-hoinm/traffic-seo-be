@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getCampaignListRepo,
   createCampaignRepo,
   getCampaignByIdRepo,
-} from "../repositories/campagin.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { CampaignAttributes } from "../interfaces/Campaign.interface";
-import { CampaignStatus } from "../enums/campaign.enum";
+} from "../../repositories/coreRepo/campagin.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { CampaignAttributes } from "../../interfaces/Campaign.interface";
+import { CampaignStatus } from "../../enums/campaign.enum";
 
 // Get campaign list with filters
 export const getCampaignList = async (

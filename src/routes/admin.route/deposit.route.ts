@@ -3,7 +3,7 @@ import {
   getDepositList,
   createDeposit,
   updateDeposit,
-} from "../../controllers/deposit.controller"; // Adjust path
+} from "../../controllers/moneyController/deposit.controller"; // Adjust path
 import { authenticateToken } from "../../middleware/auth"; // Assuming you have auth middleware
 
 const router = express.Router();

@@ -1,5 +1,5 @@
-import { Keyword } from "../models/index.model"; // Adjust path
-import { DistributionType } from "../enums/distribution.enum";
+import { Keyword } from "../../models/index.model"; // Adjust path
+import { DistributionType } from "../../enums/distribution.enum";
 import { Op } from "sequelize";
 
 // Custom error class

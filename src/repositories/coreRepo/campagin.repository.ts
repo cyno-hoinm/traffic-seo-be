@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
-import { CampaignStatus } from "../enums/campaign.enum";
-import { Campaign } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { CampaignStatus } from "../../enums/campaign.enum";
+import { Campaign } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Get campaign list with filters
 export const getCampaignListRepo = async (filters: {

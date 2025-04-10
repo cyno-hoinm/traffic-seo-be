@@ -1,6 +1,6 @@
-import { LinkStatus } from "../enums/linkStatus.enum";
+import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
-import { Link } from "../models/index.model";
+import { Link } from "../../models/index.model";
 
 // Custom error class
 class ErrorType extends Error {

@@ -39,8 +39,8 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
       } else {
         // console.log('Customer role already exists');
       }
-    } catch (error) {
-      // console.error('Error initializing roles:', error);
+    } catch (error: any) {
+      console.error("Error initializing roles:", error);
     }
   }
 }
@@ -98,4 +98,4 @@ Role.init(
   await Role.initializeRoles();
 })();
 
-export default Role
+export default Role;

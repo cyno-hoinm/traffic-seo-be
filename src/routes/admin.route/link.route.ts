@@ -3,7 +3,7 @@ import {
   getLinkList,
   createLink,
   getLinkById,
-} from "../../controllers/link.controller"; // Adjust path
+} from "../../controllers/coreController/link.controller"; // Adjust path
 
 const router = express.Router();
 

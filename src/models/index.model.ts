@@ -14,7 +14,7 @@ import Notification from "./Notification.model"; // Add Notification
 import Transaction from "./Transaction.model"; // Add Transaction
 
 // Initialize models (this ensures they’re loaded)
-const models = {
+export const models = {
   Role,
   Permission,
   RolePermission,

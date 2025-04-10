@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createVoucherRepo,
   getAllVouchersRepo,
@@ -7,10 +7,10 @@ import {
   updateVoucherRepo,
   deleteVoucherRepo,
   findVoucherByCodeRepo,
-} from "../repositories/voucher.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { VoucherAttributes } from "../interfaces/Voucher.interface";
-import { VoucherStatus } from "../enums/voucherStatus.enum";
+} from "../../repositories/moneyRepo/voucher.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { VoucherAttributes } from "../../interfaces/Voucher.interface";
+import { VoucherStatus } from "../../enums/voucherStatus.enum";
 
 // Create a new voucher
 export const createVoucher = async (

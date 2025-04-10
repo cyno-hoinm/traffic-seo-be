@@ -1,5 +1,5 @@
-import {RolePermission,Role,Permission} from "../models/index.model";
-import { RolePermissionAttributes } from "../interfaces/RolePermission.interface";
+import {RolePermission,Role,Permission} from "../../models/index.model";
+import { RolePermissionAttributes } from "../../interfaces/RolePermission.interface";
 
 // Create a new role-permission association
 export const createRolePermissionRepo = async (

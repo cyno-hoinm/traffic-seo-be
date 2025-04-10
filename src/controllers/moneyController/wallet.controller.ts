@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getAllWalletsRepo,
   getWalletByIdRepo,
   updateWalletRepo,
   deleteWalletRepo,
-} from "../repositories/wallet.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { WalletAttributes } from "../interfaces/Wallet.interface";
+} from "../../repositories/moneyRepo/wallet.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { WalletAttributes } from "../../interfaces/Wallet.interface";
 
 // Get all wallets
 export const getAllWallets = async (

@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createTransactionRepo,
   getListTransactionRepo,
-} from "../repositories/transaction.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { TransactionAttributes } from "../interfaces/Transaction.interface";
-import { TransactionStatus } from "../enums/transactionStatus.enum";
+} from "../../repositories/moneyRepo/transaction.repository"
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { TransactionAttributes } from "../../interfaces/Transaction.interface";
+import { TransactionStatus } from "../../enums/transactionStatus.enum";
 
 // Create a new transaction
 export const createTransaction = async (

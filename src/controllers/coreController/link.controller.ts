@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getLinkListRepo,
   createLinkRepo,
   getLinkByIdRepo,
-} from "../repositories/link.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { LinkAttributes } from "../interfaces/Link.interface";
-import { LinkStatus } from "../enums/linkStatus.enum";
+} from "../../repositories/coreRepo/link.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { LinkAttributes } from "../../interfaces/Link.interface";
+import { LinkStatus } from "../../enums/linkStatus.enum";
 
 // Get link list with filters
 export const getLinkList = async (

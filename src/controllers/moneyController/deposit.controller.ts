@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getDepositListRepo,
   createDepositRepo,
   updateDepositRepo,
-} from "../repositories/deposit.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { DepositAttributes } from "../interfaces/Deposit.interface";
-import { DepositStatus } from "../enums/depositStatus.enum";
+} from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
+import { ResponseType } from "../../types/Response.type"; // Adjust path
+import { DepositAttributes } from "../../interfaces/Deposit.interface";
+import { DepositStatus } from "../../enums/depositStatus.enum";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (

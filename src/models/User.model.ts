@@ -68,7 +68,7 @@ User.init(
     tableName: "users",
     timestamps: true,
     hooks: {
-      afterCreate: async (user, options) => {
+      afterCreate: async (user) => {
         if (user.roleId === 2) { // Check if roleId is 2 (Customer)
           try {
             await Wallet.create({

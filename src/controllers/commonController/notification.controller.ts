@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode"; // Adjust path
+import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createNotificationRepo,
   getNotificationsByUserIdAndTypeRepo,
-} from "../repositories/notification.repository"; // Adjust path
-import { ResponseType } from "../types/Response.type"; // Adjust path
-import { NotificationAttributes } from "../interfaces/Notification.interface";
+} from "../../repositories/commonRepo/notification.repository"; // Adjust path
+
+import { NotificationAttributes } from "../../interfaces/Notification.interface";
+import { ResponseType } from "../../types/Response.type";
 
 // Create a new notification
 export const createNotification = async (

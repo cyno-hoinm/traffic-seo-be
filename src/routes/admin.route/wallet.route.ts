@@ -4,7 +4,7 @@ import {
   getWalletById,
   updateWallet,
   deleteWallet,
-} from "../../controllers/wallet.controller"; // Adjust path
+} from "../../controllers/moneyController/wallet.controller"; // Adjust path
 
 const router = express.Router();
 

@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import statusCode from "../constants/statusCode";
-import { ResponseType } from "../types/Response.type";
-import { RolePermissionAttributes } from "../interfaces/RolePermission.interface";
+import statusCode from "../../constants/statusCode";
+import { ResponseType } from "../../types/Response.type";
+import { RolePermissionAttributes } from "../../interfaces/RolePermission.interface";
 import {
   createRolePermissionRepo,
   findRolePermissionByIdRepo,
   findAllRolePermissionsRepo,
   updateRolePermissionRepo,
   deleteRolePermissionRepo,
-} from "../repositories/role-permission.repository";
+} from "../../repositories/roleRepo/role-permission.repository";
 
 // Create a new role-permission association
 export const createRolePermission = async (

@@ -1,7 +1,7 @@
-import { VoucherStatus } from "../enums/voucherStatus.enum";
-import { Voucher } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
-import { generateVoucherCode } from "../utils/generate";
+import { VoucherStatus } from "../../enums/voucherStatus.enum";
+import { Voucher } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
+import { generateVoucherCode } from "../../utils/generate";
 
 // Create a new voucher with unique code
 export const createVoucherRepo = async (data: {

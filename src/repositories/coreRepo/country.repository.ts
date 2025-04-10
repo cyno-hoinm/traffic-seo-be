@@ -1,5 +1,5 @@
-import { Country } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { Country } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Create a new country
 export const createCountryRepo = async (name: string): Promise<Country> => {

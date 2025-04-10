@@ -2,7 +2,7 @@ import express from "express";
 import {
   createTransaction,
   getListTransaction,
-} from "../../controllers/transaction.controller"; // Adjust path
+} from "../../controllers/moneyController/transaction.controller"; // Adjust path
 
 const router = express.Router();
 

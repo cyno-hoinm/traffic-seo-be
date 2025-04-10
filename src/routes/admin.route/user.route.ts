@@ -7,7 +7,7 @@ import {
   searchUserList,
   updateUser,
   updateUserOneField,
-} from "../../controllers/user.controller";
+} from "../../controllers/commonController/user.controller";
 
 const router = express.Router();
 

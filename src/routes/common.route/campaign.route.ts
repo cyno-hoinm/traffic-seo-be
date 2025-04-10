@@ -3,7 +3,7 @@ import {
   getCampaignList,
   createCampaign,
   getCampaignById,
-} from "../../controllers/campaign.controller"; // Adjust path
+} from "../../controllers/coreController/campaign.controller"; // Adjust path
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
-import { Notification } from "../models/index.model";
-import { ErrorType } from "../types/Error.type";
+import { Notification } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
 // Create a new notification
 export const createNotificationRepo = async (data: {
