@@ -1,8 +1,8 @@
 import { DataTypes, Model } from "sequelize";
 import { TransactionAttributes } from "../interfaces/Transaction.interface";
-import { sequelizeSystem } from "./index.model";
+import { sequelizeSystem, Wallet } from "./index.model";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
-import Wallet from "./Wallet.model";
+
 
 class Transaction
   extends Model<TransactionAttributes>

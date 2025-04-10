@@ -1,8 +1,6 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem } from "./index.model";
+import { sequelizeSystem, User, Voucher } from "./index.model";
 import { DepositStatus } from "../enums/depositStatus.enum";
-import Voucher from "./Voucher.model";
-import User from "./User.model";
 import { DepositAttributes } from "../interfaces/Deposit.interface";
 
 class Deposit extends Model<DepositAttributes> implements DepositAttributes {

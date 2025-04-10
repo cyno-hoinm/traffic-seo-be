@@ -1,9 +1,7 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem } from "./index.model";
+import { Country, sequelizeSystem, User } from "./index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
-import User from "./User.model";
 import { CampaignAttributes } from "../interfaces/Campaign.interface";
-import Country from "./Country.model";
 
 class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public id!: number;

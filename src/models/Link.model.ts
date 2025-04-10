@@ -1,7 +1,6 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem } from "./index.model";
+import { Campaign, sequelizeSystem } from "./index.model";
 import { LinkStatus } from "../enums/linkStatus.enum";
-import Campaign from "./Campaign.model";
 import { LinkAttributes } from "../interfaces/Link.interface";
 
 class Link extends Model<LinkAttributes> implements LinkAttributes {

@@ -1,7 +1,8 @@
 import { DataTypes, Model } from "sequelize";
 import { WalletAttributes } from "../interfaces/Wallet.interface";
-import sequelizeSystem from "../database/connect";
+import { sequelizeSystem } from "../database/config.database";
 import User from "./User.model";
+
 
 class Wallet extends Model<WalletAttributes> implements WalletAttributes {
   public id!: number;

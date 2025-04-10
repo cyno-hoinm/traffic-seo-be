@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { UserAttributes } from "../interfaces/User.interface";
-import { sequelizeSystem } from "./index.model";
-import Role from "./Role.model";
+import { Role, sequelizeSystem, Wallet } from "./index.model";
+
 
 class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
@@ -38,7 +38,7 @@ User.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "roles",
+        model: Role,
         key: "id",
       },
       defaultValue: 2, // Customer
@@ -71,6 +71,22 @@ User.init(
     modelName: "User",
     tableName: "users",
     timestamps: true,
+    hooks: {
+      afterCreate: async (user, options) => {
+        if (user.roleId === 2) { // Check if roleId is 2 (Customer)
+          try {
+            await Wallet.create({
+              userId: user.id, // Link wallet to the newly created user
+              balance: 0, // Default balance
+            });
+            console.log(`Wallet created for user ${user.id} with roleId 2`);
+          } catch (error) {
+            console.error(`Error creating wallet for user ${user.id}:`, error);
+            throw error; // Rethrow to rollback transaction if used
+          }
+        }
+      },
+    },
   }
 );
 

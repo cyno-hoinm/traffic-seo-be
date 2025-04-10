@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { NotificationAttributes } from "../interfaces/Notification.interface";
-import { sequelizeSystem } from "./index.model";
-import User from "./User.model";
+import { sequelizeSystem, User } from "./index.model";
+
 
 class Notification
   extends Model<NotificationAttributes>
