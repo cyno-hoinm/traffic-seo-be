@@ -13,19 +13,22 @@ import {
 } from "../repositories/user.repository";
 import { UserAttributes } from "../interfaces/User.interface";
 import statusCode from "../constants/statusCode";
+import { ResponseType } from "../types/Response.type";
 
 // Create a new user
 export const createUser = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { username, password, email, roleId } = req.body;
 
     // Validate input
-    if (!username || !password || !email || !roleId) {
+    if (!username || !password || !email) {
       res.status(statusCode.BAD_REQUEST).json({
-        error: "All fields (username, password, email, roleId) are required",
+        status: false,
+        message: "Validation failed",
+        error: "All fields (username, password, email) are required",
       });
       return;
     }
@@ -33,32 +36,37 @@ export const createUser = async (
     // Check if user already exists
     const existingUserByEmail = await findUserByEmailRepo(email);
     if (existingUserByEmail) {
-      res
-        .status(statusCode.BAD_REQUEST)
-        .json({ error: "Email already exists" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "User creation failed",
+        error: "Email already exists",
+      });
       return;
     }
 
     const existingUserByUsername = await findUserByUsernameRepo(username);
     if (existingUserByUsername) {
-      res
-        .status(statusCode.BAD_REQUEST)
-        .json({ error: "Username already exists" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "User creation failed",
+        error: "Username already exists",
+      });
       return;
     }
+
     const hashedPassword = await hashedPasswordString(password, 10);
-    // Create the user
     const userData: Omit<UserAttributes, "id" | "createdAt" | "updatedAt"> = {
       username,
-      password: hashedPassword, // Assuming password is already hashed
+      password: hashedPassword,
       email,
       roleId,
     };
     const newUser = await createUserRepo(userData);
 
     res.status(statusCode.CREATED).json({
+      status: true,
       message: "User created successfully",
-      user: {
+      data: {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
@@ -67,76 +75,97 @@ export const createUser = async (
         updatedAt: newUser.updatedAt,
       },
     });
-    return;
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
 // Get a user by ID
 export const getUserById = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
 
     if (isNaN(userId)) {
-      res.status(statusCode.BAD_REQUEST).json({ error: "Invalid user ID" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "Invalid user ID",
+      });
       return;
     }
+
     const user = await findUserByIdRepo(userId);
 
     if (!user) {
-      res.status(statusCode.NOT_FOUND).json({ error: "User not found" });
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "User not found",
+      });
       return;
     }
 
     res.status(statusCode.OK).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      roleId: user.roleId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    });
-    return;
-  } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
-  }
-};
-
-// Get all users
-export const getAllUsers = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const users = await findAllUsersRepo();
-    res.status(statusCode.OK).json(
-      users.map((user: UserAttributes) => ({
+      status: true,
+      message: "User retrieved successfully",
+      data: {
         id: user.id,
         username: user.username,
         email: user.email,
         roleId: user.roleId,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-      }))
-    );
-    return;
+      },
+    });
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Get all users
+export const getAllUsers = async (
+  req: Request,
+  res: Response<ResponseType<UserAttributes>>
+): Promise<void> => {
+  try {
+    const users = await findAllUsersRepo();
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Users retrieved successfully",
+      data: users.map((user: UserAttributes) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roleId: user.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      })),
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
 // Update a user by ID
 export const updateUser = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
@@ -144,36 +173,45 @@ export const updateUser = async (
     const userId = parseInt(id, 10);
 
     if (isNaN(userId)) {
-      res.status(statusCode.BAD_REQUEST).json({ error: "Invalid user ID" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "Invalid user ID",
+      });
       return;
     }
 
-    // Validate input
     if (!username && !password && !email && !roleId) {
       res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Validation failed",
         error:
           "At least one field (username, password, email, roleId) is required to update",
       });
       return;
     }
 
-    // Update the user
     const userData: Partial<UserAttributes> = {};
     if (username) userData.username = username;
-    if (password) userData.password = password; // Assuming password is already hashed
+    if (password) userData.password = password;
     if (email) userData.email = email;
     if (roleId) userData.roleId = roleId;
 
     const updatedUser = await updateUserRepo(userId, userData);
 
     if (!updatedUser) {
-      res.status(statusCode.NOT_FOUND).json({ error: "User not found" });
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "User not found",
+      });
       return;
     }
 
     res.status(statusCode.OK).json({
+      status: true,
       message: "User updated successfully",
-      user: {
+      data: {
         id: updatedUser.id,
         username: updatedUser.username,
         email: updatedUser.email,
@@ -182,17 +220,19 @@ export const updateUser = async (
         updatedAt: updatedUser.updatedAt,
       },
     });
-    return;
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
-// Update a single field of a user by field name and value
+// Update a single field of a user
 export const updateUserOneField = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
@@ -200,19 +240,23 @@ export const updateUserOneField = async (
     const userId = parseInt(id, 10);
 
     if (isNaN(userId)) {
-      res.status(statusCode.BAD_REQUEST).json({ error: "Invalid user ID" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "Invalid user ID",
+      });
       return;
     }
 
-    // Validate input
     if (!fieldName || value === undefined) {
-      res
-        .status(statusCode.BAD_REQUEST)
-        .json({ error: "Both fieldName and value are required" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Validation failed",
+        error: "Both fieldName and value are required",
+      });
       return;
     }
 
-    // Validate fieldName
     const validFields: (keyof UserAttributes)[] = [
       "username",
       "password",
@@ -221,6 +265,8 @@ export const updateUserOneField = async (
     ];
     if (!validFields.includes(fieldName)) {
       res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Validation failed",
         error: `Invalid fieldName. Must be one of: ${validFields.join(", ")}`,
       });
       return;
@@ -229,13 +275,18 @@ export const updateUserOneField = async (
     const updatedUser = await updateUserOneFieldRepo(userId, fieldName, value);
 
     if (!updatedUser) {
-      res.status(statusCode.NOT_FOUND).json({ error: "User not found" });
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "User not found",
+      });
       return;
     }
 
     res.status(statusCode.OK).json({
+      status: true,
       message: `User ${fieldName} updated successfully`,
-      user: {
+      data: {
         id: updatedUser.id,
         username: updatedUser.username,
         email: updatedUser.email,
@@ -244,35 +295,40 @@ export const updateUserOneField = async (
         updatedAt: updatedUser.updatedAt,
       },
     });
-    return;
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
-// Search users where both email and username contain the key with pagination
+// Search users with pagination
 export const searchUserList = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { key, pageSize, pageLimit } = req.query;
 
-    // Validate pagination parameters
     const pageSizeNum = parseInt(pageSize as string, 10);
     const pageLimitNum = parseInt(pageLimit as string, 10);
 
     if (isNaN(pageSizeNum) || pageSizeNum < 0) {
-      res
-        .status(statusCode.BAD_REQUEST)
-        .json({ error: "pageSize must be a non-negative integer" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageSize must be a non-negative integer",
+      });
       return;
     }
     if (isNaN(pageLimitNum) || pageLimitNum < 0) {
-      res
-        .status(statusCode.BAD_REQUEST)
-        .json({ error: "pageLimit must be a non-negative integer" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageLimit must be a non-negative integer",
+      });
       return;
     }
 
@@ -282,68 +338,81 @@ export const searchUserList = async (
       pageLimitNum
     );
 
-    // If pageSize or pageLimit is 0, pagination is disabled, so we don't include pagination metadata
+    const userData = users.map((user: UserAttributes) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      roleId: user.roleId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+
     if (pageSizeNum === 0 || pageLimitNum === 0) {
       res.status(statusCode.OK).json({
-        users: users.map((user: UserAttributes) => ({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          roleId: user.roleId,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        })),
+        status: true,
+        message: "Users retrieved successfully",
         total,
+        data: userData,
       });
       return;
     }
 
     res.status(statusCode.OK).json({
-      users: users.map((user: UserAttributes) => ({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roleId: user.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      })),
+      status: true,
+      message: "Users retrieved successfully",
       total,
       pageSize: pageSizeNum,
       pageLimit: pageLimitNum,
       totalPages: Math.ceil(total / pageLimitNum),
+      data: userData,
     });
-    return;
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
 // Delete a user by ID
 export const deleteUser = async (
   req: Request,
-  res: Response
+  res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
 
     if (isNaN(userId)) {
-      res.status(statusCode.BAD_REQUEST).json({ error: "Invalid user ID" });
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "Invalid user ID",
+      });
       return;
     }
 
     const deleted = await deleteUserRepo(userId);
 
     if (!deleted) {
-      res.status(statusCode.NOT_FOUND).json({ error: "User not found" });
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "User not found",
+      });
       return;
     }
 
-    res.status(statusCode.OK).json({ message: "User deleted successfully" });
-    return;
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "User deleted successfully",
+    });
   } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    return;
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };

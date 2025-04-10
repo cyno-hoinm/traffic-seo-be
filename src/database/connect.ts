@@ -20,6 +20,7 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
   dialect: "postgres",
+  timezone: '+07:00',
   // logging: (msg: any) => logger.info(msg),
   pool: {
     max: maxPoolSize,
@@ -33,7 +34,9 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
 export const connectDB = async (): Promise<void> => {
   try {
     await sequelizeSystem.authenticate();
-    await sequelizeSystem.sync({ alter: true }); // Sync models with the database
+
+    // await sequelizeSystem.sync({ alter: true }); // Sync models with the database
+
     logger.info("Connected to PostgreSQL");
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL:", error);

@@ -6,4 +6,8 @@ export type ResponseType<T> = {
   data?: T | T[];
   error?: string | ErrorType;
   token?: string;
+  total?: number;
+  pageSize?: number;
+  pageLimit?: number;
+  totalPages?: number;
 };

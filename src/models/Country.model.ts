@@ -24,10 +24,24 @@ Country.init(
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      get() {
+        const rawValue = this.getDataValue('createdAt') as Date;
+        if (!rawValue) return null;
+        const adjustedDate = new Date(rawValue);
+        adjustedDate.setHours(adjustedDate.getHours() + 7);
+        return adjustedDate.toISOString().replace('Z', '+07:00');
+      },
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      get() {
+        const rawValue = this.getDataValue('updatedAt') as Date;
+        if (!rawValue) return null;
+        const adjustedDate = new Date(rawValue);
+        adjustedDate.setHours(adjustedDate.getHours() + 7);
+        return adjustedDate.toISOString().replace('Z', '+07:00');
+      },
     },
   },
   {

@@ -1,4 +1,3 @@
-// src/routes/userRoutes.ts
 import express from "express";
 import {
   createUser,
@@ -11,6 +10,103 @@ import {
 } from "../../controllers/user.controller";
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /api/admin/users/search:
+ *   get:
+ *     summary: Search users by key (email and username) with pagination
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: key
+ *         schema:
+ *           type: string
+ *         description: The search key to match against email and username
+ *         example: john
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 1
+ *         description: The page number (0 to disable pagination)
+ *         example: 1
+ *       - in: query
+ *         name: pageLimit
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 10
+ *         description: The number of users per page (0 to disable pagination)
+ *         example: 10
+ *     responses:
+ *       200:
+ *         description: List of users matching the search criteria
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       username:
+ *                         type: string
+ *                         example: john_doe
+ *                       email:
+ *                         type: string
+ *                         example: john.doe@example.com
+ *                       roleId:
+ *                         type: integer
+ *                         example: 1
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2025-04-09T12:00:00.000Z
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2025-04-09T12:00:00.000Z
+ *                 total:
+ *                   type: integer
+ *                   example: 2
+ *                 pageSize:
+ *                   type: integer
+ *                   example: 1
+ *                 pageLimit:
+ *                   type: integer
+ *                   example: 10
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 1
+ *       400:
+ *         description: Bad request (invalid pagination parameters)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: pageSize must be a non-negative integer
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get("/search", searchUserList);
 
 /**
  * @swagger
@@ -435,103 +531,6 @@ router.put("/:id", updateUser);
  *                   example: Internal server error
  */
 router.patch("/:id", updateUserOneField);
-
-/**
- * @swagger
- * /api/admin/users/search:
- *   get:
- *     summary: Search users by key (email and username) with pagination
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: key
- *         schema:
- *           type: string
- *         description: The search key to match against email and username
- *         example: john
- *       - in: query
- *         name: pageSize
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 1
- *         description: The page number (0 to disable pagination)
- *         example: 1
- *       - in: query
- *         name: pageLimit
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 10
- *         description: The number of users per page (0 to disable pagination)
- *         example: 10
- *     responses:
- *       200:
- *         description: List of users matching the search criteria
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 users:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       username:
- *                         type: string
- *                         example: john_doe
- *                       email:
- *                         type: string
- *                         example: john.doe@example.com
- *                       roleId:
- *                         type: integer
- *                         example: 1
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-09T12:00:00.000Z
- *                       updatedAt:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-09T12:00:00.000Z
- *                 total:
- *                   type: integer
- *                   example: 2
- *                 pageSize:
- *                   type: integer
- *                   example: 1
- *                 pageLimit:
- *                   type: integer
- *                   example: 10
- *                 totalPages:
- *                   type: integer
- *                   example: 1
- *       400:
- *         description: Bad request (invalid pagination parameters)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: pageSize must be a non-negative integer
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Internal server error
- */
-router.get("/search", searchUserList);
 
 /**
  * @swagger

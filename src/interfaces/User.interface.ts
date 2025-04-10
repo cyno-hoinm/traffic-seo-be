@@ -1,7 +1,7 @@
 export interface UserAttributes {
     id?: number;
     username: string;
-    password: string;
+    password?: string;
     email: string;
     roleId: number;
     createdAt?: Date;
