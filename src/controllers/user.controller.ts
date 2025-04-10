@@ -116,14 +116,7 @@ export const getUserById = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "User retrieved successfully",
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roleId: user.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
+      data: user,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -144,14 +137,7 @@ export const getAllUsers = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Users retrieved successfully",
-      data: users.map((user: UserAttributes) => ({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roleId: user.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      })),
+      data: users,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -338,21 +324,12 @@ export const searchUserList = async (
       pageLimitNum
     );
 
-    const userData = users.map((user: UserAttributes) => ({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      roleId: user.roleId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }));
-
     if (pageSizeNum === 0 || pageLimitNum === 0) {
       res.status(statusCode.OK).json({
         status: true,
         message: "Users retrieved successfully",
         total,
-        data: userData,
+        data: users,
       });
       return;
     }
@@ -364,7 +341,7 @@ export const searchUserList = async (
       pageSize: pageSizeNum,
       pageLimit: pageLimitNum,
       totalPages: Math.ceil(total / pageLimitNum),
-      data: userData,
+      data: users,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { UserAttributes } from "../interfaces/User.interface";
-import { Role, sequelizeSystem, Wallet } from "./index.model";
+import { sequelizeSystem, Wallet } from "./index.model";
 
 
 class User extends Model<UserAttributes> implements UserAttributes {
@@ -37,10 +37,6 @@ User.init(
     roleId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Role,
-        key: "id",
-      },
       defaultValue: 2, // Customer
     },
     createdAt: {

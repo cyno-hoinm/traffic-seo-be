@@ -29,7 +29,7 @@ const adminSwaggerOptions = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./src/routes/admin.route/*.ts"], // Ensure this path matches your admin route files
+  apis: ["./src/routes/admin.route/*.ts", "./src/routes/common.route/*.ts"], // Ensure this path matches your admin route files
 };
 
 const clientSwaggerOptions = {
@@ -57,7 +57,7 @@ const clientSwaggerOptions = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./src/routes/client.route/*.ts"], // Ensure this path matches your client route files
+  apis: ["./src/routes/client.route/*.ts", "./src/routes/common.route/*.ts"], // Ensure this path matches your client route files
 };
 export const setupSwaggerDocs = (
   app: express.Application,

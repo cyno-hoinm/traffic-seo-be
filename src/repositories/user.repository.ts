@@ -18,7 +18,12 @@ export const createUserRepo = async (
 // Find a user by ID
 export const findUserByIdRepo = async (id: number): Promise<User | null> => {
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ["roleId", "password"] },
+      include: [
+        { model: Role, as: "role" }, // Assuming 'role' is the alias
+      ],
+    });
     return user;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -30,7 +35,11 @@ export const findUserByEmailRepo = async (
   email: string
 ): Promise<User | null> => {
   try {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      attributes: { exclude: ["roleId"] },
+      include: [{ model: Role, as: "role" }],
+    });
     return user;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -42,7 +51,11 @@ export const findUserByUsernameRepo = async (
   username: string
 ): Promise<User | null> => {
   try {
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({
+      where: { username },
+      attributes: { exclude: ["roleId"] },
+      include: [{ model: Role, as: "role" }],
+    });
     return user;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -53,7 +66,10 @@ export const findUserByUsernameRepo = async (
 export const findAllUsersRepo = async (): Promise<User[]> => {
   try {
     const users = await User.findAll({
-      include: [{ model: Role, as: "role" }],
+      attributes: { exclude: ["roleId", "password"] },
+      include: [
+        { model: Role, as: "role" }, // Assuming 'role' is the alias
+      ],
     });
     return users;
   } catch (error: any) {
@@ -137,6 +153,8 @@ export const searchUserListRepo = async (
       where,
       limit: pageLimit,
       offset,
+      attributes: { exclude: ["roleId", "password"] },
+      include: [{ model: Role, as: "role" }],
     });
 
     return { users, total };
