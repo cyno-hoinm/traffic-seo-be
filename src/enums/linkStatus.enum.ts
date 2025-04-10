@@ -1,5 +1,5 @@
 export enum LinkStatus {
-    PENDING = "pending",
-    ACTIVE = "active",
-    COMPLETED = "completed",
+    PENDING = "PENDING",
+    ACTIVE = "ACTIVE",
+    COMPLETED = "COMPLETED",
   }

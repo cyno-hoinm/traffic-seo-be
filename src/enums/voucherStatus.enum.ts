@@ -1,5 +1,5 @@
 export enum VoucherStatus {
-    ACTIVE = "active",
-    EXPIRED = "expired",
-    USED = "used",
-  }
+  ACTIVE = "ACTIVE",
+  USED = "USED",
+  EXPIRED = "EXPIRED",
+}
