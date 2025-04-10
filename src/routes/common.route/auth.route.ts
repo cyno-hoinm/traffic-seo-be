@@ -78,6 +78,6 @@ const router = express.Router();
  *                   type: string
  *                   example: Database connection failed
  */
-router.post("/auth", loginUser);
+router.post("/", loginUser);
 
 export default router;

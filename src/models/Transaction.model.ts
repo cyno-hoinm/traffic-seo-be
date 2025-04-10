@@ -3,7 +3,6 @@ import { TransactionAttributes } from "../interfaces/Transaction.interface";
 import { sequelizeSystem, Wallet } from "./index.model";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
 
-
 class Transaction
   extends Model<TransactionAttributes>
   implements TransactionAttributes
@@ -12,7 +11,6 @@ class Transaction
   public walletId!: number;
   public amount!: number;
   public status!: TransactionStatus;
-  public date!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -38,10 +36,6 @@ Transaction.init(
     },
     status: {
       type: DataTypes.ENUM(...Object.values(TransactionStatus)),
-      allowNull: false,
-    },
-    date: {
-      type: DataTypes.DATE,
       allowNull: false,
     },
     createdAt: {

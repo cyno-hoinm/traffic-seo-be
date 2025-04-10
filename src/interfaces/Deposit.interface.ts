@@ -7,9 +7,8 @@ export interface DepositAttributes {
   amount: number;
   method: string;
   status: DepositStatus;
-  date: Date;
-  codeTransaction: string;
   acceptedBy?: string;
+  createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

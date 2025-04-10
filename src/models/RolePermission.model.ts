@@ -54,7 +54,7 @@ RolePermission.init(
   {
     sequelize: sequelizeSystem,
     modelName: "RolePermission",
-    tableName: "role_permissions",
+    tableName: "rolePermissions",
     timestamps: true,
   }
 );

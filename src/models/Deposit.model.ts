@@ -10,9 +10,8 @@ class Deposit extends Model<DepositAttributes> implements DepositAttributes {
   public amount!: number;
   public method!: string;
   public status!: DepositStatus;
-  public date!: Date;
-  public codeTransaction!: string;
   public acceptedBy?: string;
+  public createdBy?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -52,15 +51,11 @@ Deposit.init(
       type: DataTypes.ENUM(...Object.values(DepositStatus)),
       allowNull: false,
     },
-    date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    codeTransaction: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     acceptedBy: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    createdBy: {
       type: DataTypes.STRING,
       allowNull: true,
     },
