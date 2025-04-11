@@ -48,17 +48,16 @@ pipeline {
                         echo "CORS_ORIGINS=[http://localhost:3000, http://localhost:$PORT]" >> .env
                         echo "JWT_SECRET=$JWT_SECRET" >> .env
                         echo "JWT_EXPIRES_IN=$JWT_EXPIRES_IN" >> .env
-                        npm run deploy
-                        pm2 save
+                        npm start
                     '''
                 }
             }
         }
-        stage('Logger') {
-            steps {
-                sh 'pm2 logs traffic-seo-be '
-            }
-        }
+        // stage('Logger') {
+        //     steps {
+        //         sh 'pm2 logs traffic-seo-be '
+        //     }
+        // }
     }
     post {
         always {
