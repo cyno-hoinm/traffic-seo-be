@@ -19,7 +19,7 @@ const isDev = process.env.NODE_ENV === "development";
 const numCPUs = os.cpus().length;
 
 const debugApp = debug("app");
-
+//em dep lam
 if (cluster.isPrimary && !isDev) {
   logger.info(`Primary process ${process.pid} is running`);
   debugApp(`Starting primary process with ${numCPUs} CPU cores`);
