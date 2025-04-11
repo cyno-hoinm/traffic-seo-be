@@ -24,6 +24,11 @@ pipeline {
                 sh 'npm run deploy'
             }
         }
+        stage('Logger') {
+            steps {
+                sh 'pm2 log'
+            }
+        }        
     }
     post {
         always {
