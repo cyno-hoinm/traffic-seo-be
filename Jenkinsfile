@@ -21,9 +21,9 @@ pipeline {
         }
         stage('Clear pm2') {
             steps {
-                sh 'pm2 delete all'
+                sh 'pm2 delete all || true'
             }
-        }        
+        }
         stage('Deploy') {
             steps {
                 withCredentials([
@@ -38,7 +38,6 @@ pipeline {
                     string(credentialsId: 'NODE_ENV', variable: 'NODE_ENV')
                 ]) {
                     sh '''
-                        # Generate .env dynamically (optional)
                         echo "PORT=$PORT" > .env
                         echo "DB_HOST=$DB_HOST" >> .env
                         echo "DB_US=$DB_US" >> .env
@@ -50,7 +49,6 @@ pipeline {
                         echo "JWT_SECRET=$JWT_SECRET" >> .env
                         echo "JWT_EXPIRES_IN=$JWT_EXPIRES_IN" >> .env
 
-                        # Deploy with PM2
                         npm run deploy
                         pm2 save
                     '''
@@ -59,7 +57,7 @@ pipeline {
         }
         stage('Logger') {
             steps {
-                sh 'pm2 logs traffic-seo-be --lines 10'
+                sh 'pm2 logs traffic-seo-be --lines 50'
             }
         }
     }
