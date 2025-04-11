@@ -11,6 +11,7 @@ import { gracefulShutdown } from "./utils/utils";
 import { ExtendedWorker } from "./types/Worker.type";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";
+import { dbHost } from "./database/config.database";
 dotenv.config();
 
 // PORT and Environment
@@ -48,6 +49,7 @@ if (cluster.isPrimary && !isDev) {
     try {
       debugApp(`Worker ${process.pid} attempting to connect to DB and Redis`);
       await connectDB();
+      logger.info(`My database host : ${dbHost}`);
       logger.info(`Worker ${process.pid} started on port ${PORT}`);
 
       debugApp(`Worker ${process.pid} successfully started`);
