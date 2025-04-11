@@ -17,6 +17,10 @@ const adminSwaggerOptions = {
         url: `http://localhost:${process.env.PORT || 3000}/api/admin`,
         description: "Admin Development Server",
       },
+      {
+        url: `https://traffic-seo-be.mauwebsite.top/api/admin`,
+        description: "Admin Deployment Server",
+      },
     ],
     components: {
       securitySchemes: {
@@ -44,6 +48,10 @@ const clientSwaggerOptions = {
       {
         url: `http://localhost:${process.env.PORT || 3000}/api/client`,
         description: "Client Development Server",
+      },
+      {
+        url: `https://traffic-seo-be.mauwebsite.top/api/client`,
+        description: "Client Deployment Server",
       },
     ],
     components: {
