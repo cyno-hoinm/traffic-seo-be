@@ -1,21 +1,23 @@
+// Base libraries
 import express from "express";
 import dotenv from "dotenv";
 import cluster from "cluster";
 import os from "os";
 import debug from "debug";
+// Config
 import { logger } from "./config/logger.config";
-import { connectDB, disconnectDB } from "./database/connect"; // Export sequelizeSystem
+import { connectDB } from "./database/connect";
 import { gracefulShutdown } from "./utils/utils";
+import { ExtendedWorker } from "./types/Worker.type";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";
-import { Server } from "http";
-import { ExtendedWorker } from "./types/Worker.type";
-
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
+// PORT and Environment
+const PORT =  process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV === "development";
 const numCPUs = os.cpus().length;
+
 const debugApp = debug("app");
 
 if (cluster.isPrimary && !isDev) {
@@ -31,46 +33,37 @@ if (cluster.isPrimary && !isDev) {
     logger.warn(
       `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
     );
+    debugApp(`Worker ${worker.process.pid} exited`);
+    logger.info("Starting a new worker...");
     cluster.fork({ WORKER_TYPE: worker.process.env.WORKER_TYPE });
   });
 } else {
+  // Start the HTTP server in this worker
   const app = express();
+  // Configure middleware
   configureMiddleware(app);
+  // // Configure routes
   configureRoutes(app);
-
-  let server: Server;
-  const startServer = async () => {
+  const server = app.listen(PORT, async () => {
     try {
-      await connectDB(); // Connect DB first
-      server = app.listen(PORT, () => {
-        logger.info(`Worker ${process.pid} started on port ${PORT}`);
-        debugApp(`Worker ${process.pid} successfully started`);
-      });
+      debugApp(`Worker ${process.pid} attempting to connect to DB and Redis`);
+      await connectDB();
+      logger.info(`Worker ${process.pid} started on port ${PORT}`);
+
+      debugApp(`Worker ${process.pid} successfully started`);
     } catch (error: any) {
-      logger.error(`My database host: ${process.env.DB_HOST}`);
       logger.error("Failed to start server:", error.message);
+      debugApp(`Worker ${process.pid} failed: ${error.message}`);
       process.exit(1);
     }
-  };
-
-  startServer();
-
-  // Graceful shutdown with Sequelize
-  process.on("SIGTERM", async () => {
-    logger.info(`Worker ${process.pid} received SIGTERM`);
-    await gracefulShutdown(server, "SIGTERM");
-    // await disconnectDB();
-    logger.info("Sequelize pool closed");
-    process.exit(0);
   });
 
-  process.on("SIGINT", async () => {
-    await gracefulShutdown(server, "SIGINT");
-    // await disconnectDB();
-    process.exit(0);
-  });
+  // Graceful shutdown handling
+  process.on("SIGTERM", () => gracefulShutdown(server, "SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown(server, "SIGINT"));
 
   if (isDev) {
     logger.info("Running in development mode with hot-reloading enabled.");
+    debugApp("Debug mode active with hot-reloading");
   }
 }
