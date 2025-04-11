@@ -56,7 +56,7 @@ pipeline {
         }
         stage('Logger') {
             steps {
-                sh 'pm2 logs traffic-seo-be --lines 50'
+                sh 'pm2 logs traffic-seo-be '
             }
         }
     }
