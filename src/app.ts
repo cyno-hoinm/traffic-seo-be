@@ -49,11 +49,12 @@ if (cluster.isPrimary && !isDev) {
     try {
       debugApp(`Worker ${process.pid} attempting to connect to DB and Redis`);
       await connectDB();
-      logger.info(`My database host : ${dbHost}`);
+     
       logger.info(`Worker ${process.pid} started on port ${PORT}`);
 
       debugApp(`Worker ${process.pid} successfully started`);
     } catch (error: any) {
+      logger.error(`My database host : ${dbHost}`);
       logger.error("Failed to start server:", error.message);
       debugApp(`Worker ${process.pid} failed: ${error.message}`);
       process.exit(1);
