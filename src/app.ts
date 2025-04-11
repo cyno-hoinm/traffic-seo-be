@@ -14,7 +14,7 @@ import { configureMiddleware } from "./middleware";
 dotenv.config();
 
 // PORT and Environment
-const PORT = process.env.PORT || 3000;
+const PORT =  3000;
 const isDev = process.env.NODE_ENV === "development";
 const numCPUs = os.cpus().length;
 
