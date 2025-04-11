@@ -66,5 +66,5 @@ export const setupSwaggerDocs = (
 ) => {
   app.use(path, swaggerUi.serveFiles(spec), swaggerUi.setup(spec));
 };
-export const swaggerSpecAdmin = swaggerJSDoc(clientSwaggerOptions);
+export const swaggerSpecAdmin = swaggerJSDoc(adminSwaggerOptions);
 export const swaggerSpecClient = swaggerJSDoc(clientSwaggerOptions);
