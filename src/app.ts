@@ -59,14 +59,14 @@ if (cluster.isPrimary && !isDev) {
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
     await gracefulShutdown(server, "SIGTERM");
-    await disconnectDB();
+    // await disconnectDB();
     logger.info("Sequelize pool closed");
     process.exit(0);
   });
 
   process.on("SIGINT", async () => {
     await gracefulShutdown(server, "SIGINT");
-    await disconnectDB();
+    // await disconnectDB();
     process.exit(0);
   });
 
