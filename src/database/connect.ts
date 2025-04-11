@@ -8,7 +8,7 @@ export const connectDB = async (): Promise<void> => {
 
     await sequelizeSystem.sync(); // Sync models with the database
 
-    logger.info("Connected to PostgreSQL");
+    logger.info("Connected to PostgreSQL" );
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL:", error);
     throw error;

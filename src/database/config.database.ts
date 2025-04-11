@@ -14,6 +14,10 @@ const dbPassword = process.env.DB_PW ?? "password";
 const dbHost = process.env.DB_HOST ?? "localhost";
 const dbPort = parseInt(process.env.DB_PORT ?? "5432", 10);
 
+console.log('DB Name:', dbName); // Debug
+console.log('DB User:', dbUser);
+console.log('DB Host:', dbHost);
+console.log('DB Port:', dbPort);
 // Initialize Sequelize with PostgreSQL
 export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
