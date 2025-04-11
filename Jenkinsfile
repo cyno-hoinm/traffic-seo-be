@@ -3,7 +3,7 @@ pipeline {
 
     // Define tools or environment if needed
     tools {
-        nodejs 'NodeJS' // Assumes a Node.js installation named 'NodeJS' in Jenkins Global Tool Configuration
+        nodejs 'Nodejs' // Assumes a Node.js installation named 'NodeJS' in Jenkins Global Tool Configuration
     }
 
     // Environment variables (optional)
