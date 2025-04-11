@@ -8,11 +8,11 @@ import {
 } from "../config/database.config";
 dotenv.config();
 // Validate and parse environment variables
-export const dbName = process.env.DB_NAME ?? "seo_traffic";
-export const dbUser = process.env.DB_US ?? "postgres";
-export const dbPassword = process.env.DB_PW ?? "password";
-export const dbHost = process.env.DB_HOST ?? "localhost";
-export const dbPort = parseInt(process.env.DB_PORT ?? "5432", 10);
+const dbName = process.env.DB_NAME ?? "seo_traffic";
+const dbUser = process.env.DB_US ?? "postgres";
+const dbPassword = process.env.DB_PW ?? "password";
+const dbHost = process.env.DB_HOST ?? "localhost";
+const dbPort = parseInt(process.env.DB_PORT ?? "5432", 10);
 
 // Initialize Sequelize with PostgreSQL
 export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
