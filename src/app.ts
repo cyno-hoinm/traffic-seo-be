@@ -54,7 +54,7 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-
+///cmt
   // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
