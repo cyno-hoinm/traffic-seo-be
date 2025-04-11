@@ -4,7 +4,7 @@ import cluster from "cluster";
 import os from "os";
 import debug from "debug";
 import { logger } from "./config/logger.config";
-import sequelizeSystem, { connectDB } from "./database/connect"; // Export sequelizeSystem
+import { connectDB, disconnectDB } from "./database/connect"; // Export sequelizeSystem
 import { gracefulShutdown } from "./utils/utils";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";
@@ -59,14 +59,14 @@ if (cluster.isPrimary && !isDev) {
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
     await gracefulShutdown(server, "SIGTERM");
-    await sequelizeSystem.close(); // Close Sequelize pool
+    await disconnectDB();
     logger.info("Sequelize pool closed");
     process.exit(0);
   });
 
   process.on("SIGINT", async () => {
     await gracefulShutdown(server, "SIGINT");
-    await sequelizeSystem.close();
+    await disconnectDB();
     process.exit(0);
   });
 
