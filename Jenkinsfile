@@ -7,7 +7,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                sh 'cp /home/hoi/traffic-seo-be/.env .'
             }
         }
         stage('Install') {
