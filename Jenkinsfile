@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        nodejs 'Nodejs' // Ensure this matches your Node.js tool name in Jenkins
+        nodejs 'Nodejs' 
     }
     stages {
         stage('Checkout') {
@@ -11,12 +11,17 @@ pipeline {
         }
         stage('Install') {
             steps {
-                bat 'npm install'
+                sh 'npm install'
             }
         }
         stage('Build') {
             steps {
-                bat 'npm run build'
+                sh 'npm run build'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'pm2 restart all'
             }
         }
     }
