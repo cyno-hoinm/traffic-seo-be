@@ -60,9 +60,9 @@ export const getDepositListRepo = async (filters: {
 export const createDepositRepo = async (data: {
   createdBy: string; // From token
   userId: number;
+  paymentMethodId: number;
   voucherId: number;
   amount: number;
-  method: string;
 }): Promise<Deposit> => {
   try {
     // Check if wallet exists for the user
@@ -75,7 +75,7 @@ export const createDepositRepo = async (data: {
       userId: data.userId,
       voucherId: data.voucherId,
       amount: data.amount,
-      method: data.method,
+      paymentMethodId: data.paymentMethodId,
       status: DepositStatus.PENDING, // Default status
       acceptedBy: data.createdBy, // Initially set as createdBy
     };
@@ -100,19 +100,19 @@ export const updateDepositRepo = async (
       if (!deposit) {
         return null;
       }
-  
+
       const wallet = await Wallet.findOne({ where: { userId: deposit.userId } });
       if (!wallet) {
         throw new ErrorType("NotFoundError", "Wallet not found for this user");
       }
-  
+
       const updatedDeposit = await sequelizeSystem.transaction(async (t) => {
         // Update deposit
         await deposit.update(
           { acceptedBy: data.acceptedBy, status: data.status },
           { transaction: t }
         );
-  
+
         // If status is COMPLETED, create a CHARGE transaction
         if (data.status === DepositStatus.COMPLETED) {
           await createTransactionRepo(
@@ -124,10 +124,10 @@ export const updateDepositRepo = async (
             t // Pass the transaction object
           );
         }
-  
+
         return deposit;
       });
-  
+
       return updatedDeposit;
     } catch (error: any) {
       throw new ErrorType(error.name, error.message, error.code);

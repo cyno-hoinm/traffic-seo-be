@@ -77,9 +77,9 @@ export const getDepositList = async (
         deposits: deposits.map((deposit: DepositAttributes) => ({
           id: deposit.id,
           userId: deposit.userId,
+          paymentMethodId: deposit.paymentMethodId,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
-          method: deposit.method,
           status: deposit.status,
           acceptedBy: deposit.acceptedBy,
           createdAt: deposit.createdAt,
@@ -103,7 +103,7 @@ export const createDeposit = async (
   res: Response<ResponseType<DepositAttributes>>
 ): Promise<void> => {
   try {
-    const { userId, voucherId, amount, method } = req.body;
+    const { userId, voucherId, amount, paymentMethodId } = req.body;
 
     const createdBy = "system"; // Assuming token provides username
 
@@ -111,8 +111,7 @@ export const createDeposit = async (
       !userId ||
       !voucherId ||
       amount === undefined ||
-      isNaN(amount) ||
-      !method
+      isNaN(amount)
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -125,9 +124,9 @@ export const createDeposit = async (
     const deposit = await createDepositRepo({
       createdBy,
       userId,
+      paymentMethodId,
       voucherId,
       amount,
-      method,
     });
 
     res.status(statusCode.CREATED).json({
@@ -136,9 +135,9 @@ export const createDeposit = async (
       data: {
         id: deposit.id,
         userId: deposit.userId,
+        paymentMethodId: deposit.paymentMethodId,
         voucherId: deposit.voucherId,
         amount: deposit.amount,
-        method: deposit.method,
         status: deposit.status,
         acceptedBy: deposit.acceptedBy,
         createdAt: deposit.createdAt,
@@ -197,9 +196,9 @@ export const updateDeposit = async (
       data: {
         id: deposit.id,
         userId: deposit.userId,
+        paymentMethodId: deposit.paymentMethodId,
         voucherId: deposit.voucherId,
         amount: deposit.amount,
-        method: deposit.method,
         status: deposit.status,
         acceptedBy: deposit.acceptedBy,
         createdAt: deposit.createdAt,

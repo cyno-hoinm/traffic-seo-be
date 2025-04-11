@@ -12,6 +12,7 @@ import Keyword from "./Keyword.model";
 import Link from "./Link.model";
 import Notification from "./Notification.model"; // Add Notification
 import Transaction from "./Transaction.model"; // Add Transaction
+import PaymentMethod from "./PaymentMethod.model";
 
 // Initialize models (this ensures they’re loaded)
 export const models = {
@@ -28,11 +29,13 @@ export const models = {
   Link,
   Notification,
   Transaction,
+  PaymentMethod,
 };
 
+
 // Define associations
-User.belongsTo(Role, { foreignKey: "roleId", as: "role" });
-Role.hasMany(User, { foreignKey: "roleId", as: "users" });
+User.belongsTo(Role, { foreignKey: "roleId", as: "role", onDelete: 'SET NULL', });
+Role.hasMany(User, { foreignKey: "roleId", as: "users", onDelete: 'SET NULL', });
 
 User.hasOne(Wallet, { foreignKey: "userId", as: "wallet" });
 Wallet.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -48,6 +51,18 @@ User.hasMany(Deposit, { foreignKey: "userId", as: "deposits" });
 
 Deposit.belongsTo(Voucher, { foreignKey: "voucherId", as: "voucher" });
 Voucher.hasMany(Deposit, { foreignKey: "voucherId", as: "deposits" });
+
+Deposit.belongsTo(PaymentMethod, {
+  foreignKey: "paymentMethodId",
+  as: "paymentMethods",
+  onDelete: 'SET NULL'
+});
+
+PaymentMethod.hasMany(Deposit, {
+  foreignKey: "paymentMethodId",
+  as: "deposits",
+  onDelete: 'SET NULL'
+});
 
 Keyword.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign" });
 Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keywords" });
@@ -89,5 +104,6 @@ export {
   Link,
   Notification,
   Transaction,
+  PaymentMethod,
   sequelizeSystem,
 };

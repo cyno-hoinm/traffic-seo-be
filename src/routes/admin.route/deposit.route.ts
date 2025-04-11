@@ -326,9 +326,9 @@ router.post("/", authenticateToken, createDeposit);
  *                     amount:
  *                       type: number
  *                       example: 100.00
- *                     method:
- *                       type: string
- *                       example: "CREDIT_CARD"
+ *                     paymentMethodId:
+ *                       type: integer
+ *                       example: 1
  *                     status:
  *                       type: string
  *                       example: "COMPLETED"

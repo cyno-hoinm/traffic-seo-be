@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem, User, Voucher } from "./index.model";
+import { sequelizeSystem, User, Voucher, PaymentMethod } from "./index.model";
 import { DepositStatus } from "../enums/depositStatus.enum";
 import { DepositAttributes } from "../interfaces/Deposit.interface";
 
@@ -7,8 +7,8 @@ class Deposit extends Model<DepositAttributes> implements DepositAttributes {
   public id!: number;
   public userId!: number;
   public voucherId!: number;
+  public paymentMethodId!: number;
   public amount!: number;
-  public method!: string;
   public status!: DepositStatus;
   public acceptedBy?: string;
   public createdBy?: string;
@@ -39,12 +39,16 @@ Deposit.init(
         key: "id",
       },
     },
+    paymentMethodId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: PaymentMethod,
+        key: "paymentMethodId"
+      }
+    },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    method: {
-      type: DataTypes.STRING,
       allowNull: false,
     },
     status: {
