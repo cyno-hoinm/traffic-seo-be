@@ -21,7 +21,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh 'pm2 restart all'
+                sh 'npm run deploy'
             }
         }
     }
