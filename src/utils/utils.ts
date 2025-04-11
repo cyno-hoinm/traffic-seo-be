@@ -20,7 +20,7 @@ export async function gracefulShutdown(
     server.close(() => {
       logger.info("HTTP server closed");
     });
-    // await disconnectDB();
+    await disconnectDB();
     logger.info(`Database connection closed with ${signal}`);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

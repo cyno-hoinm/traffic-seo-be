@@ -24,6 +24,30 @@ pipeline {
                 sh 'pm2 delete all || true'
             }
         }
+        stage('Wait for Database') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'DB_HOST', variable: 'DB_HOST'),
+                    string(credentialsId: 'DB_PORT', variable: 'DB_PORT')
+                ]) {
+                    sh '''
+                        # Wait for PostgreSQL to be ready (timeout after 60 seconds)
+                        for i in {1..60}; do
+                            if pg_isready -h $DB_HOST -p $DB_PORT; then
+                                echo "Database is ready!"
+                                break
+                            fi
+                            echo "Waiting for database... ($i/60)"
+                            sleep 1
+                        done
+                        if ! pg_isready -h $DB_HOST -p $DB_PORT; then
+                            echo "Error: Database not ready after 60 seconds"
+                            exit 1
+                        fi
+                    '''
+                }
+            }
+        }
         stage('Deploy') {
             steps {
                 withCredentials([
@@ -48,7 +72,7 @@ pipeline {
                         echo "CORS_ORIGINS=[http://localhost:3000, http://localhost:$PORT]" >> .env
                         echo "JWT_SECRET=$JWT_SECRET" >> .env
                         echo "JWT_EXPIRES_IN=$JWT_EXPIRES_IN" >> .env
-                        sleep 15
+                        echo "WORKER_TYPE=primary" >> .env  # Add WORKER_TYPE (adjust value as needed)
                         npm run deploy
                         pm2 save
                     '''
