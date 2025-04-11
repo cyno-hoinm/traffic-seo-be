@@ -30,34 +30,39 @@ pipeline {
                 sh 'npm run build'
             }
         }
-        stage('Clear pm2') {
+        stage('log env') {
             steps {
-                sh 'pm2 delete all || true'
+                sh 'env | sort'
             }
-        }
-        stage('Deploy') {
-            steps {
-                sh '''
-                    echo "PORT=$PORT" > .env
-                    echo "DB_HOST=$DB_HOST" >> .env
-                    echo "DB_US=$DB_US" >> .env
-                    echo "DB_PW=$DB_PW" >> .env
-                    echo "DB_NAME=$DB_NAME" >> .env
-                    echo "DB_PORT=$DB_PORT" >> .env
-                    echo "NODE_ENV=$NODE_ENV" >> .env
-                    echo "CORS_ORIGINS=[http://localhost:3000, http://localhost:$PORT]" >> .env
-                    echo "JWT_SECRET=$JWT_SECRET" >> .env
-                    echo "JWT_EXPIRES_IN=$JWT_EXPIRES_IN" >> .env
-                    npm run deploy
-                    pm2 save
-                '''
-            }
-        }
-        stage('Logger') {
-            steps {
-                sh 'pm2 logs traffic-seo-be --lines 50'
-            }
-        }
+        }        
+        // stage('Clear pm2') {
+        //     steps {
+        //         sh 'pm2 delete all || true'
+        //     }
+        // }
+        // stage('Deploy') {
+        //     steps {
+        //         sh '''
+        //             echo "PORT=$PORT" > .env
+        //             echo "DB_HOST=$DB_HOST" >> .env
+        //             echo "DB_US=$DB_US" >> .env
+        //             echo "DB_PW=$DB_PW" >> .env
+        //             echo "DB_NAME=$DB_NAME" >> .env
+        //             echo "DB_PORT=$DB_PORT" >> .env
+        //             echo "NODE_ENV=$NODE_ENV" >> .env
+        //             echo "CORS_ORIGINS=[http://localhost:3000, http://localhost:$PORT]" >> .env
+        //             echo "JWT_SECRET=$JWT_SECRET" >> .env
+        //             echo "JWT_EXPIRES_IN=$JWT_EXPIRES_IN" >> .env
+        //             npm run deploy
+        //             pm2 save
+        //         '''
+        //     }
+        // }
+        // stage('Logger') {
+        //     steps {
+        //         sh 'pm2 logs traffic-seo-be --lines 50'
+        //     }
+        // }
     }
     post {
         always {
