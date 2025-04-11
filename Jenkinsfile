@@ -19,6 +19,11 @@ pipeline {
                 sh 'npm run build'
             }
         }
+        stage('Clear pm2') {
+            steps {
+                sh 'pm2 delete all'
+            }
+        }        
         stage('Deploy') {
             steps {
                 withCredentials([
