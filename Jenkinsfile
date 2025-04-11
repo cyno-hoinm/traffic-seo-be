@@ -1,8 +1,17 @@
 pipeline {
     agent any
-    // environment {
-    //     AAA_TOP_LEVEL_VAR = 'topLevel'
-    // }
+    environment {
+            PORT='9999'
+            DB_HOST='shortline.proxy.rlwy.net'
+            DB_US='postgres'
+            DB_PW='AWOZHEIjajuMsmOQmbcmCLvEyYiOCfJM'
+            DB_NAME='railway'
+            DB_PORT='15059'
+            NODE_ENV='development'
+            CORS_ORIGINS='[http://localhost:3000, http://localhost:9999]'
+            JWT_SECRET='MinhHoiPr0'
+            JWT_EXPIRES_IN='24h'
+    }
     tools {
         nodejs 'Nodejs' 
     }
