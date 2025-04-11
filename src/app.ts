@@ -21,22 +21,22 @@ const numCPUs = os.cpus().length;
 const debugApp = debug("app");
 
 if (cluster.isPrimary && !isDev) {
-  logger.info(`Primary process ${process.pid} is running`);
-  debugApp(`Starting primary process with ${numCPUs} CPU cores`);
+  // logger.info(`Primary process ${process.pid} is running`);
+  // debugApp(`Starting primary process with ${numCPUs} CPU cores`);
 
-  const appWorkers = Math.ceil(numCPUs / 2);
-  for (let i = 0; i < appWorkers; i++) {
-    cluster.fork({ WORKER_TYPE: "app" });
-  }
+  // const appWorkers = Math.ceil(numCPUs / 2);
+  // for (let i = 0; i < appWorkers; i++) {
+  //   cluster.fork({ WORKER_TYPE: "app" });
+  // }
 
-  cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
-    logger.warn(
-      `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
-    );
-    debugApp(`Worker ${worker.process.pid} exited`);
-    logger.info("Starting a new worker...");
-    cluster.fork({ WORKER_TYPE: worker.process.env.WORKER_TYPE });
-  });
+  // cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
+  //   logger.warn(
+  //     `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
+  //   );
+  //   debugApp(`Worker ${worker.process.pid} exited`);
+  //   logger.info("Starting a new worker...");
+  //   cluster.fork({ WORKER_TYPE: worker.process.env.WORKER_TYPE });
+  // });
 } else {
   // Start the HTTP server in this worker
   const app = express();
