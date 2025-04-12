@@ -1,7 +1,6 @@
 import { Permission } from "../../models/index.model";
 import { PermissionAttributes } from "../../interfaces/Permission.interface";
 
-// Create a new permission
 export const createPermissionRepo = async (
   permissionData: Omit<PermissionAttributes, "id" | "createdAt" | "updatedAt">
 ): Promise<PermissionAttributes> => {
@@ -13,7 +12,6 @@ export const createPermissionRepo = async (
   }
 };
 
-// Find permission by ID
 export const findPermissionByIdRepo = async (
   id: number
 ): Promise<PermissionAttributes | null> => {
@@ -27,12 +25,14 @@ export const findPermissionByIdRepo = async (
   }
 };
 
-// Find all permissions
 export const findAllPermissionsRepo = async (): Promise<
   PermissionAttributes[]
 > => {
   try {
-    const permissions = await Permission.findAll();
+    const permissions = await Permission.findAll({
+      where: { isDeleted: false },
+      order: [["createdAt", "DESC"]],
+    });
     return permissions.map(
       (permission) => permission.toJSON() as PermissionAttributes
     );
@@ -43,7 +43,6 @@ export const findAllPermissionsRepo = async (): Promise<
   }
 };
 
-// Update permission by ID
 export const updatePermissionRepo = async (
   id: number,
   permissionData: Partial<
@@ -61,13 +60,12 @@ export const updatePermissionRepo = async (
   }
 };
 
-// Delete permission by ID
 export const deletePermissionRepo = async (id: number): Promise<boolean> => {
   try {
     const permission = await Permission.findByPk(id);
     if (!permission) return false;
 
-    await permission.destroy();
+    await permission.update({ isDeleted: true });
     return true;
   } catch (error) {
     throw new Error(`Error deleting permission: ${(error as Error).message}`);

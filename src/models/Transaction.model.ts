@@ -11,6 +11,7 @@ class Transaction
   public walletId!: number;
   public amount!: number;
   public status!: TransactionStatus;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -24,7 +25,7 @@ Transaction.init(
     },
     walletId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Wallet,
         key: "id",
@@ -38,6 +39,11 @@ Transaction.init(
       type: DataTypes.ENUM(...Object.values(TransactionStatus)),
       allowNull: false,
     },
+     isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -46,7 +52,7 @@ Transaction.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -57,7 +63,7 @@ Transaction.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },

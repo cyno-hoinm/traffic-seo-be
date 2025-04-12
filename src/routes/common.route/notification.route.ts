@@ -76,7 +76,7 @@ const router = express.Router();
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -169,7 +169,7 @@ router.post("/", createNotification);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing userId
  *         content:

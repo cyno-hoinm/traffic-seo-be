@@ -69,15 +69,15 @@ const router = express.Router();
  *                     date:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -182,15 +182,15 @@ router.post("/", createTransaction);
  *                       date:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:

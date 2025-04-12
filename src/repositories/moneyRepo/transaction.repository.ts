@@ -3,7 +3,7 @@ import { sequelizeSystem, Transaction, Wallet } from "../../models/index.model";
 import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { Transaction as SequelizeTransaction } from "sequelize";
-// Create a new transaction and update wallet balance
+
 export const createTransactionRepo = async (
   data: {
     walletId: number;
@@ -18,7 +18,6 @@ export const createTransactionRepo = async (
       throw new ErrorType("NotFoundError", "Wallet not found");
     }
 
-    // Start a transaction to ensure atomicity
     const transaction = await sequelizeSystem.transaction(async (t) => {
       const newTransaction = await Transaction.create(data, { transaction: t });
 
@@ -49,7 +48,6 @@ export const createTransactionRepo = async (
   }
 };
 
-// Get list of transactions with filters (walletId, status, date range)
 export const getListTransactionRepo = async (filters: {
   walletId?: number;
   status?: TransactionStatus;
@@ -57,7 +55,7 @@ export const getListTransactionRepo = async (filters: {
   end_date?: Date;
 }): Promise<Transaction[]> => {
   try {
-    const where: any = {};
+    const where: any = { isDeleted: false };
 
     if (filters.walletId) {
       where.walletId = filters.walletId;
@@ -75,7 +73,10 @@ export const getListTransactionRepo = async (filters: {
       }
     }
 
-    const transactions = await Transaction.findAll({ where });
+    const transactions = await Transaction.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
     return transactions;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

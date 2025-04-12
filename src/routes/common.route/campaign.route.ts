@@ -105,15 +105,15 @@ const router = express.Router();
  *                         example: "Mobile"
  *                       timeCode:
  *                         type: string
- *                         example: "UTC+07:00"
+ *                         example: "UTC "
  *                       startDate:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T00:00:00+07:00
+ *                         example: 2025-04-10T00:00:00 
  *                       endDate:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-20T23:59:59+07:00
+ *                         example: 2025-04-20T23:59:59 
  *                       totalTraffic:
  *                         type: integer
  *                         example: 0
@@ -135,11 +135,11 @@ const router = express.Router();
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-09T07:00:00+07:00
+ *                         example: 2025-04-09T07:00:00 
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-09T07:00:00+07:00
+ *                         example: 2025-04-09T07:00:00 
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:
@@ -226,17 +226,17 @@ router.get("/list", getCampaignList);
  *               timeCode:
  *                 type: string
  *                 description: Time zone code
- *                 example: "UTC+07:00"
+ *                 example: "UTC "
  *               startDate:
  *                 type: string
  *                 format: date-time
  *                 description: Start date of the campaign
- *                 example: 2025-04-10T00:00:00+07:00
+ *                 example: 2025-04-10T00:00:00 
  *               endDate:
  *                 type: string
  *                 format: date-time
  *                 description: End date of the campaign
- *                 example: 2025-04-20T23:59:59+07:00
+ *                 example: 2025-04-20T23:59:59 
  *               cost:
  *                 type: number
  *                 description: Cost of the campaign
@@ -295,15 +295,15 @@ router.get("/list", getCampaignList);
  *                       example: "Mobile"
  *                     timeCode:
  *                       type: string
- *                       example: "UTC+07:00"
+ *                       example: "UTC "
  *                     startDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T00:00:00+07:00
+ *                       example: 2025-04-10T00:00:00 
  *                     endDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-20T23:59:59+07:00
+ *                       example: 2025-04-20T23:59:59 
  *                     totalTraffic:
  *                       type: integer
  *                       example: 0
@@ -325,11 +325,11 @@ router.get("/list", getCampaignList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00+07:00
+ *                       example: 2025-04-09T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00+07:00
+ *                       example: 2025-04-09T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -416,15 +416,15 @@ router.post("/", createCampaign);
  *                       example: "Mobile"
  *                     timeCode:
  *                       type: string
- *                       example: "UTC+07:00"
+ *                       example: "UTC "
  *                     startDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T00:00:00+07:00
+ *                       example: 2025-04-10T00:00:00 
  *                     endDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-20T23:59:59+07:00
+ *                       example: 2025-04-20T23:59:59 
  *                     totalTraffic:
  *                       type: integer
  *                       example: 0
@@ -446,11 +446,11 @@ router.post("/", createCampaign);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00+07:00
+ *                       example: 2025-04-09T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00+07:00
+ *                       example: 2025-04-09T07:00:00 
  *       404:
  *         description: Campaign not found
  *         content:

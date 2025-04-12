@@ -3,7 +3,6 @@ import { Voucher } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { generateVoucherCode } from "../../utils/generate";
 
-// Create a new voucher with unique code
 export const createVoucherRepo = async (data: {
   value: number;
   status: VoucherStatus;
@@ -12,9 +11,8 @@ export const createVoucherRepo = async (data: {
     let code = generateVoucherCode();
     let existingVoucher = await findVoucherByCodeRepo(code);
 
-    // Regenerate code if it already exists (rare, but possible)
     let attempts = 0;
-    const maxAttempts = 10; // Prevent infinite loop
+    const maxAttempts = 10;
     while (existingVoucher && attempts < maxAttempts) {
       code = generateVoucherCode();
       existingVoucher = await findVoucherByCodeRepo(code);
@@ -34,7 +32,7 @@ export const createVoucherRepo = async (data: {
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
-// Find voucher by code
+
 export const findVoucherByCodeRepo = async (
   code: string
 ): Promise<Voucher | null> => {
@@ -45,17 +43,19 @@ export const findVoucherByCodeRepo = async (
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
-// Get all vouchers
+
 export const getAllVouchersRepo = async (): Promise<Voucher[]> => {
   try {
-    const vouchers = await Voucher.findAll();
+    const vouchers = await Voucher.findAll({
+      where: { isDeleted: false },
+      order: [["createdAt", "DESC"]],
+    });
     return vouchers;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
 
-// Get voucher by ID
 export const getVoucherByIdRepo = async (
   id: number
 ): Promise<Voucher | null> => {
@@ -67,7 +67,6 @@ export const getVoucherByIdRepo = async (
   }
 };
 
-// Update voucher
 export const updateVoucherRepo = async (
   id: number,
   data: { value?: number; status?: VoucherStatus }
@@ -83,13 +82,12 @@ export const updateVoucherRepo = async (
   }
 };
 
-// Delete voucher
 export const deleteVoucherRepo = async (id: number): Promise<boolean> => {
   try {
     const voucher = await Voucher.findByPk(id);
     if (!voucher) return false;
 
-    await voucher.destroy();
+    await voucher.update({ isDeleted: true });
     return true;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

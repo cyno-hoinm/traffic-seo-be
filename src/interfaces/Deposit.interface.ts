@@ -9,6 +9,7 @@ export interface DepositAttributes {
   status: DepositStatus;
   acceptedBy?: string;
   createdBy?: string;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -38,7 +38,7 @@ export const createRole = async (
       return;
     }
 
-    const role = await createRoleRepo({ name, isDelete: false });
+    const role = await createRoleRepo({ name, isDeleted: false });
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Role created successfully",
@@ -93,7 +93,7 @@ export const getRoleById = async (
     const { id } = req.params;
     const role = await getRoleByIdRepo(Number(id));
 
-    if (!role || role.isDelete) {
+    if (!role || role.isDeleted) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Role not found",

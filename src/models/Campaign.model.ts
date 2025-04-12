@@ -2,13 +2,15 @@ import { DataTypes, Model } from "sequelize";
 import { Country, sequelizeSystem, User } from "./index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
 import { CampaignAttributes } from "../interfaces/Campaign.interface";
+import { CampaignTypeAttributes } from "../interfaces/CampaignType.interface";
+import CampaignType from "./CampaignType.model";
 
 class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public id!: number;
   public userId!: number;
   public countryId!: number;
   public name!: string;
-  public type!: string;
+  public campaignTypeId!: CampaignTypeAttributes;
   public device!: string;
   public timeCode!: string;
   public startDate!: Date;
@@ -18,6 +20,7 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public domain!: string;
   public search!: string;
   public keyword!: string;
+  public isDeleted!: boolean;
   public status!: CampaignStatus;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -32,7 +35,7 @@ Campaign.init(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: User,
         key: "id",
@@ -40,7 +43,7 @@ Campaign.init(
     },
     countryId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Country,
         key: "id",
@@ -50,9 +53,13 @@ Campaign.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    campaignTypeId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: CampaignType,
+        key: "id",
+      },
     },
     device: {
       type: DataTypes.STRING,
@@ -95,6 +102,10 @@ Campaign.init(
       type: DataTypes.ENUM(...Object.values(CampaignStatus)),
       allowNull: false,
     },
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -103,7 +114,7 @@ Campaign.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -114,7 +125,7 @@ Campaign.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },

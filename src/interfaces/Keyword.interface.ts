@@ -7,6 +7,7 @@ export interface KeywordAttributes {
   url: string[];
   distribution: DistributionType;
   traffic : number;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

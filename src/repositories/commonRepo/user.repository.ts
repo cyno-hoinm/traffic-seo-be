@@ -20,9 +20,8 @@ export const findUserByIdRepo = async (id: number): Promise<User | null> => {
   try {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["roleId", "password"] },
-      include: [
-        { model: Role, as: "role" }, // Assuming 'role' is the alias
-      ],
+      include: [{ model: Role, as: "role" }],
+      order: [["createdAt", "DESC"]],
     });
     return user;
   } catch (error: any) {
@@ -36,9 +35,10 @@ export const findUserByEmailRepo = async (
 ): Promise<User | null> => {
   try {
     const user = await User.findOne({
-      where: { email },
+      where: { email, isDeleted: false },
       attributes: { exclude: ["roleId"] },
       include: [{ model: Role, as: "role" }],
+      order: [["createdAt", "DESC"]],
     });
     return user;
   } catch (error: any) {
@@ -52,9 +52,10 @@ export const findUserByUsernameRepo = async (
 ): Promise<User | null> => {
   try {
     const user = await User.findOne({
-      where: { username },
+      where: { username, isDeleted: false },
       attributes: { exclude: ["roleId"] },
       include: [{ model: Role, as: "role" }],
+      order: [["createdAt", "DESC"]],
     });
     return user;
   } catch (error: any) {
@@ -66,10 +67,10 @@ export const findUserByUsernameRepo = async (
 export const findAllUsersRepo = async (): Promise<User[]> => {
   try {
     const users = await User.findAll({
+      where: { isDeleted: false },
       attributes: { exclude: ["roleId", "password"] },
-      include: [
-        { model: Role, as: "role" }, // Assuming 'role' is the alias
-      ],
+      include: [{ model: Role, as: "role" }],
+      order: [["createdAt", "DESC"]],
     });
     return users;
   } catch (error: any) {
@@ -121,6 +122,7 @@ export const updateUserOneFieldRepo = async (
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
+
 // Search users where both email and username contain the key with pagination
 export const searchUserListRepo = async (
   key: string | undefined,
@@ -129,19 +131,22 @@ export const searchUserListRepo = async (
 ): Promise<{ users: User[]; total: number }> => {
   try {
     // Build the where clause for searching
-    const where: any = {};
+    const where: any = { isDeleted: false };
 
     if (key) {
       // Search for users where both email AND username contain the key
       where[Op.and] = [
-        { email: { [Op.iLike]: `%${key}%` } }, // Case-insensitive search for email
-        { username: { [Op.iLike]: `%${key}%` } }, // Case-insensitive search for username
+        { email: { [Op.iLike]: `%${key}%` } },
+        { username: { [Op.iLike]: `%${key}%` } },
       ];
     }
 
     // If pageSize or pageLimit is 0, fetch all matching users without pagination
     if (pageSize === 0 || pageLimit === 0) {
-      const users = await User.findAll({ where });
+      const users = await User.findAll({
+        where,
+        order: [["createdAt", "DESC"]],
+      });
       return { users, total: users.length };
     }
 
@@ -155,6 +160,7 @@ export const searchUserListRepo = async (
       offset,
       attributes: { exclude: ["roleId", "password"] },
       include: [{ model: Role, as: "role" }],
+      order: [["createdAt", "DESC"]],
     });
 
     return { users, total };
@@ -162,6 +168,7 @@ export const searchUserListRepo = async (
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
+
 // Delete a user by ID
 export const deleteUserRepo = async (id: number): Promise<boolean> => {
   try {
@@ -169,7 +176,7 @@ export const deleteUserRepo = async (id: number): Promise<boolean> => {
     if (!user) {
       return false;
     }
-    await user.destroy();
+    await user.update({ isDeleted: true });
     return true;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

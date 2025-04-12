@@ -40,8 +40,8 @@ const router = express.Router();
  *         id: 1
  *         roleId: 1
  *         permissionId: 1
- *         createdAt: "2025-04-10T14:00:00.000+07:00"
- *         updatedAt: "2025-04-10T14:00:00.000+07:00"
+ *         createdAt: "2025-04-10T14:00:00.000 "
+ *         updatedAt: "2025-04-10T14:00:00.000 "
  */
 
 /**

@@ -14,6 +14,7 @@ class Link extends Model<LinkAttributes> implements LinkAttributes {
   public status!: LinkStatus;
   public url!: string;
   public page!: string;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -27,7 +28,7 @@ Link.init(
     },
     campaignId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Campaign,
         key: "id",
@@ -66,6 +67,11 @@ Link.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+     isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -74,7 +80,7 @@ Link.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -85,7 +91,7 @@ Link.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },

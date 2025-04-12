@@ -101,11 +101,11 @@ const router = express.Router();
  *                           createdAt:
  *                             type: string
  *                             format: date-time
- *                             example: 2025-04-10T07:00:00+07:00
+ *                             example: 2025-04-10T07:00:00 
  *                           updatedAt:
  *                             type: string
  *                             format: date-time
- *                             example: 2025-04-10T07:00:00+07:00
+ *                             example: 2025-04-10T07:00:00 
  *                     total:
  *                       type: integer
  *                       example: 25
@@ -222,11 +222,11 @@ router.get("/search", getDepositList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -338,11 +338,11 @@ router.post("/", authenticateToken, createDeposit);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T08:00:00+07:00
+ *                       example: 2025-04-10T08:00:00 
  *       400:
  *         description: Bad request - Invalid fields
  *         content:

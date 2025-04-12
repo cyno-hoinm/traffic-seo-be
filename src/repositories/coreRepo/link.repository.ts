@@ -1,18 +1,8 @@
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
 import { Link } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
-// Custom error class
-class ErrorType extends Error {
-  constructor(name: string, message: string, code?: string) {
-    super(message);
-    this.name = name;
-    if (code) this.code = code;
-  }
-  code?: string;
-}
-
-// Get link list with filters
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
   status?: LinkStatus;
@@ -20,7 +10,7 @@ export const getLinkListRepo = async (filters: {
   end_date?: Date;
 }): Promise<Link[]> => {
   try {
-    const where: any = {};
+    const where: any = { isDeleted: false };
 
     if (filters.campaignId) where.campaignId = filters.campaignId;
     if (filters.status) where.status = filters.status;
@@ -30,14 +20,16 @@ export const getLinkListRepo = async (filters: {
       if (filters.end_date) where.createdAt[Op.lte] = filters.end_date;
     }
 
-    const links = await Link.findAll({ where });
+    const links = await Link.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
     return links;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
 
-// Create a new link
 export const createLinkRepo = async (data: {
   campaignId: number;
   link: string;
@@ -57,7 +49,6 @@ export const createLinkRepo = async (data: {
   }
 };
 
-// Get link by ID
 export const getLinkByIdRepo = async (id: number): Promise<Link | null> => {
   try {
     const link = await Link.findByPk(id);

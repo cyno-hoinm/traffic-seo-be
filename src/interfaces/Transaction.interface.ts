@@ -5,6 +5,7 @@ export interface TransactionAttributes {
   walletId: number;
   amount: number;
   status: TransactionStatus;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

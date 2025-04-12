@@ -1,21 +1,11 @@
-import { Deposit, Wallet } from "../../models/index.model"; // Adjust path
+import { Deposit, Wallet } from "../../models/index.model";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { sequelizeSystem } from "../../models/index.model";
 import { Op } from "sequelize";
 import { createTransactionRepo } from "././transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
+import { ErrorType } from "../../types/Error.type";
 
-// Custom error class
-class ErrorType extends Error {
-  constructor(name: string, message: string, code?: string) {
-    super(message);
-    this.name = name;
-    if (code) this.code = code;
-  }
-  code?: string;
-}
-
-// Get deposit list with filters and pagination
 export const getDepositListRepo = async (filters: {
   userId?: number;
   start_date?: Date;
@@ -25,7 +15,7 @@ export const getDepositListRepo = async (filters: {
   pageLimit: number;
 }): Promise<{ deposits: Deposit[]; total: number }> => {
   try {
-    const where: any = {};
+    const where: any = { isDeleted: false };
 
     if (filters.userId) {
       where.userId = filters.userId;
@@ -48,6 +38,7 @@ export const getDepositListRepo = async (filters: {
       where,
       limit: filters.pageSize,
       offset,
+      order: [["createdAt", "DESC"]],
     });
 
     return { deposits, total };
@@ -56,16 +47,14 @@ export const getDepositListRepo = async (filters: {
   }
 };
 
-// Create a new deposit
 export const createDepositRepo = async (data: {
-  createdBy: string; // From token
+  createdBy: string;
   userId: number;
   paymentMethodId: number;
   voucherId: number;
   amount: number;
 }): Promise<Deposit> => {
   try {
-    // Check if wallet exists for the user
     const wallet = await Wallet.findOne({ where: { userId: data.userId } });
     if (!wallet) {
       throw new ErrorType("NotFoundError", "Wallet not found for this user");
@@ -76,8 +65,8 @@ export const createDepositRepo = async (data: {
       voucherId: data.voucherId,
       amount: data.amount,
       paymentMethodId: data.paymentMethodId,
-      status: DepositStatus.PENDING, // Default status
-      acceptedBy: data.createdBy, // Initially set as createdBy
+      status: DepositStatus.PENDING,
+      acceptedBy: data.createdBy,
     };
 
     const deposit = await Deposit.create(depositData);
@@ -87,49 +76,46 @@ export const createDepositRepo = async (data: {
   }
 };
 
-// Update deposit and create transaction if completed
 export const updateDepositRepo = async (
-    id: number,
-    data: {
-      acceptedBy: string;
-      status: DepositStatus.COMPLETED | DepositStatus.FAILED;
+  id: number,
+  data: {
+    acceptedBy: string;
+    status: DepositStatus.COMPLETED | DepositStatus.FAILED;
+  }
+): Promise<Deposit | null> => {
+  try {
+    const deposit = await Deposit.findByPk(id);
+    if (!deposit) {
+      return null;
     }
-  ): Promise<Deposit | null> => {
-    try {
-      const deposit = await Deposit.findByPk(id);
-      if (!deposit) {
-        return null;
-      }
 
-      const wallet = await Wallet.findOne({ where: { userId: deposit.userId } });
-      if (!wallet) {
-        throw new ErrorType("NotFoundError", "Wallet not found for this user");
-      }
+    const wallet = await Wallet.findOne({ where: { userId: deposit.userId } });
+    if (!wallet) {
+      throw new ErrorType("NotFoundError", "Wallet not found for this user");
+    }
 
-      const updatedDeposit = await sequelizeSystem.transaction(async (t) => {
-        // Update deposit
-        await deposit.update(
-          { acceptedBy: data.acceptedBy, status: data.status },
-          { transaction: t }
+    const updatedDeposit = await sequelizeSystem.transaction(async (t) => {
+      await deposit.update(
+        { acceptedBy: data.acceptedBy, status: data.status },
+        { transaction: t }
+      );
+
+      if (data.status === DepositStatus.COMPLETED) {
+        await createTransactionRepo(
+          {
+            walletId: wallet.id,
+            amount: deposit.amount,
+            status: TransactionStatus.CHARGE,
+          },
+          t
         );
+      }
 
-        // If status is COMPLETED, create a CHARGE transaction
-        if (data.status === DepositStatus.COMPLETED) {
-          await createTransactionRepo(
-            {
-              walletId: wallet.id,
-              amount: deposit.amount,
-              status: TransactionStatus.CHARGE, // Use enum value
-            },
-            t // Pass the transaction object
-          );
-        }
+      return deposit;
+    });
 
-        return deposit;
-      });
-
-      return updatedDeposit;
-    } catch (error: any) {
-      throw new ErrorType(error.name, error.message, error.code);
-    }
-  };
+    return updatedDeposit;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};

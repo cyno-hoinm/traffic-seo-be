@@ -1,4 +1,4 @@
-import {RolePermission,Role,Permission} from "../../models/index.model";
+import { RolePermission, Role, Permission } from "../../models/index.model";
 import { RolePermissionAttributes } from "../../interfaces/RolePermission.interface";
 
 // Create a new role-permission association
@@ -24,10 +24,10 @@ export const findRolePermissionByIdRepo = async (
 ): Promise<RolePermissionAttributes | null> => {
   try {
     const rolePermission = await RolePermission.findByPk(id, {
-      attributes: { exclude: ["roleId", "permissionId"] }, // Exclude roleId and permissionId
+      attributes: { exclude: ["roleId", "permissionId"] },
       include: [
-        { model: Role, as: "role" }, // Correct alias
-        { model: Permission, as: "permission" }, // Correct alias
+        { model: Role, as: "role" }, 
+        { model: Permission, as: "permission" }, 
       ],
     });
     return rolePermission
@@ -46,11 +46,13 @@ export const findAllRolePermissionsRepo = async (): Promise<
 > => {
   try {
     const rolePermissions = await RolePermission.findAll({
+      where: { isDeleted: false }, 
       attributes: { exclude: ["roleId", "permissionId"] },
       include: [
-        { model: Role, as: "role" }, // Assuming 'role' is the alias
-        { model: Permission, as: "permission" }, // Assuming 'permission' is the alias
+        { model: Role, as: "role" }, 
+        { model: Permission, as: "permission" }, 
       ],
+      order: [["createdAt", "DESC"]], 
     });
     return rolePermissions.map((rp) => rp.toJSON() as RolePermissionAttributes);
   } catch (error) {
@@ -93,8 +95,7 @@ export const deleteRolePermissionRepo = async (
   try {
     const rolePermission = await RolePermission.findByPk(id);
     if (!rolePermission) return false;
-
-    await rolePermission.destroy();
+    await rolePermission.update({ isDeleted: true });
     return true;
   } catch (error) {
     throw new Error(

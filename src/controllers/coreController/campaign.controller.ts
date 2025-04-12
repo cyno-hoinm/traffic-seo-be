@@ -89,7 +89,7 @@ export const getCampaignList = async (
         userId: campaign.userId,
         countryId: campaign.countryId,
         name: campaign.name,
-        type: campaign.type,
+        campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
         timeCode: campaign.timeCode,
         startDate: campaign.startDate,
@@ -134,6 +134,7 @@ export const createCampaign = async (
       search,
       keyword,
       status,
+      campaignTypeId,
     } = req.body;
 
     if (
@@ -150,6 +151,7 @@ export const createCampaign = async (
       isNaN(cost) ||
       !domain ||
       !search ||
+      !campaignTypeId ||
       !keyword ||
       !status
     ) {
@@ -194,6 +196,7 @@ export const createCampaign = async (
       cost,
       domain,
       search,
+      campaignTypeId,
       keyword,
       status,
     });
@@ -206,7 +209,7 @@ export const createCampaign = async (
         userId: campaign.userId,
         countryId: campaign.countryId,
         name: campaign.name,
-        type: campaign.type,
+        campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
         timeCode: campaign.timeCode,
         startDate: campaign.startDate,
@@ -256,7 +259,7 @@ export const getCampaignById = async (
         userId: campaign.userId,
         countryId: campaign.countryId,
         name: campaign.name,
-        type: campaign.type,
+        campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
         timeCode: campaign.timeCode,
         startDate: campaign.startDate,

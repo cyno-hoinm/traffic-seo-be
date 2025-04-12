@@ -2,7 +2,6 @@ import { DataTypes, Model } from "sequelize";
 import { NotificationAttributes } from "../interfaces/Notification.interface";
 import { sequelizeSystem, User } from "./index.model";
 
-
 class Notification
   extends Model<NotificationAttributes>
   implements NotificationAttributes
@@ -12,6 +11,7 @@ class Notification
   public name!: string;
   public content!: string;
   public type!: string;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
 }
 
@@ -24,7 +24,7 @@ Notification.init(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: User,
         key: "id",
@@ -42,6 +42,11 @@ Notification.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+     isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -50,7 +55,7 @@ Notification.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },
