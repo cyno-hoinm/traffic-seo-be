@@ -10,38 +10,36 @@ const router = express.Router();
 /**
  * @swagger
  * /links/search:
- *   get:
+ *   post:
  *     summary: Get a list of links with filters
  *     description: Retrieve links filtered by campaignId, status, and createdAt date range.
  *     tags: [Links]
- *     parameters:
- *       - in: query
- *         name: campaignId
- *         schema:
- *           type: integer
- *         description: Filter by campaign ID
- *         required: false
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [ACTIVE, INACTIVE, PENDING]
- *         description: Filter by link status
- *         required: false
- *       - in: query
- *         name: start_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Start of the createdAt date range
- *         required: false
- *       - in: query
- *         name: end_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: End of the createdAt date range
- *         required: false
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campaignId:
+ *                 type: integer
+ *                 description: Filter by campaign ID
+ *                 example: 1
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, INACTIVE, PENDING]
+ *                 description: Filter by link status
+ *                 example: ACTIVE
+ *               start_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start of the createdAt date range
+ *                 example: 2025-04-01T00:00:00
+ *               end_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End of the createdAt date range
+ *                 example: 2025-04-10T23:59:59
  *     responses:
  *       200:
  *         description: Links retrieved successfully
@@ -75,7 +73,7 @@ const router = express.Router();
  *                         example: "https://example.com/destination"
  *                       distribution:
  *                         type: string
- *                         example: "EVEN"
+ *                         example: "DAY"
  *                       traffic:
  *                         type: integer
  *                         example: 0
@@ -94,11 +92,11 @@ const router = express.Router();
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:
@@ -132,7 +130,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.get("/search", getLinkList);
+router.post("/search", getLinkList);
 
 /**
  * @swagger
@@ -172,7 +170,7 @@ router.get("/search", getLinkList);
  *               distribution:
  *                 type: string
  *                 description: Distribution method
- *                 example: "EVEN"
+ *                 example: "DAY"
  *               anchorText:
  *                 type: string
  *                 description: Anchor text for the link
@@ -221,7 +219,7 @@ router.get("/search", getLinkList);
  *                       example: "https://example.com/destination"
  *                     distribution:
  *                       type: string
- *                       example: "EVEN"
+ *                       example: "DAY"
  *                     traffic:
  *                       type: integer
  *                       example: 0
@@ -325,7 +323,7 @@ router.post("/", createLink);
  *                       example: "https://example.com/destination"
  *                     distribution:
  *                       type: string
- *                       example: "EVEN"
+ *                       example: "DAY"
  *                     traffic:
  *                       type: integer
  *                       example: 0

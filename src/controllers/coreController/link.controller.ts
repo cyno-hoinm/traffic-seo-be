@@ -15,7 +15,7 @@ export const getLinkList = async (
   res: Response<ResponseType<{ links: LinkAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { campaignId, status, start_date, end_date, page, limit } = req.query;
+    const { campaignId, status, start_date, end_date, page, limit } = req.body;
 
     const filters: {
       campaignId?: number;

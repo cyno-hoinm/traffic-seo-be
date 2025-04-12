@@ -66,7 +66,7 @@ export const getListTransaction = async (
   res: Response<ResponseType<TransactionAttributes[]>>
 ): Promise<void> => {
   try {
-    const { walletId, status, start_date, end_date, page, limit } = req.query;
+    const { walletId, status, start_date, end_date, page, limit } = req.body;
 
     const filters: {
       walletId?: number;

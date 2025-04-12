@@ -296,7 +296,7 @@ export const searchUserList = async (
   res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
-    const { key, pageSize, pageLimit } = req.query;
+    const { key, pageSize, pageLimit } = req.body;
 
     const pageSizeNum = parseInt(pageSize as string, 10);
     const pageLimitNum = parseInt(pageLimit as string, 10);

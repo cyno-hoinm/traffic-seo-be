@@ -55,10 +55,10 @@ export const createNotification = async (
 // Get notifications by userId and type
 export const getNotificationsByUserIdAndType = async (
   req: Request,
-  res: Response<ResponseType<NotificationAttributes[]>>
+  res: Response<ResponseType<{ notifications: NotificationAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { userId, type } = req.query;
+    const { userId, type } = req.body;
 
     if (!userId) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -78,14 +78,17 @@ export const getNotificationsByUserIdAndType = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Notifications retrieved successfully",
-      data: notifications.map((notification: NotificationAttributes) => ({
-        id: notification.id,
-        userId: notification.userId,
-        name: notification.name,
-        content: notification.content,
-        type: notification.type,
-        createdAt: notification.createdAt,
-      })),
+      data: {
+        notifications: notifications.notifications.map((notification: NotificationAttributes) => ({
+          id: notification.id,
+          userId: notification.userId,
+          name: notification.name,
+          content: notification.content,
+          type: notification.type,
+          createdAt: notification.createdAt,
+        })),
+        total: notifications.total,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

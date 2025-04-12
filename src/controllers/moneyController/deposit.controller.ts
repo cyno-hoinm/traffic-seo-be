@@ -16,7 +16,7 @@ export const getDepositList = async (
 ): Promise<void> => {
   try {
     const { userId, start_date, end_date, status, page, limit } =
-      req.query;
+      req.body;
 
     const filters: {
       userId?: number;

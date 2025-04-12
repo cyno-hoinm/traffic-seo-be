@@ -8,6 +8,7 @@ import {
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
+import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -20,7 +21,7 @@ export const getCampaignList = async (
     const {
       userId,
       countryId,
-      type,
+      campaignTypeId,
       device,
       timeCode,
       startDate,
@@ -28,12 +29,12 @@ export const getCampaignList = async (
       status,
       page,
       limit,
-    } = req.query;
+    } = req.body;
 
     const filters: {
       userId?: number;
       countryId?: number;
-      type?: string;
+      campaignTypeId?: number; 
       device?: string;
       timeCode?: string;
       startDate?: Date;
@@ -50,7 +51,9 @@ export const getCampaignList = async (
         : 0;
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
-    if (type) filters.type = type as string;
+    if (campaignTypeId) {
+      filters.campaignTypeId = Number(campaignTypeId); 
+    }
     if (device) filters.device = device as string;
     if (timeCode) filters.timeCode = timeCode as string;
     if (startDate) {

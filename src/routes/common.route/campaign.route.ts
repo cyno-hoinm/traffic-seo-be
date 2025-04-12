@@ -9,63 +9,61 @@ const router = express.Router();
 
 /**
  * @swagger
- * /campaigns/list:
- *   get:
+ * /campaigns/search:
+ *   post:
  *     summary: Get a list of campaigns with filters
- *     description: Retrieve campaigns filtered by various conditions.
+ *     description: Retrieve campaigns filtered by various conditions, with pagination support.
  *     tags: [Campaigns]
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: integer
- *         description: Filter by user ID
- *         required: false
- *       - in: query
- *         name: countryId
- *         schema:
- *           type: integer
- *         description: Filter by country ID
- *         required: false
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *         description: Filter by campaign type
- *         required: false
- *       - in: query
- *         name: device
- *         schema:
- *           type: string
- *         description: Filter by device
- *         required: false
- *       - in: query
- *         name: timeCode
- *         schema:
- *           type: string
- *         description: Filter by time code
- *         required: false
- *       - in: query
- *         name: startDate
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Filter by start date (gte)
- *         required: false
- *       - in: query
- *         name: endDate
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Filter by end date (lte)
- *         required: false
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [ACTIVE, INACTIVE, PENDING]
- *         description: Filter by campaign status
- *         required: false
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: Filter by user ID
+ *                 example: 1
+ *               countryId:
+ *                 type: integer
+ *                 description: Filter by country ID
+ *                 example: 1
+ *               campaignTypeId:
+ *                 type: string
+ *                 description: Filter by campaign type
+ *                 example: "1"
+ *               device:
+ *                 type: string
+ *                 description: Filter by device
+ *                 example: "Mobile"
+ *               timeCode:
+ *                 type: string
+ *                 description: Filter by time code
+ *                 example: "UTC"
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Filter by start date (gte)
+ *                 example: "2025-04-10T00:00:00"
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Filter by end date (lte)
+ *                 example: "2025-04-20T23:59:59"
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, INACTIVE, PENDING]
+ *                 description: Filter by campaign status
+ *                 example: "ACTIVE"
+ *               page:
+ *                 type: integer
+ *                 description: Page number for pagination (default is 0, which skips pagination)
+ *                 example: 1
+ *               limit:
+ *                 type: integer
+ *                 description: Number of campaigns per page (default is 0, which skips pagination)
+ *                 example: 10
  *     responses:
  *       200:
  *         description: Campaigns retrieved successfully
@@ -81,65 +79,74 @@ const router = express.Router();
  *                   type: string
  *                   example: Campaigns retrieved successfully
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       userId:
- *                         type: integer
- *                         example: 1
- *                       countryId:
- *                         type: integer
- *                         example: 1
- *                       name:
- *                         type: string
- *                         example: "Summer Sale"
- *                       type:
- *                         type: string
- *                         example: "PPC"
- *                       device:
- *                         type: string
- *                         example: "Mobile"
- *                       timeCode:
- *                         type: string
- *                         example: "UTC "
- *                       startDate:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-10T00:00:00 
- *                       endDate:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-20T23:59:59 
- *                       totalTraffic:
- *                         type: integer
- *                         example: 0
- *                       cost:
- *                         type: number
- *                         example: 500.00
- *                       domain:
- *                         type: string
- *                         example: "example.com"
- *                       search:
- *                         type: string
- *                         example: "Google"
- *                       keyword:
- *                         type: string
- *                         example: "summer sale"
- *                       status:
- *                         type: string
- *                         example: "ACTIVE"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-09T07:00:00 
- *                       updatedAt:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-09T07:00:00 
+ *                   type: object
+ *                   properties:
+ *                     campaigns:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           userId:
+ *                             type: integer
+ *                             example: 1
+ *                           countryId:
+ *                             type: integer
+ *                             example: 1
+ *                           name:
+ *                             type: string
+ *                             example: "Summer Sale"
+ *                           type:
+ *                             type: string
+ *                             example: "PPC"
+ *                           campaignTypeId:
+ *                             type: integer
+ *                             example: 1
+ *                           device:
+ *                             type: string
+ *                             example: "Mobile"
+ *                           timeCode:
+ *                             type: string
+ *                             example: "UTC"
+ *                           startDate:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-04-10T00:00:00"
+ *                           endDate:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-04-20T23:59:59"
+ *                           totalTraffic:
+ *                             type: integer
+ *                             example: 0
+ *                           cost:
+ *                             type: number
+ *                             example: 500.00
+ *                           domain:
+ *                             type: string
+ *                             example: "example.com"
+ *                           search:
+ *                             type: string
+ *                             example: "Google"
+ *                           keyword:
+ *                             type: string
+ *                             example: "summer sale"
+ *                           status:
+ *                             type: string
+ *                             example: "ACTIVE"
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-04-09T07:00:00"
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-04-09T07:00:00"
+ *                     total:
+ *                       type: integer
+ *                       example: 100
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:
@@ -173,7 +180,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.get("/list", getCampaignList);
+router.post("/search", getCampaignList);
 
 /**
  * @swagger

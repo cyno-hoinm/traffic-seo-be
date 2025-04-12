@@ -11,50 +11,44 @@ const router = express.Router();
 /**
  * @swagger
  * /deposits/search:
- *   get:
+ *   post:
  *     summary: Get a list of deposits with filters
  *     description: Retrieve deposits filtered by userId, status, and createdAt date range with pagination.
  *     tags: [Deposits]
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: integer
- *         description: Filter by user ID
- *         required: false
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [PENDING, COMPLETED, FAILED]
- *         description: Filter by deposit status
- *         required: false
- *       - in: query
- *         name: start_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Start of the createdAt date range
- *         required: false
- *       - in: query
- *         name: end_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: End of the createdAt date range
- *         required: false
- *       - in: query
- *         name: pageSize
- *         schema:
- *           type: integer
- *         description: Number of deposits per page
- *         required: false
- *       - in: query
- *         name: pageLimit
- *         schema:
- *           type: integer
- *         description: Page number
- *         required: false
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: Filter by user ID
+ *                 example: 1
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, COMPLETED, FAILED]
+ *                 description: Filter by deposit status
+ *                 example: "PENDING"
+ *               start_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start of the createdAt date range
+ *                 example: "2025-04-10T00:00:00"
+ *               end_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End of the createdAt date range
+ *                 example: "2025-04-20T23:59:59"
+ *               page:
+ *                 type: integer
+ *                 description: Page number for pagination (default is 0, which skips pagination)
+ *                 example: 1
+ *               limit:
+ *                 type: integer
+ *                 description: Number of deposits per page (default is 0, which skips pagination)
+ *                 example: 10
  *     responses:
  *       200:
  *         description: Deposits retrieved successfully
@@ -101,11 +95,11 @@ const router = express.Router();
  *                           createdAt:
  *                             type: string
  *                             format: date-time
- *                             example: 2025-04-10T07:00:00 
+ *                             example: "2025-04-10T07:00:00"
  *                           updatedAt:
  *                             type: string
  *                             format: date-time
- *                             example: 2025-04-10T07:00:00 
+ *                             example: "2025-04-10T07:00:00"
  *                     total:
  *                       type: integer
  *                       example: 25
@@ -142,7 +136,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.get("/search", getDepositList);
+router.post("/search", getDepositList);
 
 /**
  * @swagger

@@ -58,32 +58,32 @@ const router = express.Router();
 /**
  * @swagger
  * /users/search:
- *   get:
+ *   post:
  *     summary: Search users by key (email and username) with pagination
  *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: key
- *         schema:
- *           type: string
- *         description: The search key to match against email and username
- *         example: john
- *       - in: query
- *         name: pageSize
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 1
- *         description: The page number (0 to disable pagination)
- *         example: 1
- *       - in: query
- *         name: pageLimit
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 10
- *         description: The number of users per page (0 to disable pagination)
- *         example: 10
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               key:
+ *                 type: string
+ *                 description: The search key to match against email and username
+ *                 example: john
+ *               pageSize:
+ *                 type: integer
+ *                 minimum: 0
+ *                 default: 1
+ *                 description: The page number (0 to disable pagination)
+ *                 example: 1
+ *               pageLimit:
+ *                 type: integer
+ *                 minimum: 0
+ *                 default: 10
+ *                 description: The number of users per page (0 to disable pagination)
+ *                 example: 10
  *     responses:
  *       200:
  *         description: List of users matching the search criteria
@@ -150,7 +150,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/search", searchUserList);
+router.post("/search", searchUserList);
 
 /**
  * @swagger

@@ -16,7 +16,7 @@ export const getKeywordList = async (
 ): Promise<void> => {
   try {
     const { campaignId, distribution, start_date, end_date, limit, page } =
-      req.query;
+      req.body;
 
     const filters: {
       campaignId?: number;
@@ -41,7 +41,7 @@ export const getKeywordList = async (
     } else if (distribution) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "Valid distribution is required (EVEN, WEIGHTED, RANDOM)",
+        message: "Valid distribution is required (DAY, MONTH, YEAR)",
         error: "Invalid field",
       });
       return;
@@ -126,7 +126,7 @@ export const createKeyword = async (
     if (!Object.values(DistributionType).includes(distribution)) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "Valid distribution is required (EVEN, WEIGHTED, RANDOM)",
+        message: "Valid distribution is required (DAY, MONTH, YEAR)",
         error: "Invalid field",
       });
       return;
