@@ -10,6 +10,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public url!: string[]; // Array of URLs
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -23,7 +24,7 @@ Keyword.init(
     },
     campaignId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Campaign, // Use table name instead of direct model import
         key: "id",
@@ -46,6 +47,11 @@ Keyword.init(
       allowNull: false,
       defaultValue: 0, // Default value for consistency
     },
+     isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -54,7 +60,7 @@ Keyword.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -65,7 +71,7 @@ Keyword.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },

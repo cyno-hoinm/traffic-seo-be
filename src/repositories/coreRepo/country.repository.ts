@@ -1,7 +1,6 @@
 import { Country } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
-// Create a new country
 export const createCountryRepo = async (name: string): Promise<Country> => {
   try {
     const country = await Country.create({ name });
@@ -13,7 +12,10 @@ export const createCountryRepo = async (name: string): Promise<Country> => {
 
 export const getAllCountriesRepo = async (): Promise<Country[]> => {
   try {
-    const countries = await Country.findAll();
+    const countries = await Country.findAll({
+      where: { isDeleted: false },
+      order: [["createdAt", "DESC"]],
+    });
     return countries;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -62,7 +64,7 @@ export const deleteCountryRepo = async (id: number): Promise<boolean> => {
     const country = await Country.findByPk(id);
     if (!country) return false;
 
-    await country.destroy();
+    await country.update({ isDeleted: true });
     return true;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

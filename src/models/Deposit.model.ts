@@ -12,6 +12,7 @@ class Deposit extends Model<DepositAttributes> implements DepositAttributes {
   public status!: DepositStatus;
   public acceptedBy?: string;
   public createdBy?: string;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -25,7 +26,7 @@ Deposit.init(
     },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: User,
         key: "id",
@@ -33,7 +34,7 @@ Deposit.init(
     },
     voucherId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Voucher,
         key: "id",
@@ -41,11 +42,11 @@ Deposit.init(
     },
     paymentMethodId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: PaymentMethod,
-        key: "paymentMethodId"
-      }
+        key: "id",
+      },
     },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
@@ -63,6 +64,11 @@ Deposit.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+     isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -71,7 +77,7 @@ Deposit.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -82,7 +88,7 @@ Deposit.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },

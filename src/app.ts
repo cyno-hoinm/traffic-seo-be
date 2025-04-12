@@ -54,8 +54,8 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-///cmt
-  // Graceful shutdown with Sequelize
+
+  // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
     await gracefulShutdown(server, "SIGTERM");
@@ -63,10 +63,10 @@ if (cluster.isPrimary && !isDev) {
     process.exit(0);
   });
 
-  process.on("SIGINT", async () => {
-    await gracefulShutdown(server, "SIGINT");
-    process.exit(0);
-  });
+  // process.on("SIGINT", async () => {
+  //   await gracefulShutdown(server, "SIGINT");
+  //   process.exit(0);
+  // });
 
   if (isDev) {
     logger.info("Running in development mode with hot-reloading enabled.");

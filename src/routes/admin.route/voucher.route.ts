@@ -68,11 +68,11 @@ const router = express.Router();
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -149,11 +149,11 @@ router.post("/", createVoucher);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00 
  *       500:
  *         description: Internal server error
  *         content:
@@ -219,11 +219,11 @@ router.get("/", getAllVouchers);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       404:
  *         description: Voucher not found
  *         content:
@@ -305,11 +305,11 @@ router.get("/:id", getVoucherById);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing code
  *         content:
@@ -423,11 +423,11 @@ router.get("/code/:code", getVoucherByCode);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Invalid fields
  *         content:

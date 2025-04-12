@@ -1,4 +1,4 @@
-export interface PaymentMethodAttributes {
+export interface CampaignTypeAttributes {
   id?: number;
   name: string;
   isDeleted?: boolean;

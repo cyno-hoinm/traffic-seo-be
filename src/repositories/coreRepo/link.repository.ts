@@ -1,26 +1,18 @@
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
 import { Link } from "../../models/index.model";
+import { ErrorType } from "../../types/Error.type";
 
-// Custom error class
-class ErrorType extends Error {
-  constructor(name: string, message: string, code?: string) {
-    super(message);
-    this.name = name;
-    if (code) this.code = code;
-  }
-  code?: string;
-}
-
-// Get link list with filters
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
   status?: LinkStatus;
   start_date?: Date;
   end_date?: Date;
-}): Promise<Link[]> => {
+  page?: number;
+  limit?: number;
+}): Promise<{ links: Link[]; total: number }> => {
   try {
-    const where: any = {};
+    const where: any = { isDeleted: false };
 
     if (filters.campaignId) where.campaignId = filters.campaignId;
     if (filters.status) where.status = filters.status;
@@ -30,14 +22,25 @@ export const getLinkListRepo = async (filters: {
       if (filters.end_date) where.createdAt[Op.lte] = filters.end_date;
     }
 
-    const links = await Link.findAll({ where });
-    return links;
+    const queryOptions: any = {
+      where,
+      order: [["createdAt", "DESC"]],
+    };
+
+    // Apply pagination only if page and limit are not 0
+    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const { rows: links, count: total } = await Link.findAndCountAll(queryOptions);
+
+    return { links, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
 
-// Create a new link
 export const createLinkRepo = async (data: {
   campaignId: number;
   link: string;
@@ -57,7 +60,6 @@ export const createLinkRepo = async (data: {
   }
 };
 
-// Get link by ID
 export const getLinkByIdRepo = async (id: number): Promise<Link | null> => {
   try {
     const link = await Link.findByPk(id);

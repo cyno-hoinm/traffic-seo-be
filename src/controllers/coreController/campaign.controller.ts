@@ -8,38 +8,52 @@ import {
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
+import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 
 // Get campaign list with filters
 export const getCampaignList = async (
   req: Request,
-  res: Response<ResponseType<CampaignAttributes[]>>
+  res: Response<
+    ResponseType<{ campaigns: CampaignAttributes[]; total: number }>
+  >
 ): Promise<void> => {
   try {
     const {
       userId,
       countryId,
-      type,
+      campaignTypeId,
       device,
       timeCode,
       startDate,
       endDate,
       status,
-    } = req.query;
+      page,
+      limit,
+    } = req.body;
 
     const filters: {
       userId?: number;
       countryId?: number;
-      type?: string;
+      campaignTypeId?: number; 
       device?: string;
       timeCode?: string;
       startDate?: Date;
       endDate?: Date;
       status?: CampaignStatus;
+      page?: number;
+      limit?: number;
     } = {};
-
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
-    if (type) filters.type = type as string;
+    if (campaignTypeId) {
+      filters.campaignTypeId = Number(campaignTypeId); 
+    }
     if (device) filters.device = device as string;
     if (timeCode) filters.timeCode = timeCode as string;
     if (startDate) {
@@ -84,25 +98,28 @@ export const getCampaignList = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaigns retrieved successfully",
-      data: campaigns.map((campaign: CampaignAttributes) => ({
-        id: campaign.id,
-        userId: campaign.userId,
-        countryId: campaign.countryId,
-        name: campaign.name,
-        type: campaign.type,
-        device: campaign.device,
-        timeCode: campaign.timeCode,
-        startDate: campaign.startDate,
-        endDate: campaign.endDate,
-        totalTraffic: campaign.totalTraffic,
-        cost: campaign.cost,
-        domain: campaign.domain,
-        search: campaign.search,
-        keyword: campaign.keyword,
-        status: campaign.status,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-      })),
+      data: {
+        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => ({
+          id: campaign.id,
+          userId: campaign.userId,
+          countryId: campaign.countryId,
+          name: campaign.name,
+          campaignTypeId: campaign.campaignTypeId,
+          device: campaign.device,
+          timeCode: campaign.timeCode,
+          startDate: campaign.startDate,
+          endDate: campaign.endDate,
+          totalTraffic: campaign.totalTraffic,
+          cost: campaign.cost,
+          domain: campaign.domain,
+          search: campaign.search,
+          keyword: campaign.keyword,
+          status: campaign.status,
+          createdAt: campaign.createdAt,
+          updatedAt: campaign.updatedAt,
+        })),
+        total: campaigns.total,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -134,6 +151,7 @@ export const createCampaign = async (
       search,
       keyword,
       status,
+      campaignTypeId,
     } = req.body;
 
     if (
@@ -150,6 +168,7 @@ export const createCampaign = async (
       isNaN(cost) ||
       !domain ||
       !search ||
+      !campaignTypeId ||
       !keyword ||
       !status
     ) {
@@ -194,6 +213,7 @@ export const createCampaign = async (
       cost,
       domain,
       search,
+      campaignTypeId,
       keyword,
       status,
     });
@@ -206,7 +226,7 @@ export const createCampaign = async (
         userId: campaign.userId,
         countryId: campaign.countryId,
         name: campaign.name,
-        type: campaign.type,
+        campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
         timeCode: campaign.timeCode,
         startDate: campaign.startDate,
@@ -256,7 +276,7 @@ export const getCampaignById = async (
         userId: campaign.userId,
         countryId: campaign.countryId,
         name: campaign.name,
-        type: campaign.type,
+        campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
         timeCode: campaign.timeCode,
         startDate: campaign.startDate,

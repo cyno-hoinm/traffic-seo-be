@@ -11,6 +11,7 @@ export interface LinkAttributes {
   status: LinkStatus;
   url: string;
   page: string;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

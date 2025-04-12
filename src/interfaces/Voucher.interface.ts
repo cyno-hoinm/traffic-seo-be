@@ -5,6 +5,7 @@ export interface VoucherAttributes {
     code: string;
     value: number;
     status: VoucherStatus;
+    isDeleted?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }

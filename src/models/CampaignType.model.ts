@@ -1,35 +1,30 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelizeSystem } from "./index.model";
-import { RolePermissionAttributes } from "../interfaces/RolePermission.interface";
+import { CampaignTypeAttributes } from "../interfaces/CampaignType.interface";
 
-class RolePermission
-  extends Model<RolePermissionAttributes>
-  implements RolePermissionAttributes
+class CampaignType
+  extends Model<CampaignTypeAttributes>
+  implements CampaignTypeAttributes
 {
   public id!: number;
-  public roleId!: number;
-  public permissionId!: number;
+  public name!: string;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-RolePermission.init(
+CampaignType.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    roleId: {
-      type: DataTypes.INTEGER,
+    name: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    permissionId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-     isDeleted: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
@@ -59,10 +54,10 @@ RolePermission.init(
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "RolePermission",
-    tableName: "rolePermissions",
+    modelName: "CampaignType",
+    tableName: "campaignTypes",
     timestamps: true,
   }
 );
 
-export default RolePermission;
+export default CampaignType;

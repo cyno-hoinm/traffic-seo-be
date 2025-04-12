@@ -12,18 +12,25 @@ import { LinkStatus } from "../../enums/linkStatus.enum";
 // Get link list with filters
 export const getLinkList = async (
   req: Request,
-  res: Response<ResponseType<LinkAttributes[]>>
+  res: Response<ResponseType<{ links: LinkAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { campaignId, status, start_date, end_date } = req.query;
+    const { campaignId, status, start_date, end_date, page, limit } = req.body;
 
     const filters: {
       campaignId?: number;
       status?: LinkStatus;
       start_date?: Date;
       end_date?: Date;
+      page?: number;
+      limit?: number;
     } = {};
-
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (campaignId) filters.campaignId = Number(campaignId);
     if (status && Object.values(LinkStatus).includes(status as LinkStatus)) {
       filters.status = status as LinkStatus;
@@ -60,24 +67,27 @@ export const getLinkList = async (
       filters.end_date = end;
     }
 
-    const links = await getLinkListRepo(filters);
+    const result = await getLinkListRepo(filters);
     res.status(statusCode.OK).json({
       status: true,
       message: "Links retrieved successfully",
-      data: links.map((link: LinkAttributes) => ({
-        id: link.id,
-        campaignId: link.campaignId,
-        link: link.link,
-        linkTo: link.linkTo,
-        distribution: link.distribution,
-        traffic: link.traffic,
-        anchorText: link.anchorText,
-        status: link.status,
-        url: link.url,
-        page: link.page,
-        createdAt: link.createdAt,
-        updatedAt: link.updatedAt,
-      })),
+      data: {
+        links: result.links.map((link: LinkAttributes) => ({
+          id: link.id,
+          campaignId: link.campaignId,
+          link: link.link,
+          linkTo: link.linkTo,
+          distribution: link.distribution,
+          traffic: link.traffic,
+          anchorText: link.anchorText,
+          status: link.status,
+          url: link.url,
+          page: link.page,
+          createdAt: link.createdAt,
+          updatedAt: link.updatedAt,
+        })),
+        total: result.total,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

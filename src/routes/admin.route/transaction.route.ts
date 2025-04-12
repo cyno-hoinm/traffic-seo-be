@@ -69,15 +69,15 @@ const router = express.Router();
  *                     date:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -116,38 +116,36 @@ router.post("/", createTransaction);
 /**
  * @swagger
  * /transactions/search:
- *   get:
+ *   post:
  *     summary: Get a list of transactions with filters
  *     description: Retrieve transactions filtered by walletId, status, and createdAt date range.
  *     tags: [Transactions]
- *     parameters:
- *       - in: query
- *         name: walletId
- *         schema:
- *           type: integer
- *         description: Filter by wallet ID
- *         required: false
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [PAY, REFUND]
- *         description: Filter by transaction status
- *         required: false
- *       - in: query
- *         name: start_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Start of the createdAt date range
- *         required: false
- *       - in: query
- *         name: end_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: End of the createdAt date range
- *         required: false
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               walletId:
+ *                 type: integer
+ *                 description: Filter by wallet ID
+ *                 example: 1
+ *               status:
+ *                 type: string
+ *                 enum: [PAY, REFUND]
+ *                 description: Filter by transaction status
+ *                 example: PAY
+ *               start_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start of the createdAt date range
+ *                 example: 2025-04-01T00:00:00
+ *               end_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End of the createdAt date range
+ *                 example: 2025-04-10T23:59:59
  *     responses:
  *       200:
  *         description: Transactions retrieved successfully
@@ -182,15 +180,15 @@ router.post("/", createTransaction);
  *                       date:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:
@@ -224,6 +222,6 @@ router.post("/", createTransaction);
  *                   type: string
  *                   example: Database error
  */
-router.get("/search", getListTransaction);
+router.post("/search", getListTransaction);
 
 export default router;

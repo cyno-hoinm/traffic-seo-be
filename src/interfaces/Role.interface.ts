@@ -1,7 +1,7 @@
 export interface RoleAttributes {
     id?: number;
     name: string;
-    isDelete?: boolean;
+    isDeleted?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
   }
