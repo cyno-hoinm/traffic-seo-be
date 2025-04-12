@@ -12,18 +12,26 @@ import { DistributionType } from "../../enums/distribution.enum";
 // Get keyword list with filters
 export const getKeywordList = async (
   req: Request,
-  res: Response<ResponseType<KeywordAttributes[]>>
+  res: Response<ResponseType<{ keywords: KeywordAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { campaignId, distribution, start_date, end_date } = req.query;
+    const { campaignId, distribution, start_date, end_date, limit, page } =
+      req.query;
 
     const filters: {
       campaignId?: number;
       distribution?: DistributionType;
       start_date?: Date;
       end_date?: Date;
+      page?: number;
+      limit?: number;
     } = {};
-
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (campaignId) filters.campaignId = Number(campaignId);
     if (
       distribution &&
@@ -67,16 +75,19 @@ export const getKeywordList = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Keywords retrieved successfully",
-      data: keywords.map((keyword: KeywordAttributes) => ({
-        id: keyword.id,
-        campaignId: keyword.campaignId,
-        name: keyword.name,
-        url: keyword.url,
-        distribution: keyword.distribution,
-        traffic: keyword.traffic,
-        createdAt: keyword.createdAt,
-        updatedAt: keyword.updatedAt,
-      })),
+      data: {
+        keywords: keywords.keywords.map((keyword: KeywordAttributes) => ({
+          id: keyword.id,
+          campaignId: keyword.campaignId,
+          name: keyword.name,
+          url: keyword.url,
+          distribution: keyword.distribution,
+          traffic: keyword.traffic,
+          createdAt: keyword.createdAt,
+          updatedAt: keyword.updatedAt,
+        })),
+        total: keywords.total,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

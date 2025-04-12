@@ -3,7 +3,7 @@ import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createTransactionRepo,
   getListTransactionRepo,
-} from "../../repositories/moneyRepo/transaction.repository"
+} from "../../repositories/moneyRepo/transaction.repository";
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { TransactionAttributes } from "../../interfaces/Transaction.interface";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
@@ -66,15 +66,18 @@ export const getListTransaction = async (
   res: Response<ResponseType<TransactionAttributes[]>>
 ): Promise<void> => {
   try {
-    const { walletId, status, start_date, end_date } = req.query;
+    const { walletId, status, start_date, end_date, page, limit } = req.query;
 
     const filters: {
       walletId?: number;
       status?: TransactionStatus;
       start_date?: Date;
       end_date?: Date;
+      page?: number;
+      limit?: number;
     } = {};
-
+    filters.page = typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit = typeof limit === "string" && !isNaN(parseInt(limit)) ? parseInt(limit) : 0;
     if (walletId) filters.walletId = Number(walletId);
     if (status) {
       if (

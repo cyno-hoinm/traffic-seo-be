@@ -11,8 +11,8 @@ export const getDepositListRepo = async (filters: {
   start_date?: Date;
   end_date?: Date;
   status?: DepositStatus;
-  pageSize: number;
-  pageLimit: number;
+  page?: number;
+  limit?: number;
 }): Promise<{ deposits: Deposit[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
@@ -33,13 +33,18 @@ export const getDepositListRepo = async (filters: {
       }
     }
 
-    const offset = (filters.pageLimit - 1) * filters.pageSize;
-    const { rows: deposits, count: total } = await Deposit.findAndCountAll({
+    const queryOptions: any = {
       where,
-      limit: filters.pageSize,
-      offset,
       order: [["createdAt", "DESC"]],
-    });
+    };
+
+    // Apply pagination only if page and limit are not 0
+    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const { rows: deposits, count: total } = await Deposit.findAndCountAll(queryOptions);
 
     return { deposits, total };
   } catch (error: any) {

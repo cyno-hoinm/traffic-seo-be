@@ -15,7 +15,7 @@ export const getDepositList = async (
   res: Response<ResponseType<{ deposits: DepositAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { userId, start_date, end_date, status, pageSize, pageLimit } =
+    const { userId, start_date, end_date, status, page, limit } =
       req.query;
 
     const filters: {
@@ -23,13 +23,12 @@ export const getDepositList = async (
       start_date?: Date;
       end_date?: Date;
       status?: DepositStatus;
-      pageSize: number;
-      pageLimit: number;
+      page?: number;
+      limit?: number;
     } = {
-      pageSize: Number(pageSize) || 10, // Default to 10 if not provided
-      pageLimit: Number(pageLimit) || 1, // Default to page 1 if not provided
     };
-
+    filters.page = typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit = typeof limit === "string" && !isNaN(parseInt(limit)) ? parseInt(limit) : 0;
     if (userId) filters.userId = Number(userId);
     if (
       status &&

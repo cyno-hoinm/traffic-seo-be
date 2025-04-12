@@ -8,7 +8,9 @@ export const getKeywordListRepo = async (filters: {
   distribution?: DistributionType;
   start_date?: Date;
   end_date?: Date;
-}): Promise<Keyword[]> => {
+  page?: number;
+  limit?: number;
+}): Promise<{ keywords: Keyword[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -20,11 +22,27 @@ export const getKeywordListRepo = async (filters: {
       if (filters.end_date) where.createdAt[Op.lte] = filters.end_date;
     }
 
-    const keywords = await Keyword.findAll({
+    const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
-    });
-    return keywords;
+    };
+
+    // Apply pagination only if page and limit are not 0
+    if (
+      filters.page &&
+      filters.limit &&
+      filters.page > 0 &&
+      filters.limit > 0
+    ) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const { rows: keywords, count: total } = await Keyword.findAndCountAll(
+      queryOptions
+    );
+
+    return { keywords, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }

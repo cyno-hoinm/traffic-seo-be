@@ -20,7 +20,9 @@ export const createNotificationRepo = async (data: {
 export const getNotificationsByUserIdAndTypeRepo = async (filters: {
   userId: number;
   type?: string;
-}): Promise<Notification[]> => {
+  page?: number;
+  limit?: number;
+}): Promise<{ notifications: Notification[]; total: number }> => {
   try {
     const where: any = { userId: filters.userId };
 
@@ -28,8 +30,26 @@ export const getNotificationsByUserIdAndTypeRepo = async (filters: {
       where.type = filters.type;
     }
 
-    const notifications = await Notification.findAll({ where });
-    return notifications;
+    const queryOptions: any = {
+      where,
+      order: [["createdAt", "DESC"]],
+    };
+
+    // Apply pagination only if page and limit are not 0
+    if (
+      filters.page &&
+      filters.limit &&
+      filters.page > 0 &&
+      filters.limit > 0
+    ) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const { rows: notifications, count: total } =
+      await Notification.findAndCountAll(queryOptions);
+
+    return { notifications, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }

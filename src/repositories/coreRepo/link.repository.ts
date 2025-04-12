@@ -8,7 +8,9 @@ export const getLinkListRepo = async (filters: {
   status?: LinkStatus;
   start_date?: Date;
   end_date?: Date;
-}): Promise<Link[]> => {
+  page?: number;
+  limit?: number;
+}): Promise<{ links: Link[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -20,11 +22,20 @@ export const getLinkListRepo = async (filters: {
       if (filters.end_date) where.createdAt[Op.lte] = filters.end_date;
     }
 
-    const links = await Link.findAll({
+    const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
-    });
-    return links;
+    };
+
+    // Apply pagination only if page and limit are not 0
+    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const { rows: links, count: total } = await Link.findAndCountAll(queryOptions);
+
+    return { links, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }

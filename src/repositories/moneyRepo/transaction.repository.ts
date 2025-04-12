@@ -53,6 +53,8 @@ export const getListTransactionRepo = async (filters: {
   status?: TransactionStatus;
   start_date?: Date;
   end_date?: Date;
+  page?: number;
+  limit?: number;
 }): Promise<Transaction[]> => {
   try {
     const where: any = { isDeleted: false };
@@ -73,10 +75,17 @@ export const getListTransactionRepo = async (filters: {
       }
     }
 
-    const transactions = await Transaction.findAll({
+    const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
-    });
+    };
+    
+    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+      queryOptions.offset = (filters.page - 1) * filters.limit;
+      queryOptions.limit = filters.limit;
+    }
+
+    const transactions = await Transaction.findAll(queryOptions);
     return transactions;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

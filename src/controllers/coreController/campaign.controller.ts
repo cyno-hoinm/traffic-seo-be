@@ -12,7 +12,9 @@ import { CampaignStatus } from "../../enums/campaign.enum";
 // Get campaign list with filters
 export const getCampaignList = async (
   req: Request,
-  res: Response<ResponseType<CampaignAttributes[]>>
+  res: Response<
+    ResponseType<{ campaigns: CampaignAttributes[]; total: number }>
+  >
 ): Promise<void> => {
   try {
     const {
@@ -24,6 +26,8 @@ export const getCampaignList = async (
       startDate,
       endDate,
       status,
+      page,
+      limit,
     } = req.query;
 
     const filters: {
@@ -35,8 +39,15 @@ export const getCampaignList = async (
       startDate?: Date;
       endDate?: Date;
       status?: CampaignStatus;
+      page?: number;
+      limit?: number;
     } = {};
-
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
     if (type) filters.type = type as string;
@@ -84,25 +95,28 @@ export const getCampaignList = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaigns retrieved successfully",
-      data: campaigns.map((campaign: CampaignAttributes) => ({
-        id: campaign.id,
-        userId: campaign.userId,
-        countryId: campaign.countryId,
-        name: campaign.name,
-        campaignTypeId: campaign.campaignTypeId,
-        device: campaign.device,
-        timeCode: campaign.timeCode,
-        startDate: campaign.startDate,
-        endDate: campaign.endDate,
-        totalTraffic: campaign.totalTraffic,
-        cost: campaign.cost,
-        domain: campaign.domain,
-        search: campaign.search,
-        keyword: campaign.keyword,
-        status: campaign.status,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-      })),
+      data: {
+        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => ({
+          id: campaign.id,
+          userId: campaign.userId,
+          countryId: campaign.countryId,
+          name: campaign.name,
+          campaignTypeId: campaign.campaignTypeId,
+          device: campaign.device,
+          timeCode: campaign.timeCode,
+          startDate: campaign.startDate,
+          endDate: campaign.endDate,
+          totalTraffic: campaign.totalTraffic,
+          cost: campaign.cost,
+          domain: campaign.domain,
+          search: campaign.search,
+          keyword: campaign.keyword,
+          status: campaign.status,
+          createdAt: campaign.createdAt,
+          updatedAt: campaign.updatedAt,
+        })),
+        total: campaigns.total,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
