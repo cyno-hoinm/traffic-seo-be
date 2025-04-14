@@ -97,7 +97,4 @@ const router = express.Router();
  */
 router.get("/", getAllUsers);
 
-router.get("/profile", (req, res) => {
-    res.json({ id: "1", name: "Client User" });
-  });
 export default router;
