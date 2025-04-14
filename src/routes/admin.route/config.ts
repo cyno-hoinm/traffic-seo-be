@@ -16,7 +16,7 @@ import authRoute from "../common.route/auth.route";
 import notificationRoute from "../common.route/notification.route";
 import campaignRoute from "../common.route/campaign.route";
 export const publicRoutes = {
-  "/auth": authRoute,
+  "/": authRoute,
 };
 
 export const protectedRoutes = {
