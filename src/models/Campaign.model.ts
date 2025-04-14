@@ -21,6 +21,8 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public cost!: number;
   public domain!: string;
   public search!: string;
+  public linksCount!: number;
+  public keywordsCount!: number;
   public keyword!: KeywordAttributes[];
   public links!: LinkAttributes[];
   public isDeleted!: boolean;

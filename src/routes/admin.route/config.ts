@@ -10,14 +10,11 @@ import transactionRoute from "./transaction.route";
 import depositRoute from "./deposit.route";
 import keywordRoute from "./keyword.route";
 import linkRoute from "./link.route";
-
+import reportRoute from "./report.route";
 // Common routes
-import authRoute from "../common.route/auth.route";
 import notificationRoute from "../common.route/notification.route";
 import campaignRoute from "../common.route/campaign.route";
-export const publicRoutes = {
-  "/": authRoute,
-};
+
 
 export const protectedRoutes = {
   "/users": userRoute,
@@ -33,4 +30,5 @@ export const protectedRoutes = {
   "/roles": roleRoute,
   "/campaigns": campaignRoute,
   "/role-permissions": rolePermissionRoute,
+  "/report": reportRoute,
 };
