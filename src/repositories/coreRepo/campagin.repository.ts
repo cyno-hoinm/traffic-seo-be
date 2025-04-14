@@ -1,13 +1,14 @@
 import { Op } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
-import { Campaign } from "../../models/index.model";
+import { Campaign, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
+import CampaignType from "../../models/CampaignType.model";
 
 export const getCampaignListRepo = async (filters: {
   userId?: number;
   countryId?: number;
-  type?: string;
+  campaignTypeId?: number;
   device?: string;
   timeCode?: string;
   startDate?: Date;
@@ -20,7 +21,7 @@ export const getCampaignListRepo = async (filters: {
     const where: any = { isDeleted: false };
     if (filters.userId) where.userId = filters.userId;
     if (filters.countryId) where.countryId = filters.countryId;
-    if (filters.type) where.type = filters.type;
+    if (filters.campaignTypeId) where.campaignTypeId = filters.campaignTypeId;
     if (filters.device) where.device = filters.device;
     if (filters.timeCode) where.timeCode = filters.timeCode;
     if (filters.startDate) where.startDate = { [Op.gte]: filters.startDate };
@@ -91,7 +92,77 @@ export const getCampaignByIdRepo = async (
   }
 };
 
-// export const getCampaignReport = async (filters: {}): Promise<{
-//   campaigns: Campaign[];
-//   total: number;
-// }> => {};
+export const getCampaignReport = async (
+  key: string | undefined,
+  startDate?: string,
+  endDate?: string
+): Promise<any> => {
+  try {
+    const where: any = { isDeleted: false };
+
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      where[Op.and] = [];
+      if (startDate) {
+        where[Op.and].push({ start_date: { [Op.gte]: startDate } });
+      }
+      if (endDate) {
+        where[Op.and].push({ end_date: { [Op.lte]: endDate } });
+      }
+    }
+
+    if (!sequelizeSystem) {
+      throw new Error("Sequelize instance is not defined");
+    }
+
+    if (key === "type") {
+      const result = await Campaign.findAll({
+        where,
+        group: ["campaignTypeId", "campaignTypes.name"],
+        attributes: [
+          "campaignTypeId",
+          [
+            sequelizeSystem.fn("COUNT", sequelizeSystem.col("campaignTypeId")),
+            "count",
+          ],
+        ],
+        include: [
+          {
+            model: CampaignType,
+            as: "campaignTypes",
+            attributes: ["name"],
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+
+      return result.map((item: any) => ({
+        campaignTypeId: item.campaignTypeId,
+        count: item.count,
+        campaignTypeName: item["campaignTypes.name"],
+      }));
+    }
+
+    if (key === "status") {
+      const result = await Campaign.findAll({
+        where,
+        group: ["status"],
+        attributes: [
+          "status",
+          [sequelizeSystem.fn("COUNT", sequelizeSystem.col("status")), "count"],
+        ],
+        raw: true,
+      });
+
+      return result.map((item: any) => ({
+        status: item.status,
+        count: item.count,
+      }));
+    }
+
+    return [];
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};
