@@ -6,6 +6,7 @@
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.29.1",
     "@typescript-eslint/parser": "^8.29.1",
+    "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.0",
@@ -34,6 +36,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
+    "sequelize-cli": "^6.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -41,13 +44,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
     "build": "npx tsc --build",
-    "start": "cross-env NODE_ENV=development node dist/app.js",
-    "deploy": "cross-env NODE_ENV=development pm2 start dist/app.js --name traffic-seo-be --watch --ignore-watch node_modules",
+    "start": "cross-env NODE_ENV=production node dist/app.js",
+    "deploy": "cross-env NODE_ENV=production pm2 start dist/app.js --name traffic-seo-be --watch --ignore-watch node_modules",
     "debug": "cross-env NODE_ENV=development nodemon --exec 'node --inspect -r ts-node/register src/app.ts'",
     "debug:prod": "cross-env NODE_ENV=production node --inspect dist/app.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "migration": "npx sequelize-cli db:migrate"
   },
   "keywords": [],
   "author": "",

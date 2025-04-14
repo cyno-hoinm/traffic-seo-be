@@ -76,7 +76,7 @@ const router = express.Router();
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -114,24 +114,36 @@ router.post("/", createNotification);
 
 /**
  * @swagger
- * /notifications:
- *   get:
+ * /notifications/search:
+ *   post:
  *     summary: Get notifications by userId and type
- *     description: Retrieve notifications filtered by userId and optionally by type.
+ *     description: Retrieve notifications filtered by userId and optionally by type, with pagination support.
  *     tags: [Notifications]
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: integer
- *         description: ID of the user
- *         required: true
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *         description: Type of the notification
- *         required: false
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user
+ *                 example: 1
+ *               type:
+ *                 type: string
+ *                 description: Type of the notification
+ *                 example: "INFO"
+ *               page:
+ *                 type: integer
+ *                 description: Page number for pagination (default is 0, which skips pagination)
+ *                 example: 1
+ *               limit:
+ *                 type: integer
+ *                 description: Number of notifications per page (default is 0, which skips pagination)
+ *                 example: 10
  *     responses:
  *       200:
  *         description: Notifications retrieved successfully
@@ -147,31 +159,37 @@ router.post("/", createNotification);
  *                   type: string
  *                   example: Notifications retrieved successfully
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       userId:
- *                         type: integer
- *                         example: 1
- *                       name:
- *                         type: string
- *                         example: "Payment Reminder"
- *                       content:
- *                         type: string
- *                         example: "Your payment is due tomorrow."
- *                       type:
- *                         type: string
- *                         example: "INFO"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                   type: object
+ *                   properties:
+ *                     notifications:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           userId:
+ *                             type: integer
+ *                             example: 1
+ *                           name:
+ *                             type: string
+ *                             example: "Payment Reminder"
+ *                           content:
+ *                             type: string
+ *                             example: "Your payment is due tomorrow."
+ *                           type:
+ *                             type: string
+ *                             example: "INFO"
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-04-10T07:00:00"
+ *                     total:
+ *                       type: integer
+ *                       example: 50
  *       400:
- *         description: Bad request - Missing userId
+ *         description: Bad request - Missing or invalid userId
  *         content:
  *           application/json:
  *             schema:
@@ -203,6 +221,6 @@ router.post("/", createNotification);
  *                   type: string
  *                   example: Database error
  */
-router.get("/", getNotificationsByUserIdAndType);
+router.post("/search", getNotificationsByUserIdAndType);
 
 export default router;

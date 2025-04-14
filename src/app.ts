@@ -15,6 +15,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV === "development";
+
 const numCPUs = os.cpus().length;
 const debugApp = debug("app");
 
@@ -54,8 +55,8 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-///cmt
-  // Graceful shutdown with Sequelize
+
+  // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
     await gracefulShutdown(server, "SIGTERM");

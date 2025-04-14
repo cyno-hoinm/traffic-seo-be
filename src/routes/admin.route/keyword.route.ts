@@ -10,38 +10,36 @@ const router = express.Router();
 /**
  * @swagger
  * /keywords/search:
- *   get:
+ *   post:
  *     summary: Get a list of keywords with filters
  *     description: Retrieve keywords filtered by campaignId, distribution, and createdAt date range.
  *     tags: [Keywords]
- *     parameters:
- *       - in: query
- *         name: campaignId
- *         schema:
- *           type: integer
- *         description: Filter by campaign ID
- *         required: false
- *       - in: query
- *         name: distribution
- *         schema:
- *           type: string
- *           enum: [EVEN, WEIGHTED, RANDOM]
- *         description: Filter by distribution type
- *         required: false
- *       - in: query
- *         name: start_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Start of the createdAt date range
- *         required: false
- *       - in: query
- *         name: end_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: End of the createdAt date range
- *         required: false
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campaignId:
+ *                 type: integer
+ *                 description: Filter by campaign ID
+ *                 example: 1
+ *               distribution:
+ *                 type: string
+ *                 enum: [DAY, MONTH, YEAR]
+ *                 description: Filter by distribution type
+ *                 example: DAY
+ *               start_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start of the createdAt date range
+ *                 example: 2025-04-01T00:00:00
+ *               end_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End of the createdAt date range
+ *                 example: 2025-04-10T23:59:59
  *     responses:
  *       200:
  *         description: Keywords retrieved successfully
@@ -77,18 +75,18 @@ const router = express.Router();
  *                         example: ["https://example.com/sale", "https://example.com/promo"]
  *                       distribution:
  *                         type: string
- *                         example: "EVEN"
+ *                         example: "DAY"
  *                       traffic:
  *                         type: integer
  *                         example: 0
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00+07:00
+ *                         example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Invalid filter parameters
  *         content:
@@ -122,7 +120,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.get("/search", getKeywordList);
+router.post("/search", getKeywordList);
 
 /**
  * @swagger
@@ -159,9 +157,9 @@ router.get("/search", getKeywordList);
  *                 example: ["https://example.com/sale", "https://example.com/promo"]
  *               distribution:
  *                 type: string
- *                 enum: [EVEN, WEIGHTED, RANDOM]
+ *                 enum: [DAY, MONTH, YEAR]
  *                 description: Distribution type
- *                 example: "EVEN"
+ *                 example: "DAY"
  *     responses:
  *       201:
  *         description: Keyword created successfully
@@ -195,18 +193,18 @@ router.get("/search", getKeywordList);
  *                       example: ["https://example.com/sale", "https://example.com/promo"]
  *                     distribution:
  *                       type: string
- *                       example: "EVEN"
+ *                       example: "DAY"
  *                     traffic:
  *                       type: integer
  *                       example: 0
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -289,18 +287,18 @@ router.post("/", createKeyword);
  *                       example: ["https://example.com/sale", "https://example.com/promo"]
  *                     distribution:
  *                       type: string
- *                       example: "EVEN"
+ *                       example: "DAY"
  *                     traffic:
  *                       type: integer
  *                       example: 0
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00+07:00
+ *                       example: 2025-04-10T07:00:00 
  *       404:
  *         description: Keyword not found
  *         content:

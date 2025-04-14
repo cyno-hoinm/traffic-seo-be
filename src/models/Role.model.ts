@@ -5,6 +5,7 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
   public id!: number;
   public name!: string;
   public isDelete!: boolean;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -19,7 +20,7 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
       if (!existingAdmin) {
         await this.create({
           name: "admin",
-          isDelete: false,
+          isDeleted: false,
         });
         // console.log('Admin role created successfully');
       } else {
@@ -33,7 +34,7 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
       if (!existingCustomer) {
         await this.create({
           name: "customer",
-          isDelete: false,
+          isDeleted: false,
         });
         // console.log('Customer role created successfully');
       } else {
@@ -57,7 +58,7 @@ Role.init(
       allowNull: false,
       unique: true,
     },
-    isDelete: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
@@ -70,7 +71,7 @@ Role.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
     updatedAt: {
@@ -81,7 +82,7 @@ Role.init(
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "+07:00");
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },
@@ -93,9 +94,9 @@ Role.init(
   }
 );
 
-// Run initialization when the model is imported (optional)
-(async () => {
-  await Role.initializeRoles();
-})();
+// // Run initialization when the model is imported (optional)
+// (async () => {
+//   await Role.initializeRoles();
+// })();
 
 export default Role;

@@ -15,21 +15,20 @@ export const getDepositList = async (
   res: Response<ResponseType<{ deposits: DepositAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { userId, start_date, end_date, status, pageSize, pageLimit } =
-      req.query;
+    const { userId, start_date, end_date, status, page, limit } =
+      req.body;
 
     const filters: {
       userId?: number;
       start_date?: Date;
       end_date?: Date;
       status?: DepositStatus;
-      pageSize: number;
-      pageLimit: number;
+      page?: number;
+      limit?: number;
     } = {
-      pageSize: Number(pageSize) || 10, // Default to 10 if not provided
-      pageLimit: Number(pageLimit) || 1, // Default to page 1 if not provided
     };
-
+    filters.page = typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit = typeof limit === "string" && !isNaN(parseInt(limit)) ? parseInt(limit) : 0;
     if (userId) filters.userId = Number(userId);
     if (
       status &&
@@ -77,9 +76,9 @@ export const getDepositList = async (
         deposits: deposits.map((deposit: DepositAttributes) => ({
           id: deposit.id,
           userId: deposit.userId,
+          paymentMethodId: deposit.paymentMethodId,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
-          method: deposit.method,
           status: deposit.status,
           acceptedBy: deposit.acceptedBy,
           createdAt: deposit.createdAt,
@@ -103,7 +102,7 @@ export const createDeposit = async (
   res: Response<ResponseType<DepositAttributes>>
 ): Promise<void> => {
   try {
-    const { userId, voucherId, amount, method } = req.body;
+    const { userId, voucherId, amount, paymentMethodId } = req.body;
 
     const createdBy = "system"; // Assuming token provides username
 
@@ -111,8 +110,7 @@ export const createDeposit = async (
       !userId ||
       !voucherId ||
       amount === undefined ||
-      isNaN(amount) ||
-      !method
+      isNaN(amount)
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -125,9 +123,9 @@ export const createDeposit = async (
     const deposit = await createDepositRepo({
       createdBy,
       userId,
+      paymentMethodId,
       voucherId,
       amount,
-      method,
     });
 
     res.status(statusCode.CREATED).json({
@@ -136,9 +134,9 @@ export const createDeposit = async (
       data: {
         id: deposit.id,
         userId: deposit.userId,
+        paymentMethodId: deposit.paymentMethodId,
         voucherId: deposit.voucherId,
         amount: deposit.amount,
-        method: deposit.method,
         status: deposit.status,
         acceptedBy: deposit.acceptedBy,
         createdAt: deposit.createdAt,
@@ -197,9 +195,9 @@ export const updateDeposit = async (
       data: {
         id: deposit.id,
         userId: deposit.userId,
+        paymentMethodId: deposit.paymentMethodId,
         voucherId: deposit.voucherId,
         amount: deposit.amount,
-        method: deposit.method,
         status: deposit.status,
         acceptedBy: deposit.acceptedBy,
         createdAt: deposit.createdAt,

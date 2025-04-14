@@ -1,68 +1,60 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelizeSystem } from "./index.model";
-import { RolePermissionAttributes } from "../interfaces/RolePermission.interface";
+import { PaymentMethodAttributes } from "../interfaces/PaymentMethod.interface";
 
-class RolePermission
-  extends Model<RolePermissionAttributes>
-  implements RolePermissionAttributes
-{
+class PaymentMethod extends Model<PaymentMethodAttributes> implements PaymentMethodAttributes {
   public id!: number;
-  public roleId!: number;
-  public permissionId!: number;
+  public name!: string;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-RolePermission.init(
+PaymentMethod.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    roleId: {
-      type: DataTypes.INTEGER,
+    name: {
+      type: DataTypes.STRING,
       allowNull: false,
-    },
-    permissionId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-     isDeleted: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
+      unique: true,
     },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue("createdAt") as Date;
+        const rawValue = this.getDataValue('createdAt') as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "");
+        return adjustedDate.toISOString().replace('Z', '');
       },
+    },
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue("updatedAt") as Date;
+        const rawValue = this.getDataValue('updatedAt') as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace("Z", "");
+        return adjustedDate.toISOString().replace('Z', '');
       },
     },
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "RolePermission",
-    tableName: "rolePermissions",
+    modelName: "PaymentMethod",
+    tableName: "paymentMethods",
     timestamps: true,
   }
 );
 
-export default RolePermission;
+export default PaymentMethod;
