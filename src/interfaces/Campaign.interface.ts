@@ -17,6 +17,8 @@ export interface CampaignAttributes {
   cost: number;
   domain: string;
   search: string;
+  linksCount?: number;
+  keywordsCount?: number;
   keywords?: KeywordAttributes[]
   links?: LinkAttributes[];
   isDeleted?: boolean;

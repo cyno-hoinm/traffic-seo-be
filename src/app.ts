@@ -11,6 +11,7 @@ import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 
+
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -38,7 +39,6 @@ if (cluster.isPrimary && !isDev) {
   const app = express();
   configureMiddleware(app);
   configureRoutes(app);
-
   let server: Server;
   const startServer = async () => {
     try {

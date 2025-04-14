@@ -5,7 +5,7 @@ import authRoute from "../common.route/auth.route"
 // import campaignRoute from "../common.route/campaign.route"
 const clientRouter = express.Router();
 
-clientRouter.use("/auth", authRoute);
+// clientRouter.use("/auth", authRoute);
 // clientRouter.use("/users", userRoute);
 // clientRouter.use("/notifications", notificationRoute);
 // clientRouter.use("/campaigns", campaignRoute);

@@ -636,7 +636,4 @@ router.patch("/:id",authorization(["update-user"]), updateUserOneField);
  */
 router.delete("/:id",authorization(["delete-user"]), deleteUser);
 
-router.get("/profile", (req, res) => {
-  res.json([{ id: "1", name: "Admin User" }]);
-});
 export default router;

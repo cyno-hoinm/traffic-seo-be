@@ -1,6 +1,6 @@
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
-import { Link } from "../../models/index.model";
+import { Campaign, Link, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
 
@@ -69,3 +69,51 @@ export const getLinkByIdRepo = async (id: number): Promise<Link | null> => {
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
+
+export const getLinksReport = async (
+  key: string, // Determines the field to group by: "distribution" or "status"
+  startDate?: string, // Optional: filter links by createdAt
+  endDate?: string // Optional: filter links by createdAt
+): Promise<{ keyValue: string; count: number }[]> => {
+  try {
+    if (!sequelizeSystem) {
+      throw new Error("Sequelize instance is not defined");
+    }
+
+    // Link filter
+    const linkWhere: any = { isDeleted: false };
+
+    // Date range filter for links
+    if (startDate || endDate) {
+      linkWhere[Op.and] = [];
+      if (startDate) {
+        linkWhere[Op.and].push({ createdAt: { [Op.gte]: startDate } });
+      }
+      if (endDate) {
+        linkWhere[Op.and].push({ createdAt: { [Op.lte]: endDate } });
+      }
+    }
+
+    // Determine the field to group by
+    const groupField = key === "status" ? "status" : "distribution";
+
+    const queryOptions: any = {
+      where: linkWhere,
+      group: [groupField], // Group by distribution or status
+      attributes: [
+        groupField,
+        [sequelizeSystem.fn("COUNT", sequelizeSystem.col(groupField)), "count"],
+      ],
+      raw: true,
+    };
+
+    const result = await Link.findAll(queryOptions);
+
+    return result.map((item: any) => ({
+      keyValue: item[groupField], // Use dynamic field name
+      count: item.count,
+    }));
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};;
