@@ -16,7 +16,7 @@ pipeline {
                             git pull origin main
                         else
                             echo "Repository does not exist, cloning..."
-                            git clone https://cyno-hoinm:$SSH_KEY@github.com/cyno-hoinm/traffic-seo-be.git
+                            git clone https://$SSH_KEY@github.com/cyno-hoinm/traffic-seo-be.git
                         fi
                     '''
                 }
