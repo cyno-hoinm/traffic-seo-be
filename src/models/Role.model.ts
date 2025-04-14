@@ -94,9 +94,9 @@ Role.init(
   }
 );
 
-// Run initialization when the model is imported (optional)
-(async () => {
-  await Role.initializeRoles();
-})();
+// // Run initialization when the model is imported (optional)
+// (async () => {
+//   await Role.initializeRoles();
+// })();
 
 export default Role;

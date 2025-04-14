@@ -45,10 +45,10 @@ pipeline {
                 dir('traffic-seo-be') {
                     sh '''
                 # Use system-wide PM2 with sudo
-                sudo /usr/bin/pm2 start ecosystem.config.js --update-env || { echo "PM2 start failed"; exit 1; }
+                sudo /usr/local/bin/pm2 start ecosystem.config.js --update-env || { echo "PM2 start failed"; exit 1; }
 
                 # Log PM2 status
-                sudo /usr/bin/pm2 list > pm2_status.txt
+                sudo /usr/local/bin/pm2 list > pm2_status.txt
             '''
                 }
             }
