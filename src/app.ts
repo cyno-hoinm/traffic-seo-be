@@ -15,6 +15,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV === "development";
+
 const numCPUs = os.cpus().length;
 const debugApp = debug("app");
 
@@ -63,10 +64,10 @@ if (cluster.isPrimary && !isDev) {
     process.exit(0);
   });
 
-  // process.on("SIGINT", async () => {
-  //   await gracefulShutdown(server, "SIGINT");
-  //   process.exit(0);
-  // });
+  process.on("SIGINT", async () => {
+    await gracefulShutdown(server, "SIGINT");
+    process.exit(0);
+  });
 
   if (isDev) {
     logger.info("Running in development mode with hot-reloading enabled.");

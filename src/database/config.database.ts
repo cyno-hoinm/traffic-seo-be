@@ -6,6 +6,7 @@ import {
   minPoolSize,
   socketTimeoutMS,
 } from "../config/database.config";
+
 dotenv.config();
 
 const dbName = process.env.DB_NAME ?? "seo_traffic";
@@ -32,5 +33,4 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
 //   port: sequelizeSystem.config.port,
 //   database: sequelizeSystem.config.database,
 //   username: sequelizeSystem.config.username,
-//   type: node_dev,
 // });

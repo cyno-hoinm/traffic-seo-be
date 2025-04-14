@@ -5,9 +5,6 @@ import { sequelizeSystem } from "../models/index.model";
 export const connectDB = async (): Promise<void> => {
   try {
     await sequelizeSystem.authenticate();
-
-    await sequelizeSystem.sync(); // Sync models with the database
-
     logger.info("Connected to PostgreSQL" );
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL:", error);
