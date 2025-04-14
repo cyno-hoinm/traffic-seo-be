@@ -4,6 +4,7 @@ import {
   createLink,
   getLinkById,
 } from "../../controllers/coreController/link.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -130,7 +131,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getLinkList);
+router.post("/search", authorization(["read-links"]), getLinkList);
 
 /**
  * @swagger
@@ -238,11 +239,11 @@ router.post("/search", getLinkList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -276,7 +277,7 @@ router.post("/search", getLinkList);
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createLink);
+router.post("/", authorization(["create-link"]), createLink);
 
 /**
  * @swagger
@@ -342,11 +343,11 @@ router.post("/", createLink);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       404:
  *         description: Link not found
  *         content:
@@ -380,6 +381,6 @@ router.post("/", createLink);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getLinkById);
+router.get("/:id", authorization(["read-link"]), getLinkById);
 
 export default router;

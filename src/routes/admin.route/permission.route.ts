@@ -6,6 +6,7 @@ import {
   updatePermission,
   deletePermission,
 } from "../../controllers/roleController/permission.controller"; // Adjust path to your Permission controller
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -89,7 +90,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/", createPermission);
+router.post("/", authorization(["create-permission"]), createPermission);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.post("/", createPermission);
  *       500:
  *         description: Internal server error
  */
-router.get("/:id", getPermissionById);
+router.get("/:id", authorization(["read-permission"]), getPermissionById);
 
 /**
  * @swagger
@@ -152,7 +153,7 @@ router.get("/:id", getPermissionById);
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllPermissions);
+router.get("/", authorization(["read-permissions"]), getAllPermissions);
 
 /**
  * @swagger
@@ -202,7 +203,7 @@ router.get("/", getAllPermissions);
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", updatePermission);
+router.put("/:id", authorization(["update-permission"]), updatePermission);
 
 /**
  * @swagger
@@ -236,6 +237,6 @@ router.put("/:id", updatePermission);
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", deletePermission);
+router.delete("/:id", authorization(["delete-permission"]), deletePermission);
 
 export default router;

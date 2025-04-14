@@ -90,3 +90,8 @@ export const getCampaignByIdRepo = async (
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
+
+// export const getCampaignReport = async (filters: {}): Promise<{
+//   campaigns: Campaign[];
+//   total: number;
+// }> => {};

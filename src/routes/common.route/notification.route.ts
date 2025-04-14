@@ -3,6 +3,7 @@ import {
   createNotification,
   getNotificationsByUserIdAndType,
 } from "../../controllers/commonController/notification.controller";
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -76,7 +77,7 @@ const router = express.Router();
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -110,7 +111,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createNotification);
+router.post("/", authorization(["create-notification"]), createNotification);
 
 /**
  * @swagger
@@ -221,6 +222,10 @@ router.post("/", createNotification);
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getNotificationsByUserIdAndType);
+router.post(
+  "/search",
+  authorization(["read-notifications"]),
+  getNotificationsByUserIdAndType
+);
 
 export default router;

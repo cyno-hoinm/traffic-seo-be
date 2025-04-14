@@ -1,3 +1,4 @@
+import { DistributionType } from "../enums/distribution.enum";
 import { LinkStatus } from "../enums/linkStatus.enum";
 
 export interface LinkAttributes {
@@ -5,7 +6,7 @@ export interface LinkAttributes {
   campaignId: number;
   link: string;
   linkTo: string;
-  distribution: string;
+  distribution: DistributionType;
   traffic: number;
   anchorText: string;
   status: LinkStatus;

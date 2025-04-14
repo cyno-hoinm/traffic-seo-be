@@ -2,13 +2,14 @@ import { DataTypes, Model } from "sequelize";
 import { Campaign, sequelizeSystem } from "./index.model";
 import { LinkStatus } from "../enums/linkStatus.enum";
 import { LinkAttributes } from "../interfaces/Link.interface";
+import { DistributionType } from "../enums/distribution.enum";
 
 class Link extends Model<LinkAttributes> implements LinkAttributes {
   public id!: number;
   public campaignId!: number;
   public link!: string;
   public linkTo!: string;
-  public distribution!: string;
+  public distribution!: DistributionType;
   public traffic!: number;
   public anchorText!: string;
   public status!: LinkStatus;
@@ -43,7 +44,7 @@ Link.init(
       allowNull: false,
     },
     distribution: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM(...Object.values(DistributionType)),
       allowNull: false,
     },
     traffic: {

@@ -1,5 +1,7 @@
 import { CampaignStatus } from "../enums/campaign.enum";
 import { CampaignTypeAttributes } from "./CampaignType.interface";
+import { KeywordAttributes } from "./Keyword.interface";
+import { LinkAttributes } from "./Link.interface";
 
 export interface CampaignAttributes {
   id?: number;
@@ -15,7 +17,8 @@ export interface CampaignAttributes {
   cost: number;
   domain: string;
   search: string;
-  keyword: string;
+  keywords?: KeywordAttributes[]
+  links?: LinkAttributes[];
   isDeleted?: boolean;
   status: CampaignStatus;
   createdAt?: Date;
