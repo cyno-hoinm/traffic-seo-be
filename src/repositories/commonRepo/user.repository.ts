@@ -1,6 +1,11 @@
 import { Op } from "sequelize";
 import { UserAttributes } from "../../interfaces/User.interface";
-import { User, Role, RolePermission, Permission } from "../../models/index.model";
+import {
+  User,
+  Role,
+  RolePermission,
+  Permission,
+} from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
 export const createUserRepo = async (
@@ -14,7 +19,9 @@ export const createUserRepo = async (
   }
 };
 
-export const findUserByIdRepo = async (id: number): Promise<UserAttributes | null> => {
+export const findUserByIdRepo = async (
+  id: number
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["roleId", "password"] },
@@ -63,8 +70,14 @@ export const findUserByEmailRepo = async (
   try {
     const user = await User.findOne({
       where: { email, isDeleted: false },
-      attributes: { exclude: ["roleId"] },
-      include: [{ model: Role, as: "role" }],
+      attributes: { exclude: ["roleId"] }, // Exclude password and roleId
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: { exclude: ["createdAt", "updatedAt"] }, // Exclude role.createdAt and role.updatedAt
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
     return user;

@@ -181,7 +181,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", authorization(["View_Campaigns"]), getCampaignList);
+router.post("/search", authorization(["read-campaigns"]), getCampaignList);
 
 /**
  * @swagger
@@ -371,7 +371,7 @@ router.post("/search", authorization(["View_Campaigns"]), getCampaignList);
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createCampaign);
+router.post("/", authorization(["create-campaign"]), createCampaign);
 
 /**
  * @swagger
@@ -492,6 +492,6 @@ router.post("/", createCampaign);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", authorization(["View_Campaigns"]), getCampaignById);
+router.get("/:id", authorization(["read-campaigns"]), getCampaignById);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   updateRole,
   deleteRole,
 } from "../../controllers/roleController/role.controller"; // Adjust path to your Role controller
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -93,7 +94,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/", createRole);
+router.post("/", authorization(["create-role"]), createRole);
 
 /**
  * @swagger
@@ -129,7 +130,7 @@ router.post("/", createRole);
  *       500:
  *         description: Internal server error
  */
-router.get("/:id", getRoleById);
+router.get("/:id", authorization(["read-role"]), getRoleById);
 
 /**
  * @swagger
@@ -156,7 +157,7 @@ router.get("/:id", getRoleById);
  *       500:
  *         description: Internal server error
  */
-router.get("/", getAllRoles);
+router.get("/", authorization(["read-roles"]), getAllRoles);
 
 /**
  * @swagger
@@ -206,7 +207,7 @@ router.get("/", getAllRoles);
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", updateRole);
+router.put("/:id", authorization(["update-role"]), updateRole);
 
 /**
  * @swagger
@@ -240,6 +241,6 @@ router.put("/:id", updateRole);
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", deleteRole);
+router.delete("/:id", authorization(["delete-role"]), deleteRole);
 
 export default router;

@@ -6,8 +6,8 @@ import statusCode from "../../constants/statusCode";
 
 export const loginUser = async (
   req: Request,
-  res: Response<ResponseType<void>>
-): Promise<void> => {
+  res: Response<ResponseType<any>>
+): Promise<any> => {
   try {
     const { email, password } = req.body;
 
@@ -39,16 +39,27 @@ export const loginUser = async (
         .json({ status: false, message: "Invalid email or password" });
       return;
     }
-   
+
     const token = signToken(user.toJSON());
 
     res.status(statusCode.OK).json({
       status: true,
       message: "Login successful",
-      token, 
+      data: {
+        token: token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          isDeleted: user.isDeleted,
+          role: user.role, // Include role if needed
+        },
+      },
     });
+    return;
   } catch (error: any) {
-
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",
