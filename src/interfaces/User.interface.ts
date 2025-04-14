@@ -4,6 +4,7 @@ export interface UserAttributes {
     password?: string;
     email: string;
     roleId: number;
+    role? : any;
     isDeleted?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
