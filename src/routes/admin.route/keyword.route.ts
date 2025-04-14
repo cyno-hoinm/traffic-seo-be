@@ -4,6 +4,7 @@ import {
   createKeyword,
   getKeywordById,
 } from "../../controllers/coreController/keyword.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -120,7 +121,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getKeywordList);
+router.post("/search", authorization(["read-keywords"]), getKeywordList);
 
 /**
  * @swagger
@@ -200,11 +201,11 @@ router.post("/search", getKeywordList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -238,7 +239,7 @@ router.post("/search", getKeywordList);
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createKeyword);
+router.post("/", authorization(["create-keyword"]), createKeyword);
 
 /**
  * @swagger
@@ -294,11 +295,11 @@ router.post("/", createKeyword);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       404:
  *         description: Keyword not found
  *         content:
@@ -332,6 +333,6 @@ router.post("/", createKeyword);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getKeywordById);
+router.get("/:id", authorization(["read-keyword"]), getKeywordById);
 
 export default router;

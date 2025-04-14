@@ -1,6 +1,11 @@
 import { Op } from "sequelize";
 import { UserAttributes } from "../../interfaces/User.interface";
-import { User, Role } from "../../models/index.model";
+import {
+  User,
+  Role,
+  RolePermission,
+  Permission,
+} from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
 export const createUserRepo = async (
@@ -14,17 +19,49 @@ export const createUserRepo = async (
   }
 };
 
-export const findUserByIdRepo = async (id: number): Promise<User | null> => {
+export const findUserByIdRepo = async (
+  id: number
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id, {
       attributes: { exclude: ["roleId", "password"] },
-      include: [{ model: Role, as: "role" }],
+      include: [
+        {
+          model: Role,
+          as: "role",
+          include: [
+            {
+              model: RolePermission,
+              as: "rolePermissions",
+              include: [
+                {
+                  model: Permission,
+                  as: "permission",
+                  attributes: ["name"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
+
     return user;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
+};
+
+// Helper function to extract permission names
+export const getUserPermissions = async (userId: number): Promise<string[]> => {
+  const user = await findUserByIdRepo(userId);
+  if (!user || !user.role || !user.role.rolePermissions) return [];
+
+  const permissions = user.role.rolePermissions
+    .map((rp: any) => rp.permission?.name)
+    .filter((name: string | undefined) => name); // Filter out undefined/null values
+  return permissions;
 };
 
 export const findUserByEmailRepo = async (
@@ -33,8 +70,14 @@ export const findUserByEmailRepo = async (
   try {
     const user = await User.findOne({
       where: { email, isDeleted: false },
-      attributes: { exclude: ["roleId"] },
-      include: [{ model: Role, as: "role" }],
+      attributes: { exclude: ["roleId"] }, // Exclude password and roleId
+      include: [
+        {
+          model: Role,
+          as: "role",
+          attributes: { exclude: ["createdAt", "updatedAt"] }, // Exclude role.createdAt and role.updatedAt
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
     return user;
@@ -59,7 +102,7 @@ export const findUserByUsernameRepo = async (
   }
 };
 
-export const findAllUsersRepo = async (): Promise<User[]> => {
+export const findAllUsersRepo = async (): Promise<UserAttributes[]> => {
   try {
     const users = await User.findAll({
       where: { isDeleted: false },
@@ -93,7 +136,7 @@ export const updateUserOneFieldRepo = async (
   id: number,
   fieldName: keyof UserAttributes,
   value: UserAttributes[keyof UserAttributes]
-): Promise<User | null> => {
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id);
     if (!user) {
@@ -116,7 +159,7 @@ export const searchUserListRepo = async (
   key: string | undefined,
   page?: number,
   limit?: number
-): Promise<{ users: User[]; total: number }> => {
+): Promise<{ users: UserAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
     if (key) {

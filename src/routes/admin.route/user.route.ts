@@ -8,6 +8,7 @@ import {
   updateUser,
   updateUserOneField,
 } from "../../controllers/commonController/user.controller";
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -150,7 +151,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/search", searchUserList);
+router.post("/search", authorization(["read-users"]),searchUserList);
 
 /**
  * @swagger
@@ -242,7 +243,7 @@ router.post("/search", searchUserList);
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/", createUser);
+router.post("/",authorization(["create-user"]), createUser);
 
 /**
  * @swagger
@@ -318,7 +319,7 @@ router.post("/", createUser);
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/:id", getUserById);
+router.get("/:id", authorization(["read-user"]),getUserById);
 
 /**
  * @swagger
@@ -367,7 +368,7 @@ router.get("/:id", getUserById);
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/", getAllUsers);
+router.get("/", authorization(["read-users"]),getAllUsers);
 
 /**
  * @swagger
@@ -473,7 +474,7 @@ router.get("/", getAllUsers);
  *                   type: string
  *                   example: Internal server error
  */
-router.put("/:id", updateUser);
+router.put("/:id",authorization(["update-user"]), updateUser);
 
 /**
  * @swagger
@@ -574,7 +575,7 @@ router.put("/:id", updateUser);
  *                   type: string
  *                   example: Internal server error
  */
-router.patch("/:id", updateUserOneField);
+router.patch("/:id",authorization(["update-user"]), updateUserOneField);
 
 /**
  * @swagger
@@ -633,7 +634,7 @@ router.patch("/:id", updateUserOneField);
  *                   type: string
  *                   example: Internal server error
  */
-router.delete("/:id", deleteUser);
+router.delete("/:id",authorization(["delete-user"]), deleteUser);
 
 router.get("/profile", (req, res) => {
   res.json([{ id: "1", name: "Admin User" }]);

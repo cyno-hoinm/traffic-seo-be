@@ -6,6 +6,7 @@ import {
   updateCountry,
   deleteCountry,
 } from "../../controllers/coreController/country.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -55,11 +56,11 @@ const router = express.Router();
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or duplicate name
  *         content:
@@ -93,7 +94,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createCountry);
+router.post("/", authorization(["create-country"]), createCountry);
 
 /**
  * @swagger
@@ -130,11 +131,11 @@ router.post("/", createCountry);
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *       500:
  *         description: Internal server error
  *         content:
@@ -152,7 +153,7 @@ router.post("/", createCountry);
  *                   type: string
  *                   example: Database error
  */
-router.get("/", getAllCountries);
+router.get("/", authorization(["read-countries"]), getAllCountries);
 
 /**
  * @swagger
@@ -194,11 +195,11 @@ router.get("/", getAllCountries);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       404:
  *         description: Country not found
  *         content:
@@ -232,7 +233,7 @@ router.get("/", getAllCountries);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getCountryById);
+router.get("/:id", authorization(["read-country"]), getCountryById);
 
 /**
  * @swagger
@@ -287,11 +288,11 @@ router.get("/:id", getCountryById);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing name
  *         content:
@@ -341,7 +342,7 @@ router.get("/:id", getCountryById);
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id", updateCountry);
+router.put("/:id", authorization(["update-country"]), updateCountry);
 
 /**
  * @swagger
@@ -404,6 +405,6 @@ router.put("/:id", updateCountry);
  *                   type: string
  *                   example: Database error
  */
-router.delete("/:id", deleteCountry);
+router.delete("/:id", authorization(["delete-country"]), deleteCountry);
 
 export default router;

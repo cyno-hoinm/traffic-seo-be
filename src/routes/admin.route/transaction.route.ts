@@ -3,6 +3,7 @@ import {
   createTransaction,
   getListTransaction,
 } from "../../controllers/moneyController/transaction.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -69,15 +70,15 @@ const router = express.Router();
  *                     date:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -111,7 +112,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Insufficient wallet balance
  */
-router.post("/", createTransaction);
+router.post("/", authorization(["create-transaction"]), createTransaction);
 
 /**
  * @swagger
@@ -222,6 +223,10 @@ router.post("/", createTransaction);
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getListTransaction);
+router.post(
+  "/search",
+  authorization(["read-transactions"]),
+  getListTransaction
+);
 
 export default router;

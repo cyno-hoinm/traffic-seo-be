@@ -7,6 +7,7 @@ import {
   deleteVoucher,
   getVoucherByCode,
 } from "../../controllers/moneyController/voucher.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -106,7 +107,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createVoucher);
+router.post("/", authorization(["create-voucher"]),createVoucher);
 
 /**
  * @swagger
@@ -171,7 +172,7 @@ router.post("/", createVoucher);
  *                   type: string
  *                   example: Database error
  */
-router.get("/", getAllVouchers);
+router.get("/", authorization(["create-transaction"]),getAllVouchers);
 
 /**
  * @swagger
@@ -257,7 +258,7 @@ router.get("/", getAllVouchers);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getVoucherById);
+router.get("/:id",authorization(["create-transaction"]), getVoucherById);
 
 /**
  * @swagger
@@ -359,7 +360,7 @@ router.get("/:id", getVoucherById);
  *                   type: string
  *                   example: Database error
  */
-router.get("/code/:code", getVoucherByCode);
+router.get("/code/:code", authorization(["create-transaction"]),getVoucherByCode);
 
 /**
  * @swagger
@@ -477,7 +478,7 @@ router.get("/code/:code", getVoucherByCode);
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id", updateVoucher);
+router.put("/:id",authorization(["create-transaction"]), updateVoucher);
 
 /**
  * @swagger
@@ -540,6 +541,6 @@ router.put("/:id", updateVoucher);
  *                   type: string
  *                   example: Database error
  */
-router.delete("/:id", deleteVoucher);
+router.delete("/:id", authorization(["create-transaction"]),deleteVoucher);
 
 export default router;

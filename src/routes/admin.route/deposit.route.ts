@@ -4,7 +4,7 @@ import {
   createDeposit,
   updateDeposit,
 } from "../../controllers/moneyController/deposit.controller"; // Adjust path
-import { authenticateToken } from "../../middleware/auth"; // Assuming you have auth middleware
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -136,7 +136,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getDepositList);
+router.post("/search", authorization(["read-deposits"]), getDepositList);
 
 /**
  * @swagger
@@ -216,11 +216,11 @@ router.post("/search", getDepositList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -254,7 +254,7 @@ router.post("/search", getDepositList);
  *                   type: string
  *                   example: Wallet not found for this user
  */
-router.post("/", authenticateToken, createDeposit);
+router.post("/", authorization(["create-deposit"]), createDeposit);
 
 /**
  * @swagger
@@ -332,11 +332,11 @@ router.post("/", authenticateToken, createDeposit);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T08:00:00 
+ *                       example: 2025-04-10T08:00:00
  *       400:
  *         description: Bad request - Invalid fields
  *         content:
@@ -386,6 +386,6 @@ router.post("/", authenticateToken, createDeposit);
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id", authenticateToken, updateDeposit);
+router.put("/:id", authorization(["update-deposit"]), updateDeposit);
 
 export default router;

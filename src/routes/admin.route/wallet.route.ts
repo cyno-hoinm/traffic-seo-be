@@ -5,6 +5,7 @@ import {
   updateWallet,
   deleteWallet,
 } from "../../controllers/moneyController/wallet.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -46,11 +47,11 @@ const router = express.Router();
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-10T07:00:00
  *       500:
  *         description: Internal server error
  *         content:
@@ -68,7 +69,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.get("/", getAllWallets);
+router.get("/", authorization(["read-wallets"]), getAllWallets);
 
 /**
  * @swagger
@@ -113,11 +114,11 @@ router.get("/", getAllWallets);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       404:
  *         description: Wallet not found
  *         content:
@@ -151,7 +152,7 @@ router.get("/", getAllWallets);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getWalletById);
+router.get("/:id", authorization(["read-wallet"]), getWalletById);
 
 /**
  * @swagger
@@ -209,11 +210,11 @@ router.get("/:id", getWalletById);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid balance
  *         content:
@@ -263,7 +264,7 @@ router.get("/:id", getWalletById);
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id", updateWallet);
+router.put("/:id", authorization(["update-wallet"]), updateWallet);
 
 /**
  * @swagger
@@ -326,6 +327,6 @@ router.put("/:id", updateWallet);
  *                   type: string
  *                   example: Database error
  */
-router.delete("/:id", deleteWallet);
+router.delete("/:id", authorization(["delete-wallet"]), deleteWallet);
 
 export default router;

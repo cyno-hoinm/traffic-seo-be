@@ -4,6 +4,7 @@ import {
   createCampaign,
   getCampaignById,
 } from "../../controllers/coreController/campaign.controller"; // Adjust path
+import { authorization } from "../../middleware/auth";
 
 const router = express.Router();
 
@@ -100,7 +101,7 @@ const router = express.Router();
  *                             example: "Summer Sale"
  *                           type:
  *                             type: string
- *                             example: "PPC"
+ *                             example: "1"
  *                           campaignTypeId:
  *                             type: integer
  *                             example: 1
@@ -180,7 +181,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", getCampaignList);
+router.post("/search", authorization(["read-campaigns"]), getCampaignList);
 
 /**
  * @swagger
@@ -199,7 +200,7 @@ router.post("/search", getCampaignList);
  *               - userId
  *               - countryId
  *               - name
- *               - type
+ *               - campaignTypeId
  *               - device
  *               - timeCode
  *               - startDate
@@ -222,10 +223,10 @@ router.post("/search", getCampaignList);
  *                 type: string
  *                 description: Name of the campaign
  *                 example: "Summer Sale"
- *               type:
+ *               campaignTypeId:
  *                 type: string
  *                 description: Type of the campaign
- *                 example: "PPC"
+ *                 example: "1"
  *               device:
  *                 type: string
  *                 description: Device target
@@ -238,12 +239,12 @@ router.post("/search", getCampaignList);
  *                 type: string
  *                 format: date-time
  *                 description: Start date of the campaign
- *                 example: 2025-04-10T00:00:00 
+ *                 example: 2025-04-10T00:00:00
  *               endDate:
  *                 type: string
  *                 format: date-time
  *                 description: End date of the campaign
- *                 example: 2025-04-20T23:59:59 
+ *                 example: 2025-04-20T23:59:59
  *               cost:
  *                 type: number
  *                 description: Cost of the campaign
@@ -306,11 +307,11 @@ router.post("/search", getCampaignList);
  *                     startDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T00:00:00 
+ *                       example: 2025-04-10T00:00:00
  *                     endDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-20T23:59:59 
+ *                       example: 2025-04-20T23:59:59
  *                     totalTraffic:
  *                       type: integer
  *                       example: 0
@@ -332,11 +333,11 @@ router.post("/search", getCampaignList);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *       400:
  *         description: Bad request - Missing or invalid fields
  *         content:
@@ -370,7 +371,7 @@ router.post("/search", getCampaignList);
  *                   type: string
  *                   example: Database error
  */
-router.post("/", createCampaign);
+router.post("/", authorization(["create-campaign"]), createCampaign);
 
 /**
  * @swagger
@@ -427,11 +428,11 @@ router.post("/", createCampaign);
  *                     startDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T00:00:00 
+ *                       example: 2025-04-10T00:00:00
  *                     endDate:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-20T23:59:59 
+ *                       example: 2025-04-20T23:59:59
  *                     totalTraffic:
  *                       type: integer
  *                       example: 0
@@ -453,11 +454,11 @@ router.post("/", createCampaign);
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-09T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *       404:
  *         description: Campaign not found
  *         content:
@@ -491,6 +492,6 @@ router.post("/", createCampaign);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", getCampaignById);
+router.get("/:id", authorization(["read-campaigns"]), getCampaignById);
 
 export default router;

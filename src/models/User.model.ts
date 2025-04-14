@@ -1,6 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { UserAttributes } from "../interfaces/User.interface";
 import { sequelizeSystem, Wallet } from "./index.model";
+import { RoleAttributes } from "../interfaces/Role.interface";
 
 class User extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
@@ -8,6 +9,7 @@ class User extends Model<UserAttributes> implements UserAttributes {
   public password!: string;
   public email!: string;
   public roleId!: number;
+  public role!: RoleAttributes;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -39,7 +41,7 @@ User.init(
       allowNull: false,
       defaultValue: 2, // Customer
     },
-     isDeleted: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,

@@ -75,10 +75,10 @@ Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keywords", onDelete: 
 Link.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign", onDelete: 'SET NULL' });
 Campaign.hasMany(Link, { foreignKey: "campaignId", as: "links", onDelete: 'SET NULL' });
 
-Role.hasMany(RolePermission, { foreignKey: "roleId", as: "role_permissions", onDelete: 'SET NULL' });
+Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermissions", onDelete: 'SET NULL' });
 Permission.hasMany(RolePermission, {
   foreignKey: "permissionId",
-  as: "role_permissions",
+  as: "rolePermissions",
   onDelete: 'SET NULL',
 });
 RolePermission.belongsTo(Role, { foreignKey: "roleId", as: "role", onDelete: 'SET NULL' });

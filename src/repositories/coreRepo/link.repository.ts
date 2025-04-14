@@ -2,6 +2,7 @@ import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
 import { Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
+import { DistributionType } from "../../enums/distribution.enum";
 
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
@@ -45,7 +46,7 @@ export const createLinkRepo = async (data: {
   campaignId: number;
   link: string;
   linkTo: string;
-  distribution: string;
+  distribution: DistributionType;
   anchorText: string;
   status: LinkStatus;
   url: string;
