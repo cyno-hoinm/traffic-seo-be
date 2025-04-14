@@ -4,6 +4,8 @@ import { CampaignStatus } from "../enums/campaign.enum";
 import { CampaignAttributes } from "../interfaces/Campaign.interface";
 import { CampaignTypeAttributes } from "../interfaces/CampaignType.interface";
 import CampaignType from "./CampaignType.model";
+import { KeywordAttributes } from "../interfaces/Keyword.interface";
+import { LinkAttributes } from "../interfaces/Link.interface";
 
 class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public id!: number;
@@ -19,7 +21,8 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public cost!: number;
   public domain!: string;
   public search!: string;
-  public keyword!: string;
+  public keyword!: KeywordAttributes[];
+  public links!: LinkAttributes[];
   public isDeleted!: boolean;
   public status!: CampaignStatus;
   public readonly createdAt!: Date;
@@ -63,7 +66,7 @@ Campaign.init(
     },
     device: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     timeCode: {
       type: DataTypes.STRING,
@@ -91,10 +94,6 @@ Campaign.init(
       allowNull: false,
     },
     search: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    keyword: {
       type: DataTypes.STRING,
       allowNull: false,
     },

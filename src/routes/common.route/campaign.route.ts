@@ -100,7 +100,7 @@ const router = express.Router();
  *                             example: "Summer Sale"
  *                           type:
  *                             type: string
- *                             example: "PPC"
+ *                             example: "1"
  *                           campaignTypeId:
  *                             type: integer
  *                             example: 1
@@ -199,7 +199,7 @@ router.post("/search", getCampaignList);
  *               - userId
  *               - countryId
  *               - name
- *               - type
+ *               - campaignTypeId
  *               - device
  *               - timeCode
  *               - startDate
@@ -222,10 +222,10 @@ router.post("/search", getCampaignList);
  *                 type: string
  *                 description: Name of the campaign
  *                 example: "Summer Sale"
- *               type:
+ *               campaignTypeId:
  *                 type: string
  *                 description: Type of the campaign
- *                 example: "PPC"
+ *                 example: "1"
  *               device:
  *                 type: string
  *                 description: Device target
