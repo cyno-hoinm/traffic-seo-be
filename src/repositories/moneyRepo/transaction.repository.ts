@@ -18,23 +18,38 @@ export const createTransactionRepo = async (
       throw new ErrorType("NotFoundError", "Wallet not found");
     }
 
+    // Ensure balance and amount are numbers
+    const balance = parseFloat(wallet.balance.toString()); // Convert to number
+    const amount = parseFloat(data.amount.toString()); // Ensure amount is a number
+
+    if (isNaN(balance) || isNaN(amount)) {
+      throw new ErrorType("InvalidDataError", "Balance or amount is invalid");
+    }
+
+    if (amount < 0) {
+      throw new ErrorType("InvalidAmountError", "Amount cannot be negative");
+    }
+
     const transaction = await sequelizeSystem.transaction(async (t) => {
       const newTransaction = await Transaction.create(data, { transaction: t });
 
       if (data.status === TransactionStatus.PAY) {
-        if (wallet.balance < data.amount) {
+        if (balance < amount) {
           throw new ErrorType(
             "InsufficientFundsError",
             "Insufficient wallet balance"
           );
         }
-        wallet.balance -= data.amount;
-      } else if (data.status === TransactionStatus.REFUND) {
-        wallet.balance += data.amount;
+        wallet.balance = balance - amount;
+      } else if (
+        data.status === TransactionStatus.REFUND ||
+        data.status === TransactionStatus.CHARGE
+      ) {
+        wallet.balance = balance + amount;
       } else {
         throw new ErrorType(
           "InvalidStatusError",
-          "Status must be PAY or REFUND"
+          "Status must be CHARGE, REFUND, or PAY"
         );
       }
 

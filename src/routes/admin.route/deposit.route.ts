@@ -2,7 +2,6 @@ import express from "express";
 import {
   getDepositList,
   createDeposit,
-  updateDeposit,
 } from "../../controllers/moneyController/deposit.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
 
@@ -157,7 +156,7 @@ router.post("/search", authorization(["read-deposits"]), getDepositList);
  *               - userId
  *               - voucherId
  *               - amount
- *               - method
+ *               - paymentMethodId
  *             properties:
  *               userId:
  *                 type: integer
@@ -167,14 +166,14 @@ router.post("/search", authorization(["read-deposits"]), getDepositList);
  *                 type: integer
  *                 description: ID of the voucher
  *                 example: 1
+ *               paymentMethodId:
+ *                 type: integer
+ *                 description: ID of payment method
+ *                 example: 3
  *               amount:
  *                 type: number
  *                 description: Deposit amount
  *                 example: 100.00
- *               method:
- *                 type: string
- *                 description: Payment method
- *                 example: "CREDIT_CARD"
  *     responses:
  *       201:
  *         description: Deposit created successfully
@@ -254,138 +253,7 @@ router.post("/search", authorization(["read-deposits"]), getDepositList);
  *                   type: string
  *                   example: Wallet not found for this user
  */
-router.post("/", authorization(["create-deposit"]), createDeposit);
+router.post("/",  createDeposit);
 
-/**
- * @swagger
- * /deposits/{id}:
- *   put:
- *     summary: Update a deposit
- *     description: Update deposit status to COMPLETED or FAILED, creates a CHARGE transaction if COMPLETED.
- *     tags: [Deposits]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Deposit ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - acceptedBy
- *               - status
- *             properties:
- *               acceptedBy:
- *                 type: string
- *                 description: Who accepted/processed the deposit
- *                 example: "admin2"
- *               status:
- *                 type: string
- *                 enum: [COMPLETED, FAILED]
- *                 description: New status of the deposit
- *                 example: "COMPLETED"
- *     responses:
- *       200:
- *         description: Deposit updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Deposit updated successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     userId:
- *                       type: integer
- *                       example: 1
- *                     voucherId:
- *                       type: integer
- *                       example: 1
- *                     amount:
- *                       type: number
- *                       example: 100.00
- *                     paymentMethodId:
- *                       type: integer
- *                       example: 1
- *                     status:
- *                       type: string
- *                       example: "COMPLETED"
- *                     acceptedBy:
- *                       type: string
- *                       example: "admin2"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T07:00:00
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T08:00:00
- *       400:
- *         description: Bad request - Invalid fields
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Status must be COMPLETED or FAILED
- *                 error:
- *                   type: string
- *                   example: Invalid field
- *       404:
- *         description: Deposit not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Deposit not found
- *                 error:
- *                   type: string
- *                   example: Resource not found
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Error updating deposit
- *                 error:
- *                   type: string
- *                   example: Database error
- */
-router.put("/:id", authorization(["update-deposit"]), updateDeposit);
 
 export default router;

@@ -5,13 +5,14 @@ import { DepositAttributes } from "../interfaces/Deposit.interface";
 
 class Deposit extends Model<DepositAttributes> implements DepositAttributes {
   public id!: number;
+  public orderId!: string;
   public userId!: number;
   public voucherId!: number;
   public paymentMethodId!: number;
   public amount!: number;
   public status!: DepositStatus;
   public acceptedBy?: string;
-  public createdBy?: string;
+  public createdBy?: number;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -23,6 +24,10 @@ Deposit.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    orderId: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -57,11 +62,11 @@ Deposit.init(
       allowNull: false,
     },
     acceptedBy: {
-      type: DataTypes.STRING,
+      type: DataTypes.NUMBER,
       allowNull: true,
     },
     createdBy: {
-      type: DataTypes.STRING,
+      type: DataTypes.NUMBER,
       allowNull: true,
     },
      isDeleted: {

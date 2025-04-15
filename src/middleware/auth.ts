@@ -5,12 +5,13 @@ import { ResponseType } from "../types/Response.type";
 import statusCode from "../constants/statusCode";
 import { AuthenticatedRequest } from "../types/AuthenticateRequest.type";
 import { getUserPermissions } from "../repositories/commonRepo/user.repository";
+import { isTokenBlacklisted } from "../utils/utils";
 
-export const authenticateToken = (
+export const authenticateToken = async (
   req: AuthenticatedRequest,
   res: Response<ResponseType<null>>,
   next: NextFunction
-): void => {
+): Promise<void> => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
@@ -22,7 +23,14 @@ export const authenticateToken = (
     res.status(statusCode.UNAUTHORIZED).json(response);
     return;
   }
-
+  const isBlacklisted = await isTokenBlacklisted(token);
+  if (isBlacklisted) {
+    res.status(statusCode.UNAUTHORIZED).json({
+      status: false,
+      message: "Token is blacklisted",
+    });
+    return;
+  }
   try {
     const decoded = jwt.verify(
       token,

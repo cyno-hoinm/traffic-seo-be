@@ -3,12 +3,13 @@ import { DepositStatus } from "../enums/depositStatus.enum";
 export interface DepositAttributes {
   id?: number;
   userId: number;
-  paymentMethodId: number;
+  orderId: string;
+  paymentMethodId?: number;
   voucherId: number;
   amount: number;
   status: DepositStatus;
   acceptedBy?: string;
-  createdBy?: string;
+  createdBy?: number;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

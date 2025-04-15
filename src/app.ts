@@ -11,6 +11,7 @@ import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
+import payOSPaymentMethod from "./config/payOs.config";
 
 
 dotenv.config();
