@@ -3,6 +3,8 @@ import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getDepositListRepo,
   createDepositRepo,
+  getDepositByIdRepo,
+  getDepositByOrderIdRepo,
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
@@ -136,8 +138,12 @@ export const createDeposit = async (
           price: Math.floor(amount),
         },
       ],
-      cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(orderId)}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-      returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(orderId)}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+      cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(
+        orderId
+      )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+      returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
+        orderId
+      )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
     };
     const response = await payOSPaymentMethod.createPaymentLink(body);
     res.status(statusCode.CREATED).json({
@@ -152,6 +158,87 @@ export const createDeposit = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error creating deposit",
+      error: error.message,
+    });
+  }
+};
+
+export const getDepositById = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<DepositAttributes>>
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const depositId = Number(id);
+    if (isNaN(depositId)) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid deposit ID",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    const deposit = await getDepositByIdRepo(depositId);
+    if (!deposit) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Deposit not found",
+        error: "Not found",
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Deposit retrieved successfully",
+      data: deposit,
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching deposit",
+      error: error.message,
+    });
+  }
+};
+
+export const getDepositByOrderId = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<DepositAttributes>>
+): Promise<void> => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.data?.id || 0; // Get userId from authenticated user
+
+    const deposit = await getDepositByOrderIdRepo(orderId,userId);
+    if (!deposit) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Deposit not found",
+        error: "Not found",
+      });
+      return;
+    }
+
+    if (deposit.userId !== userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You do not have permission to access this deposit",
+        error: "Forbidden",
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Deposit retrieved successfully",
+      data: deposit,
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching deposit",
       error: error.message,
     });
   }

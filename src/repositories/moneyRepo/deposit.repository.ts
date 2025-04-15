@@ -214,3 +214,29 @@ export const getDepositByIdRepo = async (
     throw new ErrorType(error.name, error.message, error.code);
   }
 };
+
+export const getDepositByOrderIdRepo = async (
+  orderId: string,
+  userId: number
+): Promise<Deposit | null> => {
+  try {
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new ErrorType("ValidationError", "Invalid order ID or user ID");
+    }
+
+    const deposit = await Deposit.findOne({
+      where: {
+        orderId, // Assuming `orderId` is a field in the Deposit model
+        userId, // Ensure the deposit belongs to the user
+      },
+    });
+
+    return deposit || null;
+  } catch (error: any) {
+    throw new ErrorType(
+      error.name || "DatabaseError",
+      error.message || "Failed to fetch deposit",
+      error.code
+    );
+  }
+};
