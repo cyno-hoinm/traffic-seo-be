@@ -12,9 +12,13 @@ import keywordRoute from "./keyword.route";
 import linkRoute from "./link.route";
 import reportRoute from "./report.route";
 // Common routes
+import authRoute from "../common.route/auth.route";
 import notificationRoute from "../common.route/notification.route";
 import campaignRoute from "../common.route/campaign.route";
 
+export const publicRoutes = {
+  "/auth": authRoute,
+};
 
 export const protectedRoutes = {
   "/users": userRoute,

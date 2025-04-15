@@ -3,11 +3,13 @@ import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getDepositListRepo,
   createDepositRepo,
-  updateDepositRepo,
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { DepositStatus } from "../../enums/depositStatus.enum";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { uuidToNumber, uuIDv4 } from "../../utils/generate";
+import payOSPaymentMethod from "../../config/payOs.config";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -15,8 +17,7 @@ export const getDepositList = async (
   res: Response<ResponseType<{ deposits: DepositAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { userId, start_date, end_date, status, page, limit } =
-      req.body;
+    const { userId, start_date, end_date, status, page, limit } = req.body;
 
     const filters: {
       userId?: number;
@@ -25,10 +26,13 @@ export const getDepositList = async (
       status?: DepositStatus;
       page?: number;
       limit?: number;
-    } = {
-    };
-    filters.page = typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit = typeof limit === "string" && !isNaN(parseInt(limit)) ? parseInt(limit) : 0;
+    } = {};
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (userId) filters.userId = Number(userId);
     if (
       status &&
@@ -76,6 +80,7 @@ export const getDepositList = async (
         deposits: deposits.map((deposit: DepositAttributes) => ({
           id: deposit.id,
           userId: deposit.userId,
+          orderId: deposit.orderId,
           paymentMethodId: deposit.paymentMethodId,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
@@ -98,116 +103,55 @@ export const getDepositList = async (
 
 // Create a new deposit
 export const createDeposit = async (
-  req: Request,
-  res: Response<ResponseType<DepositAttributes>>
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
     const { userId, voucherId, amount, paymentMethodId } = req.body;
-
-    const createdBy = "system"; // Assuming token provides username
-
+    const orderId = uuIDv4();
+    const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
     if (
       !userId ||
       !voucherId ||
       amount === undefined ||
-      isNaN(amount)
+      isNaN(amount) ||
+      paymentMethodId === undefined
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "All fields (userId, voucherId, amount, method) are required",
+        message:
+          "All fields (userId, voucherId, amount, paymentMethodId) are required",
         error: "Missing or invalid field",
       });
       return;
     }
-
-    const deposit = await createDepositRepo({
-      createdBy,
-      userId,
-      paymentMethodId,
-      voucherId,
-      amount,
-    });
-
+    const body = {
+      orderCode: uuidToNumber(orderId), // Use deposit ID as orderCode
+      amount: Math.floor(amount),
+      description: "Charge money",
+      items: [
+        {
+          name: "Charge money",
+          quantity: 1,
+          price: Math.floor(amount),
+        },
+      ],
+      cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(orderId)}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+      returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(orderId)}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+    };
+    const response = await payOSPaymentMethod.createPaymentLink(body);
     res.status(statusCode.CREATED).json({
       status: true,
-      message: "Deposit created successfully",
+      message: "Create link payment successfully",
       data: {
-        id: deposit.id,
-        userId: deposit.userId,
-        paymentMethodId: deposit.paymentMethodId,
-        voucherId: deposit.voucherId,
-        amount: deposit.amount,
-        status: deposit.status,
-        acceptedBy: deposit.acceptedBy,
-        createdAt: deposit.createdAt,
-        updatedAt: deposit.updatedAt,
+        checkoutUrl: response.checkoutUrl,
       },
     });
+    return;
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error creating deposit",
-      error: error.message,
-    });
-  }
-};
-
-// Update deposit
-export const updateDeposit = async (
-  req: Request,
-  res: Response<ResponseType<DepositAttributes>>
-): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { acceptedBy, status } = req.body;
-
-    if (!acceptedBy || !status) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "acceptedBy and status are required",
-        error: "Missing required field",
-      });
-      return;
-    }
-
-    if (![DepositStatus.COMPLETED, DepositStatus.FAILED].includes(status)) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Status must be COMPLETED or FAILED",
-        error: "Invalid field",
-      });
-      return;
-    }
-
-    const deposit = await updateDepositRepo(Number(id), { acceptedBy, status });
-    if (!deposit) {
-      res.status(statusCode.NOT_FOUND).json({
-        status: false,
-        message: "Deposit not found",
-        error: "Resource not found",
-      });
-      return;
-    }
-
-    res.status(statusCode.OK).json({
-      status: true,
-      message: "Deposit updated successfully",
-      data: {
-        id: deposit.id,
-        userId: deposit.userId,
-        paymentMethodId: deposit.paymentMethodId,
-        voucherId: deposit.voucherId,
-        amount: deposit.amount,
-        status: deposit.status,
-        acceptedBy: deposit.acceptedBy,
-        createdAt: deposit.createdAt,
-        updatedAt: deposit.updatedAt,
-      },
-    });
-  } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      status: false,
-      message: "Error updating deposit",
       error: error.message,
     });
   }

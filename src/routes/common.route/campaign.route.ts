@@ -131,9 +131,6 @@ const router = express.Router();
  *                           search:
  *                             type: string
  *                             example: "Google"
- *                           keyword:
- *                             type: string
- *                             example: "summer sale"
  *                           status:
  *                             type: string
  *                             example: "ACTIVE"
@@ -208,7 +205,6 @@ router.post("/search", authorization(["read-campaigns"]), getCampaignList);
  *               - cost
  *               - domain
  *               - search
- *               - keyword
  *               - status
  *             properties:
  *               userId:
@@ -257,10 +253,6 @@ router.post("/search", authorization(["read-campaigns"]), getCampaignList);
  *                 type: string
  *                 description: Search engine
  *                 example: "Google"
- *               keyword:
- *                 type: string
- *                 description: Target keyword
- *                 example: "summer sale"
  *               status:
  *                 type: string
  *                 enum: [ACTIVE, INACTIVE, PENDING]
@@ -324,9 +316,6 @@ router.post("/search", authorization(["read-campaigns"]), getCampaignList);
  *                     search:
  *                       type: string
  *                       example: "Google"
- *                     keyword:
- *                       type: string
- *                       example: "summer sale"
  *                     status:
  *                       type: string
  *                       example: "ACTIVE"
@@ -445,9 +434,6 @@ router.post("/", authorization(["create-campaign"]), createCampaign);
  *                     search:
  *                       type: string
  *                       example: "Google"
- *                     keyword:
- *                       type: string
- *                       example: "summer sale"
  *                     status:
  *                       type: string
  *                       example: "ACTIVE"

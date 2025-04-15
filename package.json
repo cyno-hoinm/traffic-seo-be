@@ -4,6 +4,7 @@
   "description": "Cyno Traffic SEO System Backend",
   "main": "index.js",
   "dependencies": {
+    "@payos/node": "^1.0.10",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
     "@typescript-eslint/parser": "^8.29.1",
     "axios": "^1.8.4",
@@ -20,6 +21,7 @@
     "pg": "^8.14.1",
     "prom-client": "^15.1.3",
     "qs": "^6.14.0",
+    "redis": "^4.7.0",
     "sequelize": "^6.37.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -34,6 +36,7 @@
     "@types/node": "^22.14.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "sequelize-cli": "^6.6.2",
