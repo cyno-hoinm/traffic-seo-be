@@ -74,7 +74,6 @@ export const getKeywordByIdRepo = async (
   }
 };
 
-
 export const getKeywordsByDistributionType = async (
   startDate?: string, // Optional: filter keywords by createdAt
   endDate?: string // Optional: filter keywords by createdAt
@@ -100,10 +99,13 @@ export const getKeywordsByDistributionType = async (
 
     const queryOptions: any = {
       where: keywordWhere,
-      group: ['distribution'],
+      group: ["distribution"],
       attributes: [
-        'distribution',
-        [sequelizeSystem.fn('COUNT', sequelizeSystem.col('distribution')), 'count'],
+        "distribution",
+        [
+          sequelizeSystem.fn("COUNT", sequelizeSystem.col("distribution")),
+          "count",
+        ],
       ],
       raw: true,
     };
@@ -116,5 +118,42 @@ export const getKeywordsByDistributionType = async (
     }));
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const getKeywordByCampaignIdRepo = async (
+  id: number
+): Promise<Keyword[] | null> => {
+  try {
+    // Validate campaign ID
+    if (!Number.isInteger(id) || id <= 0) {
+      throw {
+        name: 'ValidationError',
+        message: 'Campaign ID must be a positive integer',
+      };
+    }
+
+    // Fetch keywords using Sequelize
+    const keywords = await Keyword.findAll({
+      where: { campaignId: id },
+      attributes: ['distribution', 'traffic', 'url', 'name'],
+    });
+
+    // Return null if no keywords found
+    return keywords.length > 0 ? keywords : null;
+  } catch (error: unknown) {
+    // Type-safe error handling
+    const errorType: ErrorType = {
+      name: 'DatabaseError',
+      message: 'Failed to fetch keywords',
+    };
+
+    if (error instanceof Error) {
+      errorType.name = error.name || 'DatabaseError';
+      errorType.message = error.message || 'Failed to fetch keywords';
+      errorType.code = 'code' in error ? String(error.code) : undefined;
+    }
+
+    throw errorType;
   }
 };

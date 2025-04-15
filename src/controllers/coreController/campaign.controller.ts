@@ -8,7 +8,7 @@ import {
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
-import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
+
 
 // Get campaign list with filters
 export const getCampaignList = async (

@@ -11,6 +11,7 @@ import depositRoute from "./deposit.route";
 import keywordRoute from "./keyword.route";
 import linkRoute from "./link.route";
 import reportRoute from "./report.route";
+import botRoute from "./bot.route";
 // Common routes
 import authRoute from "../common.route/auth.route";
 import notificationRoute from "../common.route/notification.route";
@@ -35,4 +36,5 @@ export const protectedRoutes = {
   "/campaigns": campaignRoute,
   "/role-permissions": rolePermissionRoute,
   "/report": reportRoute,
+  "/bot" : botRoute,
 };

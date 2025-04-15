@@ -287,8 +287,6 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *                 message:
  *                   type: string
  *                   example: Deposit retrieved successfully
- *                 data:
- *                   $ref: '#/components/schemas/Deposit'
  *       400:
  *         description: Invalid deposit ID
  *         content:
@@ -369,8 +367,6 @@ router.get("/:id",authorization(["read-deposit-admin"]), getDepositById);
  *                 message:
  *                   type: string
  *                   example: Deposit retrieved successfully
- *                 data:
- *                   $ref: '#/components/schemas/Deposit'
  *       403:
  *         description: Forbidden - User does not have permission to access this deposit
  *         content:

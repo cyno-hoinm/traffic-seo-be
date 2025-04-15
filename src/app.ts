@@ -12,6 +12,7 @@ import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
 import payOSPaymentMethod from "./config/payOs.config";
+import { startEmailService } from "./services/sendMail.service";
 
 
 dotenv.config();
@@ -50,6 +51,9 @@ if (cluster.isPrimary && !isDev) {
         logger.info(`Worker ${process.pid} started on port ${PORT}`);
         debugApp(`Worker ${process.pid} successfully started`);
       });
+      if (isDev) {
+        startEmailService();
+      }
     } catch (error: any) {
       logger.error(`My database host: ${process.env.DB_HOST}`);
       logger.error("Failed to start server:", error.message);
