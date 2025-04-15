@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import statusCode from "../../constants/statusCode";
 import { CreateInvoiceInput, CreatePayoutInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
-import { generateInvoice, generatePayout } from "../../services/oxapay.service";
+import { generateInvoice, generatePayout, getMyIP } from "../../services/oxapay.service";
 
 export const createInvoice = async (
   req: Request,
@@ -66,3 +66,27 @@ export const withDraw = async (
     });
   }
 }
+
+export const checkMyIP = async (
+  req: Request,
+  res: Response): Promise<void> => {
+  try {
+
+
+    const result = await getMyIP()
+    res.status(statusCode.OK).json({
+      message: "",
+      status: true,
+      data: result
+    })
+
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching deposits",
+      error: error.message,
+    });
+  }
+}
+
+// export const callback

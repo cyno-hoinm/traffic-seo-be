@@ -34,6 +34,21 @@ export const generatePayout = async (data: CreatePayoutInput): Promise<CreatePay
   }
 }
 
+export const getMyIP = async (): Promise<any> => {
+  try {
+    console.log(baseUrl)
+    const res = await axios.get(`${baseUrl}/api/myip`,  {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    return res.data;
+  } catch (error: any) {
+    console.error('Oxapay - createPayout error:', error.response?.data || error.message);
+    throw new Error('Failed to create Oxapay payout');
+
+  }
+}
+
 
   // async checkInvoiceStatus({ invoice_id }: CheckInvoiceStatusParams) {
   //   try {
