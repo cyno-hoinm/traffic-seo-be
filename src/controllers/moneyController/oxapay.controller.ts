@@ -83,10 +83,23 @@ export const checkMyIP = async (
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
-      message: "Error fetching deposits",
+      message: "Error get IP",
       error: error.message,
     });
   }
 }
 
-// export const callback
+export const callback = async (
+  req: Request,
+  res: Response): Promise<void> => {
+  try {
+
+
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching deposits",
+      error: error.message,
+    });
+  }
+}
