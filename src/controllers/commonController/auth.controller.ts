@@ -57,7 +57,7 @@ export const loginUser = async (
       status: true,
       message: "Login successful",
       data: {
-        token: token,
+
         user: {
           id: user.id,
           username: user.username,
@@ -66,6 +66,7 @@ export const loginUser = async (
           updatedAt: user.updatedAt,
           isDeleted: user.isDeleted,
           role: user.role, // Include role if needed
+          token: token,
         },
       },
     });
