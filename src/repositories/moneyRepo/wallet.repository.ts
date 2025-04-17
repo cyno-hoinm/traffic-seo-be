@@ -1,7 +1,8 @@
+import { WalletAttributes } from "../../interfaces/Wallet.interface";
 import { Wallet } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
-export const getAllWalletsRepo = async (): Promise<Wallet[]> => {
+export const getAllWalletsRepo = async (): Promise<WalletAttributes[]> => {
   try {
     const wallets = await Wallet.findAll({
       where: { isDeleted: false },
@@ -13,7 +14,7 @@ export const getAllWalletsRepo = async (): Promise<Wallet[]> => {
   }
 };
 
-export const getWalletByIdRepo = async (id: number): Promise<Wallet | null> => {
+export const getWalletByIdRepo = async (id: number): Promise<WalletAttributes | null> => {
   try {
     const wallet = await Wallet.findByPk(id);
     return wallet;
@@ -46,5 +47,23 @@ export const deleteWalletRepo = async (id: number): Promise<boolean> => {
     return true;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const getWalletByUserIdRepo = async (userId: number): Promise<WalletAttributes | null> => {
+  try {
+    const wallet = await Wallet.findOne({
+      where: { userId }, 
+    });
+
+    if (!wallet) {
+      return null;
+    }
+    return wallet.get({ plain: true }) as WalletAttributes;
+  } catch (error: any) {
+    // Handle Sequelize or other errors
+    const errorMessage = error.message || 'Failed to fetch wallet';
+    const errorCode = error.code || 'DATABASE_ERROR';
+    throw new ErrorType(error.name || 'SequelizeError', errorMessage, errorCode);
   }
 };

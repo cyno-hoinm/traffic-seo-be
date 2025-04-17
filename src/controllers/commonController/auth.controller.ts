@@ -14,6 +14,7 @@ import {
 import statusCode from "../../constants/statusCode";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { ttlInSecondsGlobal } from "../../constants/redis.constant";
+import { getWalletByUserIdRepo } from "../../repositories/moneyRepo/wallet.repository";
 
 export const loginUser = async (
   req: Request,
@@ -57,7 +58,6 @@ export const loginUser = async (
       status: true,
       message: "Login successful",
       data: {
-
         user: {
           id: user.id,
           username: user.username,
@@ -94,10 +94,10 @@ export const getMe = async (
       });
       return;
     }
-
     // Parse user ID safely
     const userId =
       typeof user.id === "string" ? parseInt(user.id, 10) : user.id;
+    const wallet = await getWalletByUserIdRepo(userId);
     if (isNaN(userId)) {
       res.status(statusCode.UNAUTHORIZED).json({
         status: false,
@@ -122,6 +122,7 @@ export const getMe = async (
       data: {
         ...user,
         permissions: permissions,
+        walletId: wallet?.id,
       },
     });
   } catch (error: any) {
