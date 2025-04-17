@@ -19,6 +19,7 @@ export const getCampaignList = async (
 ): Promise<void> => {
   try {
     const {
+      key,
       userId,
       countryId,
       campaignTypeId,
@@ -32,6 +33,7 @@ export const getCampaignList = async (
     } = req.body;
 
     const filters: {
+      key?: string;
       userId?: number;
       countryId?: number;
       campaignTypeId?: number; 

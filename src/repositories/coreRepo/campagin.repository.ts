@@ -6,6 +6,7 @@ import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface"
 import CampaignType from "../../models/CampaignType.model";
 
 export const getCampaignListRepo = async (filters: {
+  key?: string;
   userId?: number;
   countryId?: number;
   campaignTypeId?: number;
@@ -19,6 +20,16 @@ export const getCampaignListRepo = async (filters: {
 }): Promise<{ campaigns: Campaign[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
+
+    // Add search by key (name, domain, search)
+    if (filters.key) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for name
+        { domain: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for domain
+        { search: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for search
+      ];
+    }
+
     if (filters.userId) where.userId = filters.userId;
     if (filters.countryId) where.countryId = filters.countryId;
     if (filters.campaignTypeId) where.campaignTypeId = filters.campaignTypeId;
