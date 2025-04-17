@@ -12,6 +12,9 @@ import { DepositStatus } from "../../enums/depositStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { uuidToNumber, uuIDv4 } from "../../utils/generate";
 import payOSPaymentMethod from "../../config/payOs.config";
+import { CreateInvoiceInput } from "../../interfaces/Oxapay.interface";
+import { oxapayConfig } from "../../config/oxapay.config";
+import { generateInvoice } from "../../services/oxapay.service";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -109,7 +112,7 @@ export const createDeposit = async (
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
-    const { userId, voucherId, amount, paymentMethodId } = req.body;
+    const { userId, voucherId, amount, paymentMethodId, currency } = req.body;
     const orderId = uuIDv4();
     const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
     if (
@@ -127,33 +130,76 @@ export const createDeposit = async (
       });
       return;
     }
-    const body = {
-      orderCode: uuidToNumber(orderId), // Use deposit ID as orderCode
-      amount: Math.floor(amount),
-      description: "Charge money",
-      items: [
+    switch (paymentMethodId) {
+      case 1: // USDT
         {
-          name: "Charge money",
-          quantity: 1,
-          price: Math.floor(amount),
-        },
-      ],
-      cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(
-        orderId
-      )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-      returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
-        orderId
-      )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-    };
-    const response = await payOSPaymentMethod.createPaymentLink(body);
-    res.status(statusCode.CREATED).json({
-      status: true,
-      message: "Create link payment successfully",
-      data: {
-        checkoutUrl: response.checkoutUrl,
-      },
-    });
-    return;
+          const data: CreateInvoiceInput = {
+                merchant: oxapayConfig.merchant,
+                amount: amount,
+                currency: currency,
+                lifeTime: parseInt(String(oxapayConfig.lifeTime)),
+                feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
+                underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
+                callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
+                  orderId
+                )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+                returnUrl: "/"
+          }
+          console.log(data)
+          const result = await generateInvoice(data)
+          res.status(statusCode.OK).json({
+            message: "Create link payment USDT successfully",
+            status: true,
+            data: {
+              ...result,
+              checkoutUrl: result.payLink
+            }
+          })
+          return
+        }
+      case 2: // PAYOS
+        {
+          const body = {
+            orderCode: uuidToNumber(orderId), // Use deposit ID as orderCode
+            amount: Math.floor(amount),
+            description: "Charge money",
+            items: [
+              {
+                name: "Charge money",
+                quantity: 1,
+                price: Math.floor(amount),
+              },
+            ],
+            cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(
+              orderId
+            )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+            returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
+              orderId
+            )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+          };
+          const response = await payOSPaymentMethod.createPaymentLink(body);
+          res.status(statusCode.CREATED).json({
+            status: true,
+            message: "Create link payment VietQR successfully",
+            data: {
+              checkoutUrl: response.checkoutUrl,
+            },
+          });
+          return;
+        }
+
+      default:
+        {
+          res.status(statusCode.BAD_REQUEST).json({
+            status: false,
+            message:
+             "Invalid Payment Method",
+            error: "Invalid Payment Method",
+          });
+          return;
+        }
+    }
+
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
