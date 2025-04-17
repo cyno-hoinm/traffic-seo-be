@@ -54,12 +54,17 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
  *                 description: The name of the permission
+ *               code:
+ *                 type: string
+ *                 description: The code of the permission
  *             example:
- *               name: "read_users"
+ *               name: "Tạo quyền"
+ *               code: "create-permission"
  *     responses:
  *       201:
  *         description: Permission created successfully
