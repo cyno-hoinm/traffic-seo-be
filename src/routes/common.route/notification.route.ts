@@ -224,7 +224,7 @@ router.post("/", authorization(["create-notification"]), createNotification);
  */
 router.post(
   "/search",
-  authorization(["read-notifications"]),
+  authorization(["search-notifications"]),
   getNotificationsByUserIdAndType
 );
 

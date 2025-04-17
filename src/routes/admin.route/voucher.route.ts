@@ -172,7 +172,7 @@ router.post("/", authorization(["create-voucher"]),createVoucher);
  *                   type: string
  *                   example: Database error
  */
-router.get("/", authorization(["create-transaction"]),getAllVouchers);
+router.get("/", authorization(["read-transaction"]),getAllVouchers);
 
 /**
  * @swagger
@@ -258,7 +258,7 @@ router.get("/", authorization(["create-transaction"]),getAllVouchers);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id",authorization(["create-transaction"]), getVoucherById);
+router.get("/:id",authorization(["read-transaction"]), getVoucherById);
 
 /**
  * @swagger
@@ -360,7 +360,7 @@ router.get("/:id",authorization(["create-transaction"]), getVoucherById);
  *                   type: string
  *                   example: Database error
  */
-router.get("/code/:code", authorization(["create-transaction"]),getVoucherByCode);
+router.get("/code/:code", authorization(["read-transaction"]),getVoucherByCode);
 
 /**
  * @swagger
@@ -478,7 +478,7 @@ router.get("/code/:code", authorization(["create-transaction"]),getVoucherByCode
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id",authorization(["create-transaction"]), updateVoucher);
+router.put("/:id",authorization(["update-transaction"]), updateVoucher);
 
 /**
  * @swagger
@@ -541,6 +541,6 @@ router.put("/:id",authorization(["create-transaction"]), updateVoucher);
  *                   type: string
  *                   example: Database error
  */
-router.delete("/:id", authorization(["create-transaction"]),deleteVoucher);
+router.delete("/:id", authorization(["delete-transaction"]),deleteVoucher);
 
 export default router;

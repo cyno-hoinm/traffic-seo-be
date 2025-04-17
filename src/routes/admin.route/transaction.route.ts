@@ -225,7 +225,7 @@ router.post("/", authorization(["create-transaction"]), createTransaction);
  */
 router.post(
   "/search",
-  authorization(["read-transactions"]),
+  authorization(["search-transactions"]),
   getListTransaction
 );
 

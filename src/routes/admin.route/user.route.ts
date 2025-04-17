@@ -151,7 +151,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/search", authorization(["read-users"]),searchUserList);
+router.post("/search", authorization(["search-users"]),searchUserList);
 
 /**
  * @swagger

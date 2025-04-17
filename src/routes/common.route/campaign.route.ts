@@ -178,7 +178,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Database error
  */
-router.post("/search", authorization(["read-campaigns"]), getCampaignList);
+router.post("/search", authorization(["search-campaigns"]), getCampaignList);
 
 /**
  * @swagger
