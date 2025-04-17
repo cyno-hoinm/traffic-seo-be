@@ -16,9 +16,9 @@ export const createPermission = async (
   res: Response<ResponseType<PermissionAttributes>>
 ): Promise<void> => {
   try {
-    const { name } = req.body;
+    const { name, code } = req.body;
 
-    if (!name) {
+    if (!name || !code) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Validation failed",
@@ -27,7 +27,7 @@ export const createPermission = async (
       return;
     }
 
-    const permission = await createPermissionRepo({ name });
+    const permission = await createPermissionRepo({ name, code });
 
     res.status(statusCode.CREATED).json({
       status: true,
@@ -146,7 +146,9 @@ export const updatePermission = async (
       return;
     }
 
-    const updatedPermission = await updatePermissionRepo(permissionId, { name });
+    const updatedPermission = await updatePermissionRepo(permissionId, {
+      name,
+    });
 
     if (!updatedPermission) {
       res.status(statusCode.NOT_FOUND).json({
