@@ -30,10 +30,7 @@ router.get("/cancel", async (req: Request, res: Response): Promise<void> => {
       orderId: orderId?.toString() || "", // Handle optional fields
       status: DepositStatus.FAILED, // Set status to REFUND
     });
-    res.status(200).json({
-      message: "Deposit cancelled successfully",
-      // data: result,
-    });
+    res.redirect(`https://localhost:3000/deposit/failed`)
     return;
   } catch (error: any) {
     console.error("Error cancelling deposit:", error);
@@ -62,7 +59,7 @@ router.get("/success", async (req: Request, res: Response): Promise<void> => {
     const parsedCreatedBy = createdBy ? Number(createdBy) : 0; // Explicitly convert to number
     const parsedPaymentMethodId = paymentMethodId ? Number(paymentMethodId) : 0; // Default to 0 if undefined
 
-    await createDepositRepo({
+    const result = await createDepositRepo({
       createdBy: parsedCreatedBy,
       userId: Number(userId), // Ensure userId is also a number
       voucherId: voucherId ? Number(voucherId) : 0, // Handle optional fields
@@ -72,9 +69,7 @@ router.get("/success", async (req: Request, res: Response): Promise<void> => {
       status: DepositStatus.COMPLETED, // Set status to COMPLETED
     });
 
-    res.status(200).json({
-      message: "Deposit completed successfully",
-    });
+    res.redirect(`https://localhost:3000/deposit/${result.id}`)
   } catch (error: any) {
     console.error("Error processing deposit:", error);
     res

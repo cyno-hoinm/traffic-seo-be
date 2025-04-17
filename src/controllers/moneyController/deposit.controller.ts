@@ -157,7 +157,7 @@ export const createDeposit = async (
           })
           return
         }
-      case 2: // PAYOS
+      case 3: // PAYOS
         {
           const body = {
             orderCode: uuidToNumber(orderId), // Use deposit ID as orderCode
