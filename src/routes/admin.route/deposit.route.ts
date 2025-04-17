@@ -2,7 +2,8 @@ import express from "express";
 import {
   getDepositList,
   createDeposit,
-  updateDeposit,
+  getDepositById,
+  getDepositByOrderId,
 } from "../../controllers/moneyController/deposit.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
 
@@ -157,7 +158,7 @@ router.post("/search", authorization(["read-deposits"]), getDepositList);
  *               - userId
  *               - voucherId
  *               - amount
- *               - method
+ *               - paymentMethodId
  *             properties:
  *               userId:
  *                 type: integer
@@ -167,14 +168,14 @@ router.post("/search", authorization(["read-deposits"]), getDepositList);
  *                 type: integer
  *                 description: ID of the voucher
  *                 example: 1
+ *               paymentMethodId:
+ *                 type: integer
+ *                 description: ID of payment method
+ *                 example: 3
  *               amount:
  *                 type: number
  *                 description: Deposit amount
  *                 example: 100.00
- *               method:
- *                 type: string
- *                 description: Payment method
- *                 example: "CREDIT_CARD"
  *     responses:
  *       201:
  *         description: Deposit created successfully
@@ -259,9 +260,9 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
 /**
  * @swagger
  * /deposits/{id}:
- *   put:
- *     summary: Update a deposit
- *     description: Update deposit status to COMPLETED or FAILED, creates a CHARGE transaction if COMPLETED.
+ *   get:
+ *     summary: Retrieve a deposit by its ID
+ *     description: Fetches a deposit record by its unique ID. Requires authentication.
  *     tags: [Deposits]
  *     security:
  *       - bearerAuth: []
@@ -271,29 +272,10 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *         required: true
  *         schema:
  *           type: integer
- *         description: Deposit ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - acceptedBy
- *               - status
- *             properties:
- *               acceptedBy:
- *                 type: string
- *                 description: Who accepted/processed the deposit
- *                 example: "admin2"
- *               status:
- *                 type: string
- *                 enum: [COMPLETED, FAILED]
- *                 description: New status of the deposit
- *                 example: "COMPLETED"
+ *         description: The unique ID of the deposit
  *     responses:
  *       200:
- *         description: Deposit updated successfully
+ *         description: Deposit retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -304,41 +286,11 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Deposit updated successfully
+ *                   example: Deposit retrieved successfully
  *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     userId:
- *                       type: integer
- *                       example: 1
- *                     voucherId:
- *                       type: integer
- *                       example: 1
- *                     amount:
- *                       type: number
- *                       example: 100.00
- *                     paymentMethodId:
- *                       type: integer
- *                       example: 1
- *                     status:
- *                       type: string
- *                       example: "COMPLETED"
- *                     acceptedBy:
- *                       type: string
- *                       example: "admin2"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T07:00:00
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T08:00:00
+ *                   $ref: '#/components/schemas/Deposit'
  *       400:
- *         description: Bad request - Invalid fields
+ *         description: Invalid deposit ID
  *         content:
  *           application/json:
  *             schema:
@@ -349,7 +301,7 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Status must be COMPLETED or FAILED
+ *                   example: Invalid deposit ID
  *                 error:
  *                   type: string
  *                   example: Invalid field
@@ -368,7 +320,7 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *                   example: Deposit not found
  *                 error:
  *                   type: string
- *                   example: Resource not found
+ *                   example: Not found
  *       500:
  *         description: Internal server error
  *         content:
@@ -381,11 +333,93 @@ router.post("/", authorization(["create-deposit"]), createDeposit);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error updating deposit
+ *                   example: Error fetching deposit
  *                 error:
  *                   type: string
- *                   example: Database error
+ *                   example: Internal server error
  */
-router.put("/:id", authorization(["update-deposit"]), updateDeposit);
+router.get("/:id",authorization(["read-deposit-admin"]), getDepositById);
+/**
+ * @swagger
+ * /deposits/order/{orderId}:
+ *   get:
+ *     summary: Retrieve a deposit by its order ID
+ *     description: Fetches a deposit record by its order ID, ensuring the authenticated user has access. Requires authentication.
+ *     tags: [Deposits]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The order ID associated with the deposit
+ *     responses:
+ *       200:
+ *         description: Deposit retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Deposit retrieved successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Deposit'
+ *       403:
+ *         description: Forbidden - User does not have permission to access this deposit
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: You do not have permission to access this deposit
+ *                 error:
+ *                   type: string
+ *                   example: Forbidden
+ *       404:
+ *         description: Deposit not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Deposit not found
+ *                 error:
+ *                   type: string
+ *                   example: Not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching deposit
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get("/order/:orderId", authorization(["read-deposit-user"]),getDepositByOrderId);
 
 export default router;
