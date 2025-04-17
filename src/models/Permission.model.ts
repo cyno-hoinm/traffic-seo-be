@@ -9,6 +9,7 @@ class Permission
   public id!: number;
   public name!: string;
   public isDeleted!: boolean;
+  public code!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -21,6 +22,11 @@ Permission.init(
       primaryKey: true,
     },
     name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    code: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
