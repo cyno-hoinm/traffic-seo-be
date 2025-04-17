@@ -4,7 +4,7 @@ import {
   getNotificationsByUserIdAndType,
 } from "../../controllers/commonController/notification.controller";
 import { authorization } from "../../middleware/auth";
-
+// ok em
 const router = express.Router();
 
 /**
