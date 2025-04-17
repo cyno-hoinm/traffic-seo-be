@@ -59,8 +59,8 @@ export const getUserPermissions = async (userId: number): Promise<string[]> => {
   if (!user || !user.role || !user.role.rolePermissions) return [];
 
   const permissions = user.role.rolePermissions
-    .map((rp: any) => rp.permission?.name)
-    .filter((name: string | undefined) => name); // Filter out undefined/null values
+    .map((rp: any) => rp.permission?.code)
+    .filter((code: string | undefined) => code); // Filter out undefined/null values
   return permissions;
 };
 
