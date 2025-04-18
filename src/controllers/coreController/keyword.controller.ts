@@ -4,10 +4,13 @@ import {
   getKeywordListRepo,
   createKeywordRepo,
   getKeywordByIdRepo,
+  updateKeywordRepo,
 } from "../../repositories/coreRepo/keyword.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { DistributionType } from "../../enums/distribution.enum";
+import { ErrorType } from "../../types/Error.type";
+import { baseApiPython } from "../../config/botAPI.config";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -139,7 +142,14 @@ export const createKeyword = async (
       traffic,
       distribution,
     });
-
+    // console.log(keyword);
+    try {
+      const newKeyword = await baseApiPython("keyword/set", keyword);
+      console.log(newKeyword.response);
+    } catch (error) {
+      console.log(error);
+    }
+    
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Keyword created successfully",
@@ -201,5 +211,37 @@ export const getKeywordById = async (
       message: "Error fetching keyword",
       error: error.message,
     });
+  }
+};
+
+export const updateKeyword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId) || parsedId <= 0) {
+      throw new ErrorType("ValidationError", "Invalid keyword ID", 400);
+    }
+
+    const data = req.body as Partial<{
+      name: string;
+      url: string[];
+      distribution: DistributionType;
+      isDeleted: boolean;
+    }>;
+
+    const updatedKeyword = await updateKeywordRepo(parsedId, data);
+    res.status(statusCode.OK).json(updatedKeyword);
+    return;
+  } catch (error: any) {
+    const err = error as ErrorType;
+    res.status(err.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      name: err.name || "InternalServerError",
+      message: err.message || "An unexpected error occurred",
+      code: err.code || statusCode.INTERNAL_SERVER_ERROR,
+    });
+    return;
   }
 };
