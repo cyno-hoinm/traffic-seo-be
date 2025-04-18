@@ -2,10 +2,11 @@ import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
-import { getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
+import { CampaignReportList, getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
 import { getKeywordsByDistributionType } from "../../repositories/coreRepo/keyword.repository";
 import { getLinksReport } from "../../repositories/coreRepo/link.repository";
 import {
+  CampaignReport,
   getCampaignsReportUserRepo,
   getOneCampaignReportRepo,
 } from "../../repositories/coreRepo/report.repository";
@@ -13,7 +14,7 @@ import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 export const countCampaignReport = async (
   req: AuthenticatedRequest,
-  res: Response<ResponseType<{ keywords: KeywordAttributes[]; total: number }>>
+  res: Response<ResponseType<CampaignReportList>>
 ): Promise<void> => {
   try {
     const { status, start_date, end_date } = req.body;
@@ -114,7 +115,7 @@ export const getCampaignReportUser = async (
 
 export const getOneCampaignReport = async (
   req: Request,
-  res: Response<ResponseType<any>>
+  res: Response<ResponseType<CampaignReport>>
 ): Promise<void> => {
   try {
     const { campaignId } = req.body;
@@ -124,7 +125,7 @@ export const getOneCampaignReport = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign report fetched successfully",
-      data: result,
+      data: result || undefined, 
     });
     return;
   } catch (error: any) {

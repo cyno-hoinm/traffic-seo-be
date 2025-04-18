@@ -7,7 +7,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
   public campaignId!: number;
   public name!: string;
-  public url!: string[]; // Array of URLs
+  public urls!: string[]; // Array of URLs
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
   public isDeleted!: boolean;
@@ -34,7 +34,7 @@ Keyword.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    url: {
+    urls: {
       type: DataTypes.ARRAY(DataTypes.STRING), // Array of strings for PostgreSQL
       allowNull: false,
     },

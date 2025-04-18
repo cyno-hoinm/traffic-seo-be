@@ -53,7 +53,7 @@ export const getKeywordListRepo = async (filters: {
 export const  createKeywordRepo = async (data: {
   campaignId: number;
   name: string;
-  url: string[];
+  urls: string[];
   traffic: number;
   distribution: DistributionType;
 }): Promise<any> => {
@@ -62,14 +62,14 @@ export const  createKeywordRepo = async (data: {
     const keyword = await Keyword.create(data);
     return {
       keywordId: keyword.id,
-      url: keyword.url,
+      urls: keyword.urls,
       keyword: keyword.name,
       traffic: keyword.traffic,
       distribution: keyword.distribution,
       device: campaign?.device,
       domain: campaign?.domain,
-      timeStart: campaign?.startDate,
-      timeEnd: campaign?.endDate,
+      timeStart: campaign?.startDate.toString(),
+      timeEnd: campaign?.endDate.toString(),
       searchTool: campaign?.search,
     };
   } catch (error: any) {
@@ -150,7 +150,7 @@ export const getKeywordByCampaignIdRepo = async (
     // Fetch keywords using Sequelize
     const keywords = await Keyword.findAll({
       where: { campaignId: id },
-      attributes: ["distribution", "traffic", "url", "name"],
+      attributes: ["distribution", "traffic", "urls", "name"],
     });
 
     // Return null if no keywords found
@@ -176,7 +176,7 @@ export const updateKeywordRepo = async (
   id: number,
   data: Partial<{
     name: string;
-    url: string[];
+    urls: string[];
     distribution: DistributionType;
     isDeleted: boolean;
   }>

@@ -75,7 +75,7 @@ export const getCampaignsReportUserRepo = async (
   }
 };
 
-interface CampaignReport {
+export interface CampaignReport {
   campaignId: number;
   campaignName: string;
   campaignDomain: string;
