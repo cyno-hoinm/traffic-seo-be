@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import { Campaign, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
@@ -68,11 +68,11 @@ export const createCampaignRepo = async (data: {
   domain: string;
   search: string;
   campaignTypeId: CampaignTypeAttributes;
-  keyword: string;
   status: CampaignStatus;
-}): Promise<Campaign> => {
+  isDeleted: boolean;
+}, transaction?: Transaction): Promise<Campaign> => {
   try {
-    const campaign = await Campaign.create(data);
+    const campaign = await Campaign.create(data, { transaction });
     return campaign;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);

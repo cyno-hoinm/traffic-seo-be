@@ -8,6 +8,13 @@ import {
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
+import { DistributionType } from "../../enums/distribution.enum";
+import { LinkStatus } from "../../enums/linkStatus.enum";
+import { sequelizeSystem } from "../../database/config.database";
+import { Transaction } from "sequelize";
+import { KeywordAttributes } from "../../interfaces/Keyword.interface";
+import {Campaign, Keyword, Link} from "../../models/index.model";
+import { LinkAttributes } from "../../interfaces/Link.interface";
 
 
 // Get campaign list with filters
@@ -129,10 +136,9 @@ export const getCampaignList = async (
   }
 };
 
-// Create a new campaign
 export const createCampaign = async (
   req: Request,
-  res: Response<ResponseType<CampaignAttributes>>
+  res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
     const {
@@ -148,11 +154,13 @@ export const createCampaign = async (
       cost,
       domain,
       search,
-      keyword,
       status,
       campaignTypeId,
+      keywords, // Array of KeywordAttributes, optional
+      links, // Array of LinkAttributes, optional
     } = req.body;
 
+    // Validate required fields
     if (
       !userId ||
       !countryId ||
@@ -168,12 +176,11 @@ export const createCampaign = async (
       !domain ||
       !search ||
       !campaignTypeId ||
-      !keyword ||
       !status
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "All fields are required",
+        message: "All required fields must be provided",
         error: "Missing or invalid field",
       });
       return;
@@ -199,44 +206,156 @@ export const createCampaign = async (
       return;
     }
 
-    const campaign = await createCampaignRepo({
-      userId,
-      countryId,
-      name,
-      type,
-      device,
-      timeCode,
-      startDate: start,
-      endDate: end,
-      totalTraffic,
-      cost,
-      domain,
-      search,
-      campaignTypeId,
-      keyword,
-      status,
+    // Validate keywords if provided
+    if (keywords) {
+      if (!Array.isArray(keywords)) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Keywords must be an array",
+          error: "Invalid field",
+        });
+        return;
+      }
+      for (const keyword of keywords) {
+        if (
+          !keyword.name ||
+          !keyword.urls ||
+          !Array.isArray(keyword.urls) ||
+          !keyword.distribution ||
+          !Object.values(DistributionType).includes(keyword.distribution)
+        ) {
+          res.status(statusCode.BAD_REQUEST).json({
+            status: false,
+            message:
+              "Each keyword must have a valid name, urls array, and distribution",
+            error: "Invalid field",
+          });
+          return;
+        }
+      }
+    }
+
+    // Validate links if provided
+    if (links) {
+      if (!Array.isArray(links)) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Links must be an array",
+          error: "Invalid field",
+        });
+        return;
+      }
+      for (const link of links) {
+        if (
+          !link.link ||
+          !link.linkTo ||
+          !link.distribution ||
+          !Object.values(DistributionType).includes(link.distribution) ||
+          !link.anchorText ||
+          !link.status ||
+          !Object.values(LinkStatus).includes(link.status) ||
+          !link.url ||
+          !link.page
+        ) {
+          res.status(statusCode.BAD_REQUEST).json({
+            status: false,
+            message:
+              "Each link must have valid link, linkTo, distribution, anchorText, status, url, and page",
+            error: "Invalid field",
+          });
+          return;
+        }
+      }
+    }
+  
+    // Use a transaction to ensure data consistency
+    const campaign = await sequelizeSystem.transaction(
+      async (transaction: Transaction) => {
+        // Create the campaign
+        const campaign = await createCampaignRepo(
+          {
+            userId,
+            countryId,
+            name,
+            type,
+            device,
+            timeCode,
+            startDate: start,
+            endDate: end,
+            totalTraffic,
+            cost,
+            domain,
+            search,
+            campaignTypeId,
+            status,
+            isDeleted: false, // Set default value
+          },
+          transaction
+        );
+        // Insert keywords if provided
+        if (keywords && keywords.length > 0) {
+          const keywordData = keywords.map((keyword: Partial<KeywordAttributes>) => ({
+            campaignId: campaign.id,
+            name: keyword.name,
+            urls: keyword.urls,
+            distribution: keyword.distribution,
+            traffic: keyword.traffic || 0,
+            isDeleted: false,
+          }));
+          await Keyword.bulkCreate(keywordData, { transaction });
+        }
+
+        // Insert links if provided
+        if (links && links.length > 0) {
+          const linkData = links.map((link: Partial<LinkAttributes>) => ({
+            campaignId: campaign.id,
+            link: link.link,
+            linkTo: link.linkTo,
+            distribution: link.distribution,
+            traffic: link.traffic || 0,
+            anchorText: link.anchorText,
+            status: link.status,
+            url: link.url,
+            page: link.page,
+            isDeleted: false,
+          }));
+          await Link.bulkCreate(linkData, { transaction });
+        }
+
+        return campaign;
+      }
+    );
+  
+    // Fetch the campaign with associated keywords and links for response
+    const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
+      include: [
+        { model: Keyword, as: "keywords" },
+        { model: Link, as: "links" },
+      ],
     });
 
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Campaign created successfully",
       data: {
-        id: campaign.id,
-        userId: campaign.userId,
-        countryId: campaign.countryId,
-        name: campaign.name,
-        campaignTypeId: campaign.campaignTypeId,
-        device: campaign.device,
-        timeCode: campaign.timeCode,
-        startDate: campaign.startDate,
-        endDate: campaign.endDate,
-        totalTraffic: campaign.totalTraffic,
-        cost: campaign.cost,
-        domain: campaign.domain,
-        search: campaign.search,
-        status: campaign.status,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
+        id: campaignWithAssociations?.id,
+        userId: campaignWithAssociations?.userId,
+        countryId: campaignWithAssociations?.countryId,
+        name: campaignWithAssociations?.name,
+        campaignTypeId: campaignWithAssociations?.campaignTypeId,
+        device: campaignWithAssociations?.device,
+        timeCode: campaignWithAssociations?.timeCode,
+        startDate: campaignWithAssociations?.startDate,
+        endDate: campaignWithAssociations?.endDate,
+        totalTraffic: campaignWithAssociations?.totalTraffic,
+        cost: campaignWithAssociations?.cost,
+        domain: campaignWithAssociations?.domain,
+        search: campaignWithAssociations?.search,
+        status: campaignWithAssociations?.status,
+        keywords: campaignWithAssociations?.keywords || [],
+        links: campaignWithAssociations?.links || [],
+        createdAt: campaignWithAssociations?.createdAt,
+        updatedAt: campaignWithAssociations?.updatedAt,
       },
     });
   } catch (error: any) {
