@@ -7,6 +7,7 @@ import {
   getAllRolesRepo,
   updateRoleRepo,
   deleteRoleRepo,
+  searchRoleRepo,
 } from "../../repositories/roleRepo/role.repository";
 import { RoleAttributes } from "../../interfaces/Role.interface";
 import { ResponseType } from "../../types/Response.type";
@@ -195,6 +196,71 @@ export const deleteRole = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error deleting role",
+      error: error.message,
+    });
+  }
+};
+
+export const searchRoleList = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { key, page, size } = req.body;
+
+    const pageSizeNum = parseInt(page as string, 10);
+    const pageLimitNum = parseInt(size as string, 10);
+
+    if (isNaN(pageSizeNum) || pageSizeNum < 0) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageSize must be a non-negative integer",
+      });
+      return;
+    }
+    if (isNaN(pageLimitNum) || pageLimitNum < 0) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageLimit must be a non-negative integer",
+      });
+      return;
+    }
+
+    const { roles, total } = await searchRoleRepo(
+      key as string | undefined,
+      pageSizeNum,
+      pageLimitNum
+    );
+
+    if (pageSizeNum === 0 || pageLimitNum === 0) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Roles retrieved successfully",
+        data: {
+          total: total,
+          list: roles,
+        },
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Users retrieved successfully",
+      pageSize: pageSizeNum,
+      pageLimit: pageLimitNum,
+      totalPages: Math.ceil(total / pageLimitNum),
+      data: {
+        total: total,
+        list: roles,
+      },
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
       error: error.message,
     });
   }
