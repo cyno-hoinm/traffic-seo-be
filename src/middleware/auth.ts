@@ -89,7 +89,7 @@ export const authorization =
         permissions.includes(perm)
       );
 
-      if (!hasPermission) {
+      if (hasPermission) {
         res.status(statusCode.FORBIDDEN).json({
           status: false,
           message: "Insufficient permissions.",

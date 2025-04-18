@@ -3,6 +3,7 @@ import {
   getLinkList,
   createLink,
   getLinkById,
+  updateLink,
 } from "../../controllers/coreController/link.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
 
@@ -382,5 +383,162 @@ router.post("/", authorization(["create-link"]), createLink);
  *                   example: Database error
  */
 router.get("/:id", authorization(["read-link"]), getLinkById);
+
+/**
+ * @swagger
+ * /links/{id}:
+ *   patch:
+ *     summary: Update a link by ID
+ *     description: Updates specific fields of an existing link identified by its ID. Only provided fields are updated.
+ *     tags:
+ *       - Links
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: The ID of the link to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               link:
+ *                 type: string
+ *                 description: The link URL
+ *               linkTo:
+ *                 type: string
+ *                 description: The destination URL
+ *               distribution:
+ *                 type: string
+ *                 enum: [DAY, MONTH, YEAR]
+ *                 description: The distribution type of the link
+ *               anchorText:
+ *                 type: string
+ *                 description: The anchor text for the link
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, PENDING, COMPLETED]
+ *                 description: The status of the link
+ *               url:
+ *                 type: string
+ *                 description: The URL associated with the link
+ *               page:
+ *                 type: string
+ *                 description: The page associated with the link
+ *               isDeleted:
+ *                 type: boolean
+ *                 description: Whether the link is marked as deleted
+ *             example:
+ *               link: "https://example.com"
+ *               anchorText: "Example Link"
+ *               status: "active"
+ *     responses:
+ *       200:
+ *         description: Link updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: The ID of the updated link
+ *                 campaignId:
+ *                   type: integer
+ *                   description: ID of the campaign
+ *                 link:
+ *                   type: string
+ *                   description: The link URL
+ *                 linkTo:
+ *                   type: string
+ *                   description: The destination URL
+ *                 distribution:
+ *                   type: string
+ *                   description: The distribution type
+ *                 traffic:
+ *                   type: number
+ *                   description: Traffic count
+ *                 anchorText:
+ *                   type: string
+ *                   description: The anchor text
+ *                 status:
+ *                   type: string
+ *                   description: The status of the link
+ *                 url:
+ *                   type: string
+ *                   description: The URL
+ *                 page:
+ *                   type: string
+ *                   description: The page
+ *                 isDeleted:
+ *                   type: boolean
+ *                   description: Whether the link is deleted
+ *               example:
+ *                 link: "https://example.com"
+ *                 linkTo: "https://destination.com"
+ *                 distribution: "DAY"
+ *                 anchorText: "Example Link"
+ *                 status: "COMPLETED"
+ *                 url: "https://example.com/page"
+ *                 page: "/page"
+ *                 isDeleted: false
+ *       400:
+ *         description: Invalid link ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "ValidationError"
+ *                 message: "Invalid link ID"
+ *                 code: 400
+ *       404:
+ *         description: Link not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "NotFoundError"
+ *                 message: "Link with id 1 not found"
+ *                 code: 404
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "InternalServerError"
+ *                 message: "An unexpected error occurred"
+ *                 code: 500
+ */
+router.patch("/:id", updateLink);
 
 export default router;

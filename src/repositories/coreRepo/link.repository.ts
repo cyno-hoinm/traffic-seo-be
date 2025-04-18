@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import { Campaign, Link, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
+import statusCode from "../../constants/statusCode";
 
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
@@ -29,12 +30,19 @@ export const getLinkListRepo = async (filters: {
     };
 
     // Apply pagination only if page and limit are not 0
-    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+    if (
+      filters.page &&
+      filters.limit &&
+      filters.page > 0 &&
+      filters.limit > 0
+    ) {
       queryOptions.offset = (filters.page - 1) * filters.limit;
       queryOptions.limit = filters.limit;
     }
 
-    const { rows: links, count: total } = await Link.findAndCountAll(queryOptions);
+    const { rows: links, count: total } = await Link.findAndCountAll(
+      queryOptions
+    );
 
     return { links, total };
   } catch (error: any) {
@@ -116,4 +124,38 @@ export const getLinksReport = async (
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
-};;
+};
+
+export const updateLinkRepo = async (
+  id: number,
+  data: Partial<{
+    link: string;
+    linkTo: string;
+    distribution: DistributionType;
+    anchorText: string;
+    status: LinkStatus;
+    url: string;
+    page: string;
+    isDeleted: boolean;
+  }>
+): Promise<Link> => {
+  try {
+    const link = await Link.findByPk(id);
+    if (!link) {
+      throw new ErrorType("NotFoundError", `Link with id ${id} not found`, statusCode.NOT_FOUND);
+    }
+
+    // Create a new object with only defined values
+    const updateData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    await link.update(updateData);
+    return link;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code || statusCode.INTERNAL_SERVER_ERROR);
+  }
+};

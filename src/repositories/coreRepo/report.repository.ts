@@ -1,7 +1,9 @@
 import { Op } from "sequelize";
 import { sequelizeSystem } from "../../database/config.database";
-import { Campaign } from "../../models/index.model";
+import { Campaign, Keyword, Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
+import { LinkAttributes } from "../../interfaces/Link.interface";
+import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 
 export const getCampaignsReportUserRepo = async (
   userId: string, // Required: filter campaigns by userId
@@ -73,79 +75,65 @@ export const getCampaignsReportUserRepo = async (
   }
 };
 
-export const getOneCampaignReportRepo = async (
-  campaignId: number, // Required: filter by campaignId
-  startDate?: string, // Optional: filter campaign by startDate
-  endDate?: string // Optional: filter campaign by endDate
-): Promise<{
+interface CampaignReport {
   campaignId: number;
   campaignName: string;
+  campaignDomain: string;
+  startDate: Date;
+  endDate: Date;
+  targetTraffic: number;
   linkCount: number;
   keywordCount: number;
-}> => {
+  links: LinkAttributes[];
+  keywords: KeywordAttributes[];
+
+}
+
+export const getOneCampaignReportRepo = async (
+  campaignId: number
+): Promise<CampaignReport | null> => {
   try {
-    if (!sequelizeSystem) {
-      throw new Error("Sequelize instance is not defined");
-    }
-
-    // Campaign filter
-    const campaignWhere: any = {
-      id: campaignId,
-      isDeleted: false,
-    };
-
-    // Date range filter for campaign
-    if (startDate || endDate) {
-      campaignWhere[Op.and] = [];
-      if (startDate) {
-        campaignWhere[Op.and].push({ startDate: { [Op.gte]: startDate } });
-      }
-      if (endDate) {
-        campaignWhere[Op.and].push({ endDate: { [Op.lte]: endDate } });
-      }
-    }
-
-    const queryOptions: any = {
-      where: campaignWhere,
-      attributes: [
-        "id",
-        "name",
-        // Subquery for counting links
-        [
-          sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
-          ),
-          "linkCount",
-        ],
-        // Subquery for counting keywords
-        [
-          sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
-          ),
-          "keywordCount",
-        ],
+    const campaign = await Campaign.findOne({
+      where: {
+        id: campaignId,
+        status : "ACTIVE",
+        isDeleted: false,
+      },
+      attributes: ["id", "name","startDate","endDate","totalTraffic","domain"],
+      include: [
+        {
+          model: Link,
+          as: "links",
+          where: { isDeleted: false },
+          required: false, // Include even if no links
+        },
+        {
+          model: Keyword,
+          as: "keywords",
+          where: { isDeleted: false },
+          required: false, // Include even if no keywords
+        },
       ],
-      raw: true,
-    };
+    });
 
-    const result = await Campaign.findOne(queryOptions);
-
-    if (!result) {
-      return {
-        campaignId: -1,
-        campaignName: "",
-        linkCount: 0,
-        keywordCount: 0,
-      };
+    if (!campaign) {
+      return null; // Campaign not found or is deleted
     }
 
     return {
-      campaignId: result.id,
-      campaignName: result.name,
-      linkCount: result.keywordsCount || 0,
-      keywordCount: result.keywordsCount || 0,
+      campaignId: campaign.id,
+      campaignName: campaign.name,
+      campaignDomain : campaign.domain || "",
+      startDate: campaign.startDate || "",
+      endDate: campaign.endDate || "",
+      targetTraffic : campaign.totalTraffic || 0,
+      linkCount : campaign.links.length,
+      keywordCount : campaign.keywords.length,
+      links: campaign.links || [],
+      keywords: campaign.keywords || [],
     };
-  } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code);
+  } catch (error) {
+    console.error("Error fetching campaign details:", error);
+    throw error;
   }
 };
