@@ -28,9 +28,3 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   },
 });
 
-// console.log("Sequelize Config:", {
-//   host: sequelizeSystem.config.host,
-//   port: sequelizeSystem.config.port,
-//   database: sequelizeSystem.config.database,
-//   username: sequelizeSystem.config.username,
-// });

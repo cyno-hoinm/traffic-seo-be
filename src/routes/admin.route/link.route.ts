@@ -539,6 +539,6 @@ router.get("/:id", authorization(["read-link"]), getLinkById);
  *                 message: "An unexpected error occurred"
  *                 code: 500
  */
-router.patch("/:id", updateLink);
+router.patch("/:id", authorization(["update-link"]),  updateLink);
 
 export default router;

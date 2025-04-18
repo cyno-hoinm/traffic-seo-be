@@ -22,9 +22,8 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
           name: "admin",
           isDeleted: false,
         });
-        // console.log('Admin role created successfully');
       } else {
-        // console.log('Admin role already exists');
+
       }
 
       // Check and create customer role
@@ -36,9 +35,9 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
           name: "customer",
           isDeleted: false,
         });
-        // console.log('Customer role created successfully');
+
       } else {
-        // console.log('Customer role already exists');
+
       }
     } catch (error: any) {
       console.error("Error initializing roles:", error);

@@ -142,14 +142,9 @@ export const createKeyword = async (
       traffic,
       distribution,
     });
-    // console.log(keyword);
-    try {
-      const newKeyword = await baseApiPython("keyword/set", keyword);
-      console.log(newKeyword);
-    } catch (error) {
-      console.log(error);
-    }
-    
+
+    const newKeyword = await baseApiPython("keyword/set", keyword);
+
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Keyword created successfully",

@@ -145,7 +145,7 @@ export const createDeposit = async (
                 )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
                 returnUrl: "/"
           }
-          console.log(data)
+
           const result = await generateInvoice(data)
           res.status(statusCode.OK).json({
             message: "Create link payment USDT successfully",

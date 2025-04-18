@@ -6,7 +6,7 @@ const baseUrl = oxapayConfig.url;
 
 export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateInvoiceResult> => {
   try {
-    console.log(baseUrl)
+
     const res = await axios.post(`${baseUrl}/merchants/request`, data, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -21,7 +21,7 @@ export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateI
 
 export const generatePayout = async (data: CreatePayoutInput): Promise<CreatePayoutResult> => {
   try {
-    console.log(baseUrl)
+
     const res = await axios.post(`${baseUrl}/api/send`, data, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -36,7 +36,6 @@ export const generatePayout = async (data: CreatePayoutInput): Promise<CreatePay
 
 export const getMyIP = async (): Promise<any> => {
   try {
-    console.log(baseUrl)
     const res = await axios.get(`${baseUrl}/api/myip`,  {
       headers: { 'Content-Type': 'application/json' },
     });

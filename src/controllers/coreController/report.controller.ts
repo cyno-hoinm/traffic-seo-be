@@ -19,7 +19,7 @@ export const countCampaignReport = async (
   try {
     const { status, start_date, end_date } = req.body;
     const userId = req.data?.id;
-    console.log(req.data?.role.id);
+
     const roleUser = req.data?.role.id;
     let result;
     if (roleUser === 1) {

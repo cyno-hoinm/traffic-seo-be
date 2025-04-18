@@ -478,5 +478,5 @@ router.get("/:id", authorization(["read-keyword"]), getKeywordById);
  *                 message: "An unexpected error occurred"
  *                 code: 500
  */
-router.patch("/:id", updateKeyword);
+router.patch("/:id", authorization(["update-keyword"]), updateKeyword);
 export default router;
