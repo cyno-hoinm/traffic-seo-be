@@ -79,11 +79,11 @@ export const getKeywordList = async (
       status: true,
       message: "Keywords retrieved successfully",
       data: {
-        keywords: keywords.keywords.map((keyword: KeywordAttributes) => ({
+        keywords: keywords.keywords.map((keyword: any) => ({
           id: keyword.id,
           campaignId: keyword.campaignId,
           name: keyword.name,
-          url: keyword.url,
+          urls: keyword.url,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
           createdAt: keyword.createdAt,
@@ -107,14 +107,14 @@ export const createKeyword = async (
   res: Response<ResponseType<KeywordAttributes>>
 ): Promise<void> => {
   try {
-    const { campaignId, name, url, distribution, traffic } = req.body;
+    const { campaignId, name, urls, distribution, traffic } = req.body;
 
     if (
       !campaignId ||
       !name ||
-      !url ||
-      !Array.isArray(url) ||
-      url.length === 0 ||
+      !urls ||
+      !Array.isArray(urls) ||
+      urls.length === 0 ||
       !distribution
     ) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -138,14 +138,14 @@ export const createKeyword = async (
     const keyword = await createKeywordRepo({
       campaignId,
       name,
-      url,
+      urls,
       traffic,
       distribution,
     });
     // console.log(keyword);
     try {
       const newKeyword = await baseApiPython("keyword/set", keyword);
-      console.log(newKeyword.response);
+      console.log(newKeyword);
     } catch (error) {
       console.log(error);
     }
@@ -157,7 +157,7 @@ export const createKeyword = async (
         id: keyword.id,
         campaignId: keyword.campaignId,
         name: keyword.name,
-        url: keyword.url,
+        urls: keyword.url,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
@@ -198,7 +198,7 @@ export const getKeywordById = async (
         id: keyword.id,
         campaignId: keyword.campaignId,
         name: keyword.name,
-        url: keyword.url,
+        urls: keyword.urls,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
@@ -227,7 +227,7 @@ export const updateKeyword = async (
 
     const data = req.body as Partial<{
       name: string;
-      url: string[];
+      urls: string[];
       distribution: DistributionType;
       isDeleted: boolean;
     }>;

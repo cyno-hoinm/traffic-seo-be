@@ -160,7 +160,11 @@ export const getCampaignReport = async (
       : new ErrorType('UnknownError', 'Failed to fetch campaign report');
   }
 };
-
+export interface CampaignReportList {
+  campaignTypeId: number;
+  campaignTypeName: string;
+  count: number;
+}
 
 // Utility function to validate YYYY-MM-DD date format
 const isValidDate = (dateString: string): boolean => {

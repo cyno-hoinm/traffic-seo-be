@@ -1,6 +1,5 @@
 import axios from "axios";
 import { parseStringPromise } from "xml2js";
-import qs from "qs";
 
 const jwtToken = process.env.JWT_API_PYTHON;
 const urlApi = process.env.URL_API_PYTHON;
@@ -13,14 +12,15 @@ const urlApi = process.env.URL_API_PYTHON;
 export const baseApiPython = async (endpoint: string, data = {}) => {
     try {
       const apiUrl = `${urlApi}/${endpoint}`;
-      
-      const response = await axios.post(apiUrl, qs.stringify(data), {
+      // console.log(apiUrl);
+      // console.log(data);
+      const response = await axios.post(apiUrl, data, {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
           "Authorization": `Bearer ${jwtToken}`,
         },
       });
-  
+      console.log(response);
       if (!response.data) {
         throw new Error("Empty response from API");
       }
@@ -28,6 +28,7 @@ export const baseApiPython = async (endpoint: string, data = {}) => {
       const parsedResponse = await parseStringPromise(response.data, {
         explicitArray: false,
       });
+      // console.log(parsedResponse);
       const jsonString = parsedResponse?.string?._ || null;
   
       if (!jsonString) {
