@@ -11,12 +11,12 @@ export const createInvoice = async (
     const { amount, currency } = req.body
 
     const data: CreateInvoiceInput = {
-      merchant: oxapayConfig.merchant,
       amount: amount,
       currency: currency,
       lifeTime: parseInt(String(oxapayConfig.lifeTime)),
       feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
       underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
+      thanksMessage: "Auto Ranker!",
       callbackUrl: "",
       returnUrl: "/"
     }
