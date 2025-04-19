@@ -15,6 +15,7 @@ import { Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import {Campaign, Keyword, Link} from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
+import { baseApiPython } from "../../config/botAPI.config";
 
 
 // Get campaign list with filters
@@ -292,17 +293,23 @@ export const createCampaign = async (
           },
           transaction
         );
+
         // Insert keywords if provided
         if (keywords && keywords.length > 0) {
-          const keywordData = keywords.map((keyword: Partial<KeywordAttributes>) => ({
-            campaignId: campaign.id,
-            name: keyword.name,
-            urls: keyword.urls,
-            distribution: keyword.distribution,
-            traffic: keyword.traffic || 0,
-            isDeleted: false,
-          }));
-          await Keyword.bulkCreate(keywordData, { transaction });
+          for (const keyword of keywords) {
+            const keywordData = {
+              campaignId: campaign.id,
+              name: keyword.name,
+              urls: keyword.urls,
+              distribution: keyword.distribution,
+              traffic: keyword.traffic || 0,
+              isDeleted: false,
+            };
+            // Create keyword in database
+            await Keyword.create(keywordData, { transaction });
+            // Call Python API for each keyword
+            await baseApiPython("keyword/set", keywordData);
+          }
         }
 
         // Insert links if provided
