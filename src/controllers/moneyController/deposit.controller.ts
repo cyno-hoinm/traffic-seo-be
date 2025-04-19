@@ -134,7 +134,6 @@ export const createDeposit = async (
       case 1: // USDT
         {
           const data: CreateInvoiceInput = {
-                merchant: oxapayConfig.merchant,
                 amount: amount,
                 currency: currency,
                 lifeTime: parseInt(String(oxapayConfig.lifeTime)),
@@ -143,7 +142,8 @@ export const createDeposit = async (
                 callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
                   orderId
                 )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-                returnUrl: "/"
+                returnUrl: "/",
+                sandbox: !!oxapayConfig.sandbox
           }
 
           const result = await generateInvoice(data)
@@ -152,7 +152,7 @@ export const createDeposit = async (
             status: true,
             data: {
               ...result,
-              checkoutUrl: result.payLink
+              checkoutUrl: result.payment_url
             }
           })
           return

@@ -6,12 +6,15 @@ const baseUrl = oxapayConfig.url;
 
 export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateInvoiceResult> => {
   try {
-
-    const res = await axios.post(`${baseUrl}/merchants/request`, data, {
-      headers: { 'Content-Type': 'application/json' },
+    console.log(baseUrl)
+    const res = await axios.post(`${baseUrl}/payment/invoice`, data, {
+      headers: {
+        'merchant_api_key': oxapayConfig.merchant,
+        'Content-Type': 'application/json'
+      },
     });
 
-    return res.data;
+    return res.data.data;
   } catch (error: any) {
     console.error('Oxapay - createInvoice error:', error.response?.data || error.message);
     throw new Error('Failed to create Oxapay invoice');

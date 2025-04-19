@@ -5,5 +5,6 @@ export const oxapayConfig = {
   lifeTime: process.env.OXAPAY_LIFETTIME || 30,
   feePaidByPayer: process.env.OXAPAY_FEEPAID_BY_PAYER,
   underPaidCover: process.env.OXAPAY_UNDER_PAID_COVER || 0,
-  payoutAddress: process.env.OXAPAY_PAYOUT_ADDRESS || ""
+  payoutAddress: process.env.OXAPAY_PAYOUT_ADDRESS || "",
+  sandbox: process.env.OXAPAY_SANDBOX
 };
