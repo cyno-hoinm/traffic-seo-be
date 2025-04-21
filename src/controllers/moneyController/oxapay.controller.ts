@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import statusCode from "../../constants/statusCode";
 import { CreateInvoiceInput, CreatePayoutInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
-import { generateInvoice, generatePayout, getMyIP } from "../../services/oxapay.service";
+import { generateInvoice, generatePayout, getCurrenciesService, getMyIP } from "../../services/oxapay.service";
 
 export const createInvoice = async (
   req: Request,
@@ -11,12 +11,12 @@ export const createInvoice = async (
     const { amount, currency } = req.body
 
     const data: CreateInvoiceInput = {
-      merchant: oxapayConfig.merchant,
       amount: amount,
       currency: currency,
       lifeTime: parseInt(String(oxapayConfig.lifeTime)),
       feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
       underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
+      thanksMessage: "Auto Ranker!",
       callbackUrl: "",
       returnUrl: "/"
     }
@@ -32,6 +32,29 @@ export const createInvoice = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error fetching deposits",
+      error: error.message,
+    });
+  }
+}
+
+export const getCurrencies = async (
+  req: Request,
+  res: Response): Promise<void> => {
+  try {
+
+
+    const result = await getCurrenciesService()
+
+    res.status(statusCode.OK).json({
+      message: "List currencies!",
+      status: true,
+      data: result.list
+    })
+
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching currencies!",
       error: error.message,
     });
   }

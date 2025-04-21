@@ -112,7 +112,7 @@ export const createDeposit = async (
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
-    const { userId, voucherId, amount, paymentMethodId, currency } = req.body;
+    const { userId, voucherId, amount, paymentMethodId } = req.body;
     const orderId = uuIDv4();
     const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
     if (
@@ -134,16 +134,17 @@ export const createDeposit = async (
       case 1: // USDT
         {
           const data: CreateInvoiceInput = {
-                merchant: oxapayConfig.merchant,
                 amount: amount,
-                currency: currency,
+                currency: oxapayConfig.currency,
                 lifeTime: parseInt(String(oxapayConfig.lifeTime)),
                 feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
                 underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
-                callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
-                  orderId
-                )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-                returnUrl: "/"
+                callbackUrl: `${process.env.DEV_URL}/oxapay/callback`,
+                // callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
+                //   orderId
+                // )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+                returnUrl: "/",
+                sandbox: !!oxapayConfig.sandbox
           }
 
           const result = await generateInvoice(data)
@@ -152,7 +153,7 @@ export const createDeposit = async (
             status: true,
             data: {
               ...result,
-              checkoutUrl: result.payLink
+              checkoutUrl: result.payment_url
             }
           })
           return
