@@ -2,18 +2,32 @@ import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
-import { getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
+import { CampaignReportList, getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
 import { getKeywordsByDistributionType } from "../../repositories/coreRepo/keyword.repository";
 import { getLinksReport } from "../../repositories/coreRepo/link.repository";
-import { getCampaignsReportUserRepo, getOneCampaignReportRepo } from "../../repositories/coreRepo/report.repository";
+import {
+  CampaignReport,
+  getCampaignsReportUserRepo,
+  getOneCampaignReportRepo,
+} from "../../repositories/coreRepo/report.repository";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 export const countCampaignReport = async (
-  req: Request,
-  res: Response<ResponseType<{ keywords: KeywordAttributes[]; total: number }>>
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<CampaignReportList>>
 ): Promise<void> => {
   try {
-    const { key, start_date, end_date } = req.body;
-    const result = await getCampaignReport(key, start_date, end_date);
+    const { status, start_date, end_date } = req.body;
+    const userId = req.data?.id;
+
+    const roleUser = req.data?.role.id;
+    let result;
+    if (roleUser === 1) {
+      result = await getCampaignReport(status, start_date, end_date);
+    } else if (roleUser === 2) {
+      result = await getCampaignReport(status, start_date, end_date, userId);
+    }
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign report fetched successfully",
@@ -99,22 +113,19 @@ export const getCampaignReportUser = async (
   }
 };
 
-
 export const getOneCampaignReport = async (
   req: Request,
-  res: Response<ResponseType<any>>
+  res: Response<ResponseType<CampaignReport>>
 ): Promise<void> => {
   try {
-    const { campaignId, start_date, end_date } = req.body;
+    const { campaignId } = req.body;
     const result = await getOneCampaignReportRepo(
-      campaignId,
-      start_date,
-      end_date
+      campaignId
     );
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign report fetched successfully",
-      data: result,
+      data: result || undefined, 
     });
     return;
   } catch (error: any) {
@@ -125,4 +136,3 @@ export const getOneCampaignReport = async (
     });
   }
 };
-

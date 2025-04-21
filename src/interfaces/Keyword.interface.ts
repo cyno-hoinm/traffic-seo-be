@@ -4,7 +4,7 @@ export interface KeywordAttributes {
   id?: number;
   campaignId: number;
   name: string;
-  url: string[];
+  urls?: string[];
   distribution: DistributionType;
   traffic : number;
   isDeleted?: boolean;

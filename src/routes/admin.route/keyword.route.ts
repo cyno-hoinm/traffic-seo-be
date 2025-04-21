@@ -3,6 +3,7 @@ import {
   getKeywordList,
   createKeyword,
   getKeywordById,
+  updateKeyword,
 } from "../../controllers/coreController/keyword.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
 
@@ -335,4 +336,147 @@ router.post("/", authorization(["create-keyword"]), createKeyword);
  */
 router.get("/:id", authorization(["read-keyword"]), getKeywordById);
 
+/**
+ * @swagger
+ * /keywords/{id}:
+ *   patch:
+ *     summary: Update a keyword by ID
+ *     description: Updates specific fields of an existing keyword identified by its ID. Only provided fields are updated. The fields `traffic` and `campaignId` cannot be updated through this endpoint.
+ *     tags:
+ *       - Keywords
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: The ID of the keyword to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The name of the keyword
+ *               url:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of URLs associated with the keyword
+ *               distribution:
+ *                 type: string
+ *                 enum: [DAY, MONTH, YEAR]
+ *                 description: The distribution type of the keyword
+ *               isDeleted:
+ *                 type: boolean
+ *                 description: Whether the keyword is marked as deleted
+ *             example:
+ *               name: "New Keyword"
+ *               url: ["https://example.com", "https://example.org"]
+ *               distribution: "DAY"
+ *               isDeleted: false
+ *     responses:
+ *       200:
+ *         description: Keyword updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: The ID of the updated keyword
+ *                 campaignId:
+ *                   type: integer
+ *                   description: ID of the campaign
+ *                 name:
+ *                   type: string
+ *                   description: The name of the keyword
+ *                 url:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: Array of URLs
+ *                 distribution:
+ *                   type: string
+ *                   description: The distribution type
+ *                 traffic:
+ *                   type: number
+ *                   description: Traffic count
+ *                 isDeleted:
+ *                   type: boolean
+ *                   description: Whether the keyword is deleted
+ *                 createdAt:
+ *                   type: string
+ *                   description: Creation timestamp
+ *                 updatedAt:
+ *                   type: string
+ *                   description: Last update timestamp
+ *               example:
+ *                 id: 1
+ *                 campaignId: 10
+ *                 name: "New Keyword"
+ *                 url: ["https://example.com", "https://example.org"]
+ *                 distribution: "organic"
+ *                 traffic: 100
+ *                 isDeleted: false
+ *                 createdAt: "2025-04-17T10:00:00"
+ *                 updatedAt: "2025-04-17T12:00:00"
+ *       400:
+ *         description: Invalid keyword ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "ValidationError"
+ *                 message: "Invalid keyword ID"
+ *                 code: 400
+ *       404:
+ *         description: Keyword not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "NotFoundError"
+ *                 message: "Keyword with id 1 not found"
+ *                 code: 404
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 code:
+ *                   type: integer
+ *               example:
+ *                 name: "InternalServerError"
+ *                 message: "An unexpected error occurred"
+ *                 code: 500
+ */
+router.patch("/:id", authorization(["update-keyword"]), updateKeyword);
 export default router;

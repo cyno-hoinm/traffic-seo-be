@@ -8,6 +8,7 @@ import {
   findAllPermissionsRepo,
   updatePermissionRepo,
   deletePermissionRepo,
+  searchPermissionRepo,
 } from "../../repositories/roleRepo/permission.repository";
 
 // Create a new permission
@@ -205,6 +206,72 @@ export const deletePermission = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Permission deleted successfully",
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+export const searchPermissionList = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { key, page, size } = req.body;
+
+    const pageSizeNum = parseInt(page as string, 10);
+    const pageLimitNum = parseInt(size as string, 10);
+
+    if (isNaN(pageSizeNum) || pageSizeNum < 0) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageSize must be a non-negative integer",
+      });
+      return;
+    }
+    if (isNaN(pageLimitNum) || pageLimitNum < 0) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "pageLimit must be a non-negative integer",
+      });
+      return;
+    }
+
+    const { permissions, total } = await searchPermissionRepo(
+      key as string | undefined,
+      pageSizeNum,
+      pageLimitNum
+    );
+
+    if (pageSizeNum === 0 || pageLimitNum === 0) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "permissions retrieved successfully",
+        data: {
+          total: total,
+          list: permissions,
+        },
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "permissions retrieved successfully",
+      pageSize: pageSizeNum,
+      pageLimit: pageLimitNum,
+      totalPages: Math.ceil(total / pageLimitNum),
+      data: {
+        total: total,
+        list: permissions,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

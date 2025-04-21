@@ -4,10 +4,13 @@ import {
   getKeywordListRepo,
   createKeywordRepo,
   getKeywordByIdRepo,
+  updateKeywordRepo,
 } from "../../repositories/coreRepo/keyword.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { DistributionType } from "../../enums/distribution.enum";
+import { ErrorType } from "../../types/Error.type";
+import { baseApiPython } from "../../config/botAPI.config";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -76,11 +79,11 @@ export const getKeywordList = async (
       status: true,
       message: "Keywords retrieved successfully",
       data: {
-        keywords: keywords.keywords.map((keyword: KeywordAttributes) => ({
+        keywords: keywords.keywords.map((keyword: any) => ({
           id: keyword.id,
           campaignId: keyword.campaignId,
           name: keyword.name,
-          url: keyword.url,
+          urls: keyword.url,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
           createdAt: keyword.createdAt,
@@ -104,14 +107,14 @@ export const createKeyword = async (
   res: Response<ResponseType<KeywordAttributes>>
 ): Promise<void> => {
   try {
-    const { campaignId, name, url, distribution, traffic } = req.body;
+    const { campaignId, name, urls, distribution, traffic } = req.body;
 
     if (
       !campaignId ||
       !name ||
-      !url ||
-      !Array.isArray(url) ||
-      url.length === 0 ||
+      !urls ||
+      !Array.isArray(urls) ||
+      urls.length === 0 ||
       !distribution
     ) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -135,10 +138,12 @@ export const createKeyword = async (
     const keyword = await createKeywordRepo({
       campaignId,
       name,
-      url,
+      urls,
       traffic,
       distribution,
     });
+
+    const newKeyword = await baseApiPython("keyword/set", keyword);
 
     res.status(statusCode.CREATED).json({
       status: true,
@@ -147,7 +152,7 @@ export const createKeyword = async (
         id: keyword.id,
         campaignId: keyword.campaignId,
         name: keyword.name,
-        url: keyword.url,
+        urls: keyword.url,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
@@ -188,7 +193,7 @@ export const getKeywordById = async (
         id: keyword.id,
         campaignId: keyword.campaignId,
         name: keyword.name,
-        url: keyword.url,
+        urls: keyword.urls,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
@@ -201,5 +206,37 @@ export const getKeywordById = async (
       message: "Error fetching keyword",
       error: error.message,
     });
+  }
+};
+
+export const updateKeyword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId) || parsedId <= 0) {
+      throw new ErrorType("ValidationError", "Invalid keyword ID", 400);
+    }
+
+    const data = req.body as Partial<{
+      name: string;
+      urls: string[];
+      distribution: DistributionType;
+      isDeleted: boolean;
+    }>;
+
+    const updatedKeyword = await updateKeywordRepo(parsedId, data);
+    res.status(statusCode.OK).json(updatedKeyword);
+    return;
+  } catch (error: any) {
+    const err = error as ErrorType;
+    res.status(err.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      name: err.name || "InternalServerError",
+      message: err.message || "An unexpected error occurred",
+      code: err.code || statusCode.INTERNAL_SERVER_ERROR,
+    });
+    return;
   }
 };

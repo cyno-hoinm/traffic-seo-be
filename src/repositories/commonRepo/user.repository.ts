@@ -61,7 +61,6 @@ export const getUserPermissions = async (userId: number): Promise<string[]> => {
   const permissions = user.role.rolePermissions
     .map((rp: any) => rp.permission?.code)
     .filter((code: string | undefined) => code); // Filter out undefined/null values
-    console.log(permissions);
   return permissions;
 };
 

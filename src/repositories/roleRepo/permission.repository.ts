@@ -1,5 +1,6 @@
 import { Permission } from "../../models/index.model";
 import { PermissionAttributes } from "../../interfaces/Permission.interface";
+import { Op, WhereOptions } from "sequelize";
 
 export const createPermissionRepo = async (
   permissionData: Omit<PermissionAttributes, "id" | "createdAt" | "updatedAt">
@@ -69,5 +70,46 @@ export const deletePermissionRepo = async (id: number): Promise<boolean> => {
     return true;
   } catch (error) {
     throw new Error(`Error deleting permission: ${(error as Error).message}`);
+  }
+};
+
+export const searchPermissionRepo = async (
+  key: string | undefined,
+  page: number,
+  size: number
+
+): Promise<{ permissions: PermissionAttributes[]; total: number }> => {
+  try {
+    const offset = (page - 1) * size;
+
+    // Build where clause for search
+    const where: WhereOptions<Permission> = {
+      isDeleted: false,
+    };
+
+    if (key) {
+      where.name = {
+        [Op.iLike]: `%${key}%`, // Case-insensitive search
+      };
+      where.code = {
+        [Op.iLike]: `%${key}%`, // Case-insensitive search
+      };
+    }
+
+    // Query roles with pagination and search
+    const { rows: permissions, count: total } =
+      await Permission.findAndCountAll({
+        where,
+        limit: size,
+        offset,
+        order: [["createdAt", "DESC"]],
+      });
+
+    return {
+      permissions,
+      total,
+    };
+  } catch (error) {
+    throw new Error(`Error searching roles: ${(error as Error).message}`);
   }
 };

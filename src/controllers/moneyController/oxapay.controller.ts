@@ -50,7 +50,7 @@ export const withDraw = async (
       amount: amount,
       description: description || ""
     }
-    console.log(data)
+
     const result = await generatePayout(data)
     res.status(statusCode.OK).json({
       message: "",

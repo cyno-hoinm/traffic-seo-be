@@ -293,7 +293,7 @@ export const updateUserOneField = async (
 // Search users with pagination
 export const searchUserList = async (
   req: Request,
-  res: Response<ResponseType<UserAttributes>>
+  res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
     const { key, pageSize, pageLimit } = req.body;
@@ -328,8 +328,10 @@ export const searchUserList = async (
       res.status(statusCode.OK).json({
         status: true,
         message: "Users retrieved successfully",
-        total,
-        data: users,
+        data: {
+          total : total,
+          list : users,
+        },
       });
       return;
     }
@@ -337,11 +339,13 @@ export const searchUserList = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Users retrieved successfully",
-      total,
       pageSize: pageSizeNum,
       pageLimit: pageLimitNum,
       totalPages: Math.ceil(total / pageLimitNum),
-      data: users,
+      data: {
+        total : total,
+        list : users,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
