@@ -6,5 +6,6 @@ export const oxapayConfig = {
   feePaidByPayer: process.env.OXAPAY_FEEPAID_BY_PAYER,
   underPaidCover: process.env.OXAPAY_UNDER_PAID_COVER || 0,
   payoutAddress: process.env.OXAPAY_PAYOUT_ADDRESS || "",
-  sandbox: process.env.OXAPAY_SANDBOX
+  sandbox: process.env.OXAPAY_SANDBOX,
+  currency: "USDT"
 };

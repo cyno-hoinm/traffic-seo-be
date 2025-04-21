@@ -40,3 +40,13 @@ export interface CreatePayoutResult {
   trackId: string,
   status: string,
 }
+
+export interface OxaPayCallback {
+  type: 'invoice' | 'payout';
+  status: string;
+  track_id: string;
+  amount: number;
+  currency: string;
+  order_id?: string;
+  [key: string]: any;
+}

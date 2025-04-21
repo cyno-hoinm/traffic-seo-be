@@ -22,6 +22,25 @@ export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateI
   }
 }
 
+
+export const getCurrenciesService = async (): Promise<{
+  list: string[]
+}> => {
+  try {
+    const res = await axios.get(`${baseUrl}/payment/accepted-currencies`, {
+      headers: {
+         'merchant_api_key': oxapayConfig.merchant,
+         'Content-Type': 'application/json' },
+    });
+
+    return res.data.data;
+
+  } catch (error: any) {
+    console.error('Oxapay - getCurencies error:', error.response?.data || error.message);
+    throw new Error('Failed to get currencies');
+  }
+}
+
 export const generatePayout = async (data: CreatePayoutInput): Promise<CreatePayoutResult> => {
   try {
 
