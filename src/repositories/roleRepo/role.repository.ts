@@ -87,12 +87,12 @@ export const deleteRoleRepo = async (id: number): Promise<boolean> => {
 export const searchRoleRepo = async (
   key: string |undefined,
   page: number,
-  size: number
+  limit: number
 
 ): Promise<{ roles: Role[]; total: number }> => {
   try {
 
-    const offset = (page - 1) * size;
+    const offset = (page - 1) * limit;
 
     // Build where clause for search
     const where: WhereOptions<Role> = {
@@ -108,7 +108,7 @@ export const searchRoleRepo = async (
     // Query roles with pagination and search
     const { rows: roles, count: total } = await Role.findAndCountAll({
       where,
-      limit: size,
+      limit: limit,
       offset,
       order: [["createdAt", "DESC"]],
     });

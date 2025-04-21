@@ -73,13 +73,13 @@ const router = express.Router();
  *                 type: string
  *                 description: The search key to match against email and username
  *                 example: john
- *               pageSize:
+ *               page:
  *                 type: integer
  *                 minimum: 0
  *                 default: 1
  *                 description: The page number (0 to disable pagination)
  *                 example: 1
- *               pageLimit:
+ *               limit:
  *                 type: integer
  *                 minimum: 0
  *                 default: 10
@@ -121,10 +121,10 @@ const router = express.Router();
  *                 total:
  *                   type: integer
  *                   example: 2
- *                 pageSize:
+ *                 page:
  *                   type: integer
  *                   example: 1
- *                 pageLimit:
+ *                 limit:
  *                   type: integer
  *                   example: 10
  *                 totalPages:
@@ -139,7 +139,7 @@ const router = express.Router();
  *               properties:
  *                 error:
  *                   type: string
- *                   example: pageSize must be a non-negative integer
+ *                   example: pageLimit must be a non-negative integer
  *       500:
  *         description: Internal server error
  *         content:

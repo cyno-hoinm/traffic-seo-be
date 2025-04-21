@@ -260,7 +260,7 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *             type: object
  *             required:
  *               - page
- *               - size
+ *               - limit
  *             properties:
  *               key:
  *                 type: string
@@ -270,7 +270,7 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                 type: string
  *                 description: Page number for pagination (non-negative integer)
  *                 example: "1"
- *               size:
+ *               limit:
  *                 type: string
  *                 description: Number of roles per page (non-negative integer)
  *                 example: "10"
@@ -288,9 +288,6 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                 message:
  *                   type: string
  *                   example: Roles retrieved successfully
- *                 pageSize:
- *                   type: integer
- *                   example: 1
  *                 pageLimit:
  *                   type: integer
  *                   example: 10
@@ -323,7 +320,7 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                   example: Invalid input
  *                 error:
  *                   type: string
- *                   example: pageSize must be a non-negative integer
+ *                   example: pageLimit must be a non-negative integer
  *       500:
  *         description: Internal server error
  *         content:

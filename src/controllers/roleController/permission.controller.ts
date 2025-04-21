@@ -222,10 +222,10 @@ export const searchPermissionList = async (
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
-    const { key, page, size } = req.body;
+    const { key, page, limit } = req.body;
 
     const pageSizeNum = parseInt(page as string, 10);
-    const pageLimitNum = parseInt(size as string, 10);
+    const pageLimitNum = parseInt(limit as string, 10);
 
     if (isNaN(pageSizeNum) || pageSizeNum < 0) {
       res.status(statusCode.BAD_REQUEST).json({

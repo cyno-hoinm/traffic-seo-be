@@ -76,11 +76,11 @@ export const deletePermissionRepo = async (id: number): Promise<boolean> => {
 export const searchPermissionRepo = async (
   key: string | undefined,
   page: number,
-  size: number
+  limit: number
 
 ): Promise<{ permissions: PermissionAttributes[]; total: number }> => {
   try {
-    const offset = (page - 1) * size;
+    const offset = (page - 1) * limit;
 
     // Build where clause for search
     const where: WhereOptions<Permission> = {
@@ -100,7 +100,7 @@ export const searchPermissionRepo = async (
     const { rows: permissions, count: total } =
       await Permission.findAndCountAll({
         where,
-        limit: size,
+        limit: limit,
         offset,
         order: [["createdAt", "DESC"]],
       });
