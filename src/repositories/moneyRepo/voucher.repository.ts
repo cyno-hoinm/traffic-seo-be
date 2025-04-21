@@ -1,4 +1,5 @@
 import { VoucherStatus } from "../../enums/voucherStatus.enum";
+import { VoucherAttributes } from "../../interfaces/Voucher.interface";
 import { Voucher } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { generateVoucherCode } from "../../utils/generate";
@@ -6,7 +7,7 @@ import { generateVoucherCode } from "../../utils/generate";
 export const createVoucherRepo = async (data: {
   value: number;
   status: VoucherStatus;
-}): Promise<Voucher> => {
+}): Promise<VoucherAttributes> => {
   try {
     let code = generateVoucherCode();
     let existingVoucher = await findVoucherByCodeRepo(code);
@@ -35,7 +36,7 @@ export const createVoucherRepo = async (data: {
 
 export const findVoucherByCodeRepo = async (
   code: string
-): Promise<Voucher | null> => {
+): Promise<VoucherAttributes | null> => {
   try {
     const voucher = await Voucher.findOne({ where: { code } });
     return voucher;
@@ -44,7 +45,7 @@ export const findVoucherByCodeRepo = async (
   }
 };
 
-export const getAllVouchersRepo = async (): Promise<Voucher[]> => {
+export const getAllVouchersRepo = async (): Promise<VoucherAttributes[]> => {
   try {
     const vouchers = await Voucher.findAll({
       where: { isDeleted: false },

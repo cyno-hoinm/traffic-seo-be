@@ -5,7 +5,7 @@ import {
   maxPoolSize,
   minPoolSize,
   socketTimeoutMS,
-} from "../config/database.config";
+} from "../../config/database.config";
 
 dotenv.config();
 

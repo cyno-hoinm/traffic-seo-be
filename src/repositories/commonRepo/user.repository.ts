@@ -9,8 +9,8 @@ import {
 import { ErrorType } from "../../types/Error.type";
 
 export const createUserRepo = async (
-  userData: Omit<UserAttributes, "id" | "createdAt" | "updatedAt">
-): Promise<User> => {
+  userData: UserAttributes
+): Promise<UserAttributes> => {
   try {
     const user = await User.create(userData);
     return user;
@@ -66,7 +66,7 @@ export const getUserPermissions = async (userId: number): Promise<string[]> => {
 
 export const findUserByEmailRepo = async (
   email: string
-): Promise<User | null> => {
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findOne({
       where: { email, isDeleted: false },
@@ -88,7 +88,7 @@ export const findUserByEmailRepo = async (
 
 export const findUserByUsernameRepo = async (
   username: string
-): Promise<User | null> => {
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findOne({
       where: { username, isDeleted: false },
@@ -118,8 +118,8 @@ export const findAllUsersRepo = async (): Promise<UserAttributes[]> => {
 
 export const updateUserRepo = async (
   id: number,
-  userData: Partial<UserAttributes>
-): Promise<User | null> => {
+  userData: Partial<User>
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id);
     if (!user) {

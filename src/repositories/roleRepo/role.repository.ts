@@ -5,7 +5,7 @@ import { ErrorType } from "../../types/Error.type";
 
 export const createRoleRepo = async (
   roleData: Omit<RoleAttributes, "id" | "createdAt" | "updatedAt">
-): Promise<Role> => {
+): Promise<RoleAttributes> => {
   try {
     const role = await Role.create(roleData);
     return role;
@@ -14,7 +14,7 @@ export const createRoleRepo = async (
   }
 };
 
-export const getRoleByIdRepo = async (id: number): Promise<Role | null> => {
+export const getRoleByIdRepo = async (id: number): Promise<RoleAttributes | null> => {
   try {
     const role = await Role.findByPk(id);
     return role;
@@ -23,7 +23,7 @@ export const getRoleByIdRepo = async (id: number): Promise<Role | null> => {
   }
 };
 
-export const getRoleByNameRepo = async (name: string): Promise<Role | null> => {
+export const getRoleByNameRepo = async (name: string): Promise<RoleAttributes | null> => {
   try {
     const role = await Role.findOne({
       where: {
@@ -37,7 +37,7 @@ export const getRoleByNameRepo = async (name: string): Promise<Role | null> => {
   }
 };
 
-export const getAllRolesRepo = async (): Promise<Role[]> => {
+export const getAllRolesRepo = async (): Promise<RoleAttributes[]> => {
   try {
     const roles = await Role.findAll({
       where: {
@@ -56,7 +56,7 @@ export const updateRoleRepo = async (
   roleData: Partial<
     Omit<RoleAttributes, "id" | "createdAt" | "updatedAt" | "isDelete">
   >
-): Promise<Role | null> => {
+): Promise<RoleAttributes | null> => {
   try {
     const role = await Role.findByPk(id);
     if (!role || role.isDelete) {
@@ -89,7 +89,7 @@ export const searchRoleRepo = async (
   page: number,
   limit: number
 
-): Promise<{ roles: Role[]; total: number }> => {
+): Promise<{ roles: RoleAttributes[]; total: number }> => {
   try {
 
     const offset = (page - 1) * limit;

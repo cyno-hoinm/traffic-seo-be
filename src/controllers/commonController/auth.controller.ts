@@ -43,7 +43,7 @@ export const loginUser = async (
     }
 
     // Verify password (assuming it's hashed in the database)
-    const isPasswordValid = await comparePassword(password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password ? user.password : "");
 
     if (!isPasswordValid) {
       res
@@ -52,7 +52,7 @@ export const loginUser = async (
       return;
     }
 
-    const token = signToken(user.toJSON());
+    const token = signToken(user);
 
     res.status(statusCode.OK).json({
       status: true,

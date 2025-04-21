@@ -10,13 +10,12 @@ import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import { DistributionType } from "../../enums/distribution.enum";
 import { LinkStatus } from "../../enums/linkStatus.enum";
-import { sequelizeSystem } from "../../database/config.database";
+import { sequelizeSystem } from "../../database/postgreDB/config.database";
 import { Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
-import {Campaign, Keyword, Link} from "../../models/index.model";
+import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { baseApiPython } from "../../config/botAPI.config";
-
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -44,7 +43,7 @@ export const getCampaignList = async (
       key?: string;
       userId?: number;
       countryId?: number;
-      campaignTypeId?: number; 
+      campaignTypeId?: number;
       device?: string;
       timeCode?: string;
       startDate?: Date;
@@ -62,7 +61,7 @@ export const getCampaignList = async (
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
     if (campaignTypeId) {
-      filters.campaignTypeId = Number(campaignTypeId); 
+      filters.campaignTypeId = Number(campaignTypeId);
     }
     if (device) filters.device = device as string;
     if (timeCode) filters.timeCode = timeCode as string;
@@ -270,7 +269,7 @@ export const createCampaign = async (
         }
       }
     }
-  
+
     // Use a transaction to ensure data consistency
     const campaign = await sequelizeSystem.transaction(
       async (transaction: Transaction) => {
@@ -295,11 +294,13 @@ export const createCampaign = async (
           },
           transaction
         );
-
+        if (!campaign.id) {
+          throw new Error("Failed to create campaign");
+        }
         // Insert keywords if provided
         if (keywords && keywords.length > 0) {
           for (const keyword of keywords) {
-            const keywordData = {
+            const keywordData: KeywordAttributes = {
               campaignId: campaign.id,
               name: keyword.name,
               urls: keyword.urls,
@@ -334,7 +335,7 @@ export const createCampaign = async (
         return campaign;
       }
     );
-  
+
     // Fetch the campaign with associated keywords and links for response
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [

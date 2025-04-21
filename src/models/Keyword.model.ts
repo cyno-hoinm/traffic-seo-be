@@ -5,7 +5,7 @@ import { DistributionType } from "../enums/distribution.enum";
 
 class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
-  public campaignId!: number;
+  public campaignId!: number | null; // Nullable if not always present
   public name!: string;
   public urls!: string[]; // Array of URLs
   public distribution!: DistributionType; // Enum type

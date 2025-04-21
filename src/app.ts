@@ -4,14 +4,14 @@ import cluster from "cluster";
 import os from "os";
 import debug from "debug";
 import { logger } from "./config/logger.config";
-import { connectDB } from "./database/connect"; // Export sequelizeSystem
+import { connectDB } from "./database/postgreDB/connect"; // Export sequelizeSystem
 import { gracefulShutdown } from "./utils/utils";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
-import payOSPaymentMethod from "./config/payOs.config";
+import { connectMongoDB } from "./database/mongoDB/connect";
 
 
 dotenv.config();
@@ -45,6 +45,7 @@ if (cluster.isPrimary && !isDev) {
   const startServer = async () => {
     try {
       await connectDB(); // Connect DB first
+      await connectMongoDB(); // Connect MongoDB
       await redisClient.connect();
       server = app.listen(PORT, () => {
         logger.info(`Worker ${process.pid} started on port ${PORT}`);
