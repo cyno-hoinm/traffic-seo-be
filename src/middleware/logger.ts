@@ -12,8 +12,8 @@ export const errorHandler = (
 ) => {
   err.statusCode = err.statusCode || statusCode.INTERNAL_SERVER_ERROR;
   err.status = err.status || 'error';
-  const isDev = process.env.NODE_ENV === 'development'
-  if (true) {
+  const isDev = process.env.NODE_ENV === 'development' || true
+  if (isDev) {
     logger.error(`${err.status} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
     
     res.status(err.statusCode).json({

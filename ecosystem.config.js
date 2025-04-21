@@ -8,7 +8,7 @@ module.exports = {
         max_restarts: 5, 
         restart_delay: 1000,
         env: {
-          NODE_ENV: "production",
+          NODE_ENV: "development",
           PORT: 9999, 
         },
         error_file: "./dist/logs/error.log",
