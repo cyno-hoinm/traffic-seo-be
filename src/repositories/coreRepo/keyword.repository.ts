@@ -2,6 +2,8 @@ import { Campaign, Keyword, sequelizeSystem } from "../../models/index.model";
 import { DistributionType } from "../../enums/distribution.enum";
 import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
+import { url } from "inspector";
+import { time } from "console";
 
 export const getKeywordListRepo = async (filters: {
   campaignId?: number;
@@ -48,16 +50,28 @@ export const getKeywordListRepo = async (filters: {
   }
 };
 
-export const createKeywordRepo = async (data: {
+export const  createKeywordRepo = async (data: {
   campaignId: number;
   name: string;
-  url: string[];
+  urls: string[];
   traffic: number;
   distribution: DistributionType;
-}): Promise<Keyword> => {
+}): Promise<any> => {
   try {
+    const campaign = await Campaign.findByPk(data.campaignId);
     const keyword = await Keyword.create(data);
-    return keyword;
+    return {
+      keywordId: keyword.id,
+      urls: keyword.urls,
+      keyword: keyword.name,
+      traffic: keyword.traffic,
+      distribution: keyword.distribution,
+      device: campaign?.device,
+      domain: campaign?.domain,
+      timeStart: campaign?.startDate.toString(),
+      timeEnd: campaign?.endDate.toString(),
+      searchTool: campaign?.search,
+    };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
@@ -128,15 +142,15 @@ export const getKeywordByCampaignIdRepo = async (
     // Validate campaign ID
     if (!Number.isInteger(id) || id <= 0) {
       throw {
-        name: 'ValidationError',
-        message: 'Campaign ID must be a positive integer',
+        name: "ValidationError",
+        message: "Campaign ID must be a positive integer",
       };
     }
 
     // Fetch keywords using Sequelize
     const keywords = await Keyword.findAll({
       where: { campaignId: id },
-      attributes: ['distribution', 'traffic', 'url', 'name'],
+      attributes: ["distribution", "traffic", "urls", "name"],
     });
 
     // Return null if no keywords found
@@ -144,16 +158,50 @@ export const getKeywordByCampaignIdRepo = async (
   } catch (error: unknown) {
     // Type-safe error handling
     const errorType: ErrorType = {
-      name: 'DatabaseError',
-      message: 'Failed to fetch keywords',
+      name: "DatabaseError",
+      message: "Failed to fetch keywords",
     };
 
     if (error instanceof Error) {
-      errorType.name = error.name || 'DatabaseError';
-      errorType.message = error.message || 'Failed to fetch keywords';
-      errorType.code = 'code' in error ? String(error.code) : undefined;
+      errorType.name = error.name || "DatabaseError";
+      errorType.message = error.message || "Failed to fetch keywords";
+      errorType.code = "code" in error ? String(error.code) : undefined;
     }
 
     throw errorType;
+  }
+};
+
+export const updateKeywordRepo = async (
+  id: number,
+  data: Partial<{
+    name: string;
+    urls: string[];
+    distribution: DistributionType;
+    isDeleted: boolean;
+  }>
+): Promise<Keyword> => {
+  try {
+    const keyword = await Keyword.findByPk(id);
+    if (!keyword) {
+      throw new ErrorType(
+        "NotFoundError",
+        `Keyword with id ${id} not found`,
+        404
+      );
+    }
+
+    // Create a new object with only defined values, excluding traffic and campaignId
+    const updateData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== undefined && key !== "traffic" && key !== "campaignId") {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    await keyword.update(updateData);
+    return keyword;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code || 500);
   }
 };

@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import { Campaign, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
@@ -79,11 +79,11 @@ export const createCampaignRepo = async (data: {
   domain: string;
   search: string;
   campaignTypeId: CampaignTypeAttributes;
-  keyword: string;
   status: CampaignStatus;
-}): Promise<Campaign> => {
+  isDeleted: boolean;
+}, transaction?: Transaction): Promise<Campaign> => {
   try {
-    const campaign = await Campaign.create(data);
+    const campaign = await Campaign.create(data, { transaction });
     return campaign;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -104,76 +104,84 @@ export const getCampaignByIdRepo = async (
 };
 
 export const getCampaignReport = async (
-  key: string | undefined,
+  status?: CampaignStatus,
   startDate?: string,
-  endDate?: string
-): Promise<any> => {
+  endDate?: string,
+  userId?: number
+): Promise<any[]> => {
   try {
-    const where: any = { isDeleted: false };
+    // Validate date formats if provided
+    if (startDate && !isValidDate(startDate)) {
+      throw new ErrorType('ValidationError', 'Invalid start date format');
+    }
+    if (endDate && !isValidDate(endDate)) {
+      throw new ErrorType('ValidationError', 'Invalid end date format');
+    }
 
-    // Add date range filter if provided
+    // Build where clause
+    const where: any = { isDeleted: false };
+    if (userId) {
+      where.userId = userId;
+    }
+    if (status) {
+      where.status = status;
+    }
+
     if (startDate || endDate) {
       where[Op.and] = [];
       if (startDate) {
-        where[Op.and].push({ start_date: { [Op.gte]: startDate } });
+        where[Op.and].push({ startDate: { [Op.gte]: startDate } });
       }
       if (endDate) {
-        where[Op.and].push({ end_date: { [Op.lte]: endDate } });
+        where[Op.and].push({ endDate: { [Op.lte]: endDate } });
       }
     }
 
     if (!sequelizeSystem) {
-      throw new Error("Sequelize instance is not defined");
+      throw new ErrorType('InitializationError', 'Sequelize instance is not initialized');
     }
 
-    if (key === "type") {
-      const result = await Campaign.findAll({
-        where,
-        group: ["campaignTypeId", "campaignTypes.name"],
-        attributes: [
-          "campaignTypeId",
-          [
-            sequelizeSystem.fn("COUNT", sequelizeSystem.col("campaignTypeId")),
-            "count",
-          ],
-        ],
-        include: [
-          {
-            model: CampaignType,
-            as: "campaignTypes",
-            attributes: ["name"],
-            required: true,
-          },
-        ],
-        raw: true,
-      });
+    const results = await Campaign.findAll({
+      where,
+      include: [
+        {
+          model: CampaignType,
+          as: 'campaignTypes',
+          attributes: ['name'],
+          required: true, // Inner join to ensure only campaigns with valid campaign types are included
+        },
+      ],
+      group: ['Campaign.campaignTypeId', 'campaignTypes.name'],
+      attributes: [
+        'campaignTypeId',
+        [sequelizeSystem.fn('COUNT', sequelizeSystem.col('Campaign.campaignTypeId')), 'count'],
+      ],
+      raw: true,
+    });
 
-      return result.map((item: any) => ({
-        campaignTypeId: item.campaignTypeId,
-        count: item.count,
-        campaignTypeName: item["campaignTypes.name"],
-      }));
-    }
-
-    if (key === "status") {
-      const result = await Campaign.findAll({
-        where,
-        group: ["status"],
-        attributes: [
-          "status",
-          [sequelizeSystem.fn("COUNT", sequelizeSystem.col("status")), "count"],
-        ],
-        raw: true,
-      });
-
-      return result.map((item: any) => ({
-        status: item.status,
-        count: item.count,
-      }));
-    }
-
-    return [];
-  } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code);
+    return results.map((item: any) => ({
+      campaignTypeId: item.campaignTypeId,
+      campaignTypeName: item['campaignTypes.name'],
+      count: parseInt(item.count, 10),
+    }));
+  } catch (error) {
+    console.error('Error fetching campaign report:', error);
+    throw error instanceof ErrorType
+      ? error
+      : new ErrorType('UnknownError', 'Failed to fetch campaign report');
   }
+};
+export interface CampaignReportList {
+  campaignTypeId: number;
+  campaignTypeName: string;
+  count: number;
+}
+
+// Utility function to validate YYYY-MM-DD date format
+const isValidDate = (dateString: string): boolean => {
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateString)) return false;
+
+  const date = new Date(dateString);
+  return !isNaN(date.getTime()) && date.toISOString().startsWith(dateString);
 };

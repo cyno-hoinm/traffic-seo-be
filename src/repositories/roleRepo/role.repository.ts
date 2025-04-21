@@ -1,3 +1,4 @@
+import { Op, WhereOptions } from "sequelize";
 import { RoleAttributes } from "../../interfaces/Role.interface";
 import { Role } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
@@ -80,5 +81,43 @@ export const deleteRoleRepo = async (id: number): Promise<boolean> => {
     return true;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const searchRoleRepo = async (
+  key: string |undefined,
+  page: number,
+  size: number
+
+): Promise<{ roles: Role[]; total: number }> => {
+  try {
+
+    const offset = (page - 1) * size;
+
+    // Build where clause for search
+    const where: WhereOptions<Role> = {
+      isDeleted: false,
+    };
+
+    if (key) {
+      where.name = {
+        [Op.iLike]: `%${key}%`, // Case-insensitive search
+      };
+    }
+
+    // Query roles with pagination and search
+    const { rows: roles, count: total } = await Role.findAndCountAll({
+      where,
+      limit: size,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      roles,
+      total,
+    };
+  } catch (error) {
+    throw new Error(`Error searching roles: ${(error as Error).message}`);
   }
 };

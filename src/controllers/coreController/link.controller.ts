@@ -4,10 +4,13 @@ import {
   getLinkListRepo,
   createLinkRepo,
   getLinkByIdRepo,
+  updateLinkRepo,
 } from "../../repositories/coreRepo/link.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { LinkStatus } from "../../enums/linkStatus.enum";
+import { ErrorType } from "../../types/Error.type";
+import { DistributionType } from "../../enums/distribution.enum";
 
 // Get link list with filters
 export const getLinkList = async (
@@ -225,5 +228,40 @@ export const getLinkById = async (
       message: "Error fetching link",
       error: error.message,
     });
+  }
+};
+
+export const updateLink = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId) || parsedId <= 0) {
+      throw new ErrorType("ValidationError", "Invalid link ID", 400);
+    }
+
+    const data = req.body as Partial<{
+      link: string;
+      linkTo: string;
+      distribution: DistributionType;
+      anchorText: string;
+      status: LinkStatus;
+      url: string;
+      page: string;
+      isDeleted: boolean;
+    }>;
+    const updatedLink = await updateLinkRepo(parsedId, data);
+    res.status(statusCode.OK).json(updatedLink);
+    return;
+  } catch (error: any) {
+    const err = error as ErrorType;
+    res.status(err.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      name: err.name || "InternalServerError",
+      message: err.message || "An unexpected error occurred",
+      code: err.code || statusCode.INTERNAL_SERVER_ERROR,
+    });
+    return;
   }
 };

@@ -9,7 +9,6 @@ router.get("/cancel", async (req: Request, res: Response): Promise<void> => {
     // Extract query parameters
     const { orderId, userId, voucherId, paymentMethodId, amount, createdBy } =
       req.query;
-    console.log(userId, orderId, voucherId, paymentMethodId, amount, createdBy);
     // Optional: Validate other parameters if needed
     if (amount && (isNaN(Number(amount)) || Number(amount) <= 0)) {
       res.status(400).json({ error: "Invalid or negative amount" });
@@ -44,7 +43,6 @@ router.get("/success", async (req: Request, res: Response): Promise<void> => {
     // Extract query parameters
     const { orderId, userId, voucherId, paymentMethodId, amount, createdBy } =
       req.query;
-    console.log(userId, orderId, voucherId, paymentMethodId, amount, createdBy);
 
     // Optional: Validate other parameters if needed
     if (amount && (isNaN(Number(amount)) || Number(amount) <= 0)) {

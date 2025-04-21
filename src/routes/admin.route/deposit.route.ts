@@ -256,7 +256,7 @@ router.post("/search", authorization(["search-deposits"]), getDepositList);
  *                   example: Wallet not found for this user
  */
 router.post("/",
-  // authorization(["create-deposit"]),
+  authorization(["create-deposit"]),
   createDeposit);
 
 /**

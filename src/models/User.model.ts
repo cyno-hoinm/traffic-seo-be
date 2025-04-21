@@ -83,9 +83,8 @@ User.init(
               userId: user.id, // Link wallet to the newly created user
               balance: 0, // Default balance
             });
-            console.log(`Wallet created for user ${user.id} with roleId 2`);
           } catch (error) {
-            console.error(`Error creating wallet for user ${user.id}:`, error);
+
             throw error; // Rethrow to rollback transaction if used
           }
         }
