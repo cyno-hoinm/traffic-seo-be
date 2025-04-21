@@ -13,7 +13,7 @@ pipeline {
                             echo "Repository exists, pulling latest from main..."
                             cd traffic-seo-be
                             git checkout main
-                            git pull origin main
+                            git pull origin main --rebase
                         else
                             echo "Repository does not exist, cloning..."
                             git clone https://$SSH_KEY@github.com/cyno-hoinm/traffic-seo-be.git
