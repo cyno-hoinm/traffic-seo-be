@@ -1,4 +1,4 @@
-import { Deposit, Wallet } from "../../models/index.model";
+import { Deposit, PaymentMethod, Wallet } from "../../models/index.model";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { sequelizeSystem } from "../../models/index.model";
 import { Op, Transaction } from "sequelize";
@@ -208,10 +208,19 @@ export const getDepositByIdRepo = async (
   id: number
 ): Promise<Deposit | null> => {
   try {
-    const deposit = await Deposit.findByPk(id);
+    const deposit = await Deposit.findOne({
+      where: { id }, // Filter by the provided ID
+      include: [
+        {
+          model: PaymentMethod,
+          as: "paymentMethods", // Adjust to match your model association alias (singular if one-to-one)
+          required: true, // Inner join to only return deposits with matching payment methods
+        },
+      ],
+    });
 
     if (!deposit) {
-      return null; // Or throw new ErrorType("NotFoundError", "Deposit not found") if you prefer
+      return null; // Deposit not found
     }
 
     return deposit;

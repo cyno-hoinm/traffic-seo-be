@@ -6,6 +6,7 @@ class PaymentMethod extends Model<PaymentMethodAttributes> implements PaymentMet
   public id!: number;
   public name!: string;
   public isDeleted!: boolean;
+  public unit!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -18,6 +19,11 @@ PaymentMethod.init(
       primaryKey: true,
     },
     name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    unit: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
