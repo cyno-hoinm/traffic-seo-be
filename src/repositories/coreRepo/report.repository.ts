@@ -83,6 +83,7 @@ export interface CampaignReport {
   endDate: Date;
   targetTraffic: number;
   linkCount: number;
+  cost: number;
   keywordCount: number;
   links: LinkAttributes[];
   keywords: KeywordAttributes[];
@@ -126,6 +127,7 @@ export const getOneCampaignReportRepo = async (
       campaignDomain : campaign.domain || "",
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
+      cost : campaign.cost || 0,
       targetTraffic : campaign.totalTraffic || 0,
       linkCount : campaign.links.length,
       keywordCount : campaign.keywords.length,
