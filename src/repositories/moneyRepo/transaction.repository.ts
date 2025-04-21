@@ -1,14 +1,22 @@
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
-import { sequelizeSystem, Transaction, Wallet } from "../../models/index.model";
+import {
+  Deposit,
+  sequelizeSystem,
+  Transaction,
+  Wallet,
+} from "../../models/index.model";
 import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { Transaction as SequelizeTransaction } from "sequelize";
+import { TransactionType } from "../../enums/transactionType.enum";
 
 export const createTransactionRepo = async (
   data: {
     walletId: number;
     amount: number;
     status: TransactionStatus;
+    type: TransactionType;
+    referenceId?: string | null;
   },
   _transaction?: SequelizeTransaction
 ): Promise<Transaction> => {
@@ -33,7 +41,7 @@ export const createTransactionRepo = async (
     const transaction = await sequelizeSystem.transaction(async (t) => {
       const newTransaction = await Transaction.create(data, { transaction: t });
 
-      if (data.status === TransactionStatus.PAY) {
+      if (data.type === TransactionType.PAY_SERVICE) {
         if (balance < amount) {
           throw new ErrorType(
             "InsufficientFundsError",
@@ -42,8 +50,8 @@ export const createTransactionRepo = async (
         }
         wallet.balance = balance - amount;
       } else if (
-        data.status === TransactionStatus.REFUND ||
-        data.status === TransactionStatus.CHARGE
+        data.type === TransactionType.DEPOSIT ||
+        data.type === TransactionType.DEPOSIT
       ) {
         wallet.balance = balance + amount;
       } else {
@@ -94,14 +102,63 @@ export const getListTransactionRepo = async (filters: {
       where,
       order: [["createdAt", "DESC"]],
     };
-    
-    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+
+    if (
+      filters.page &&
+      filters.limit &&
+      filters.page > 0 &&
+      filters.limit > 0
+    ) {
       queryOptions.offset = (filters.page - 1) * filters.limit;
       queryOptions.limit = filters.limit;
     }
 
     const transactions = await Transaction.findAll(queryOptions);
     return transactions;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const getTransactionByIdRepo = async (
+  transactionId: number,
+  type?: TransactionType
+): Promise<Transaction> => {
+  try {
+    const transaction = await Transaction.findByPk(transactionId, {
+      include: [
+        {
+          model: Deposit,
+          as: "deposit", // Ensure the alias matches the association defined in the model
+          required: false, // Left join to include transactions even if no deposit exists
+          attributes: [
+            "id",
+            "orderId",
+            "userId",
+            "voucherId",
+            "paymentMethodId",
+            "amount",
+            "status",
+            "acceptedBy",
+            "createdBy",
+            "isDeleted",
+            "createdAt",
+            "updatedAt",
+          ], // Explicitly select valid Deposit columns, excluding referenceId
+          on: sequelizeSystem.where(
+            sequelizeSystem.col("deposit.orderId"),
+            Op.eq,
+            sequelizeSystem.col("Transaction.referenceId")
+          ),
+        },
+      ],
+    });
+
+    if (!transaction) {
+      throw new ErrorType("NotFoundError", "Transaction not found");
+    }
+
+    return transaction;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
