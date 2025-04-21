@@ -14,11 +14,11 @@ export const createInvoice = async (
       amount: amount,
       currency: currency,
       lifeTime: parseInt(String(oxapayConfig.lifeTime)),
-      feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
-      underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
-      thanksMessage: "Auto Ranker!",
-      callbackUrl: "",
-      returnUrl: "/"
+      fee_paid_by_payer: parseInt(String(oxapayConfig.feePaidByPayer)),
+      under_paid_cover:  parseInt(String(oxapayConfig.underPaidCover)),
+      thanks_message: "Auto Ranker!",
+      callback_url: "",
+      return_url: "/"
     }
 
     const result = await generateInvoice(data)

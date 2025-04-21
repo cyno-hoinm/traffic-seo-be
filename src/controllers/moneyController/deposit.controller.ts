@@ -137,13 +137,13 @@ export const createDeposit = async (
                 amount: amount,
                 currency: oxapayConfig.currency,
                 lifeTime: parseInt(String(oxapayConfig.lifeTime)),
-                feePaidByPayer: parseInt(String(oxapayConfig.feePaidByPayer)),
-                underPaidCover:  parseInt(String(oxapayConfig.underPaidCover)),
-                callbackUrl: `${process.env.DEV_URL}/oxapay/callback`,
+                fee_paid_by_payer: parseInt(String(oxapayConfig.feePaidByPayer)),
+                under_paid_cover:  parseInt(String(oxapayConfig.underPaidCover)),
+                callback_url: `${process.env.DEV_URL}/oxapay/callback`,
                 // callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
                 //   orderId
                 // )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-                returnUrl: "https://pickle-zone-customer.vercel.app/",
+                return_url: "https://pickle-zone-customer.vercel.app/",
                 sandbox: oxapayConfig.sandbox
           }
           console.log('OxapayData: ',data)
