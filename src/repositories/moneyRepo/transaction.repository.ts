@@ -9,6 +9,7 @@ import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { Transaction as SequelizeTransaction } from "sequelize";
 import { TransactionType } from "../../enums/transactionType.enum";
+import { TransactionAttributes } from "../../interfaces/Transaction.interface";
 
 export const createTransactionRepo = async (
   data: {
@@ -19,7 +20,7 @@ export const createTransactionRepo = async (
     referenceId?: string | null;
   },
   _transaction?: SequelizeTransaction
-): Promise<Transaction> => {
+): Promise<TransactionAttributes> => {
   try {
     const wallet = await Wallet.findByPk(data.walletId);
     if (!wallet) {
@@ -78,7 +79,7 @@ export const getListTransactionRepo = async (filters: {
   end_date?: Date;
   page?: number;
   limit?: number;
-}): Promise<Transaction[]> => {
+}): Promise<TransactionAttributes[]> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -123,7 +124,7 @@ export const getListTransactionRepo = async (filters: {
 export const getTransactionByIdRepo = async (
   transactionId: number,
   type?: TransactionType
-): Promise<Transaction> => {
+): Promise<TransactionAttributes> => {
   try {
     const transaction = await Transaction.findByPk(transactionId, {
       include: [

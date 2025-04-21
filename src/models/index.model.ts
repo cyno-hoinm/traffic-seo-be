@@ -1,4 +1,4 @@
-import { sequelizeSystem } from "../database/config.database";
+import { sequelizeSystem } from "../database/postgreDB/config.database";
 import Role from "./Role.model";
 import Permission from "./Permission.model";
 import RolePermission from "./RolePermission.model";

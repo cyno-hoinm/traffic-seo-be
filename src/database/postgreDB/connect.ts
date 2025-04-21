@@ -1,5 +1,5 @@
-import { logger } from "../config/logger.config";
-import { sequelizeSystem } from "../models/index.model";
+import { logger } from "../../config/logger.config";
+import { sequelizeSystem } from "../../models/index.model";
 
 // Export connect and disconnect functions
 export const connectDB = async (): Promise<void> => {

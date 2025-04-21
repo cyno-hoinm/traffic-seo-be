@@ -6,6 +6,7 @@ import { createTransactionRepo } from "././transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { TransactionType } from "../../enums/transactionType.enum";
+import { DepositAttributes } from "../../interfaces/Deposit.interface";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -14,7 +15,7 @@ export const getDepositListRepo = async (filters: {
   status?: DepositStatus;
   page?: number;
   limit?: number;
-}): Promise<{ deposits: Deposit[]; total: number }> => {
+}): Promise<{ deposits: DepositAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -68,7 +69,7 @@ export const createDepositRepo = async (data: {
   paymentMethodId: number;
   orderId: string;
   status: DepositStatus;
-}): Promise<any> => {
+}): Promise<DepositAttributes> => {
   // Start a transaction
   return await sequelizeSystem.transaction(async (t: Transaction) => {
     try {
@@ -143,7 +144,7 @@ export const createDepositRepo = async (data: {
 export const updateDepositRepo = async (
   id: number,
   status: DepositStatus
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     const deposit = await Deposit.findByPk(id);
     if (!deposit) {
@@ -206,7 +207,7 @@ export const updateDepositRepo = async (
 
 export const getDepositByIdRepo = async (
   id: number
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     const deposit = await Deposit.findOne({
       where: { id }, // Filter by the provided ID
@@ -232,7 +233,7 @@ export const getDepositByIdRepo = async (
 export const getDepositByOrderIdRepo = async (
   orderId: string,
   userId: number
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     if (!Number.isInteger(userId) || userId <= 0) {
       throw new ErrorType("ValidationError", "Invalid order ID or user ID");

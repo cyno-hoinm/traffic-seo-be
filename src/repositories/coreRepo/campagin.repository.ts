@@ -4,6 +4,7 @@ import { Campaign, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 import CampaignType from "../../models/CampaignType.model";
+import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 
 export const getCampaignListRepo = async (filters: {
   key?: string;
@@ -17,7 +18,7 @@ export const getCampaignListRepo = async (filters: {
   status?: CampaignStatus;
   page?: number;
   limit?: number;
-}): Promise<{ campaigns: Campaign[]; total: number }> => {
+}): Promise<{ campaigns: CampaignAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -81,7 +82,7 @@ export const createCampaignRepo = async (data: {
   campaignTypeId: CampaignTypeAttributes;
   status: CampaignStatus;
   isDeleted: boolean;
-}, transaction?: Transaction): Promise<Campaign> => {
+}, transaction?: Transaction): Promise<CampaignAttributes> => {
   try {
     const campaign = await Campaign.create(data, { transaction });
     return campaign;
@@ -92,7 +93,7 @@ export const createCampaignRepo = async (data: {
 
 export const getCampaignByIdRepo = async (
   id: number
-): Promise<Campaign | null> => {
+): Promise<CampaignAttributes | null> => {
   try {
     const campaign = await Campaign.findByPk(id, {
       order: [["createdAt", "DESC"]],
@@ -108,7 +109,7 @@ export const getCampaignReport = async (
   startDate?: string,
   endDate?: string,
   userId?: number
-): Promise<any[]> => {
+): Promise<CampaignReportList[]> => {
   try {
     // Validate date formats if provided
     if (startDate && !isValidDate(startDate)) {

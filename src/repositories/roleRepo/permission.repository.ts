@@ -116,7 +116,7 @@ export const searchPermissionRepo = async (
 };
 
 
-export const getPermissionsByRoleIdRepo = async (roleId: number): Promise<Permission[] | null> => {
+export const getPermissionsByRoleIdRepo = async (roleId: number): Promise<PermissionAttributes[] | null> => {
   try {
     const permissions = await Permission.findAll({
       include: [

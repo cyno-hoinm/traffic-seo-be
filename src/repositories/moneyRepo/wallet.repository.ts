@@ -26,7 +26,7 @@ export const getWalletByIdRepo = async (id: number): Promise<WalletAttributes | 
 export const updateWalletRepo = async (
   id: number,
   data: { balance: number }
-): Promise<Wallet | null> => {
+): Promise<WalletAttributes | null> => {
   try {
     const wallet = await Wallet.findByPk(id);
     if (!wallet) return null;
