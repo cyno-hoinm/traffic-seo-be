@@ -11,6 +11,7 @@ import {
 } from "../../repositories/roleRepo/role.repository";
 import { RoleAttributes } from "../../interfaces/Role.interface";
 import { ResponseType } from "../../types/Response.type";
+import { getPermissionsByRoleIdRepo } from "../../repositories/roleRepo/permission.repository";
 
 // Create a new role
 export const createRole = async (
@@ -93,7 +94,7 @@ export const getRoleById = async (
   try {
     const { id } = req.params;
     const role = await getRoleByIdRepo(Number(id));
-
+    const permissions = await getPermissionsByRoleIdRepo(role?.id|| 0);
     if (!role || role.isDeleted) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -111,6 +112,7 @@ export const getRoleById = async (
         name: role.name,
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
+        permissions : permissions
       },
     });
   } catch (error: any) {

@@ -1,6 +1,7 @@
-import { Permission } from "../../models/index.model";
+import { Permission, RolePermission } from "../../models/index.model";
 import { PermissionAttributes } from "../../interfaces/Permission.interface";
 import { Op, WhereOptions } from "sequelize";
+import { ErrorType } from "../../types/Error.type";
 
 export const createPermissionRepo = async (
   permissionData: Omit<PermissionAttributes, "id" | "createdAt" | "updatedAt">
@@ -111,5 +112,32 @@ export const searchPermissionRepo = async (
     };
   } catch (error) {
     throw new Error(`Error searching roles: ${(error as Error).message}`);
+  }
+};
+
+
+export const getPermissionsByRoleIdRepo = async (roleId: number): Promise<Permission[] | null> => {
+  try {
+    const permissions = await Permission.findAll({
+      include: [
+        {
+          model: RolePermission,
+          as: "rolePermissions",
+          where: { 
+            roleId,
+            isDeleted: false // Only include non-deleted role permissions
+          },
+          attributes: [], // Exclude RolePermission attributes from the result
+          required: true, // Inner join to only return permissions with matching roleId
+        },
+      ],
+      where: {
+        isDeleted: false, // Only include non-deleted permissions
+      },
+    });
+
+    return permissions.length > 0 ? permissions : null;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
   }
 };
