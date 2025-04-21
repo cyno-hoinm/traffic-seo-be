@@ -144,7 +144,7 @@ export const createDeposit = async (
                 //   orderId
                 // )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
                 returnUrl: "/",
-                sandbox: !!oxapayConfig.sandbox
+                sandbox: oxapayConfig.sandbox
           }
 
           const result = await generateInvoice(data)
