@@ -29,7 +29,7 @@ router.get("/cancel", async (req: Request, res: Response): Promise<void> => {
       orderId: orderId?.toString() || "", // Handle optional fields
       status: DepositStatus.FAILED, // Set status to REFUND
     });
-    res.redirect(`http://localhost:3000/en/deposit/failed`)
+    res.redirect(`${process.env.FRONT_END_URL}/en/deposit/failed`)
     return;
   } catch (error: any) {
     console.error("Error cancelling deposit:", error);
@@ -67,7 +67,7 @@ router.get("/success", async (req: Request, res: Response): Promise<void> => {
       status: DepositStatus.COMPLETED, // Set status to COMPLETED
     });
 
-    res.redirect(`http://localhost:3000/en/deposit/${result.id}`)
+    res.redirect(`${process.env.FRONT_END_URL}/en/deposit/${result.id}`)
   } catch (error: any) {
     console.error("Error processing deposit:", error);
     res

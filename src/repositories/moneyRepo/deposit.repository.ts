@@ -76,9 +76,10 @@ export const createDepositRepo = async (data: {
       const existingDeposit = await Deposit.findOne({
         where: { orderId: data.orderId },
         transaction: t,
+        attributes: ["id", "orderId","userId","voucherId","amount","status","createdBy","paymentMethodId"],
       });
       if (existingDeposit) {
-        throw new ErrorType(
+        throw new ErrorType(  
           "DuplicateOrderIdError",
           `Deposit with orderId ${data.orderId} already exists`
         );
@@ -127,7 +128,7 @@ export const createDepositRepo = async (data: {
             amount: amount,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
-            referenceId: newDeposit.orderId.toString(), // Use the deposit ID as reference
+            referenceId: newDeposit.orderId ? newDeposit.orderId.toString() : null, // Use the deposit ID as reference
           },
           t // Pass transaction to createTransactionRepo
         );
