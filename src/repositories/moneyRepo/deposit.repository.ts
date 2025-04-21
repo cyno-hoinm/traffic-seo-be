@@ -5,8 +5,7 @@ import { Op, Transaction } from "sequelize";
 import { createTransactionRepo } from "././transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
-import payOSPaymentMethod from "../../config/payOs.config";
-import { uuidToNumber } from "../../utils/generate";
+import { TransactionType } from "../../enums/transactionType.enum";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -126,7 +125,9 @@ export const createDepositRepo = async (data: {
           {
             walletId: wallet.id,
             amount: amount,
-            status: TransactionStatus.CHARGE,
+            status: TransactionStatus.COMPLETED,
+            type: TransactionType.DEPOSIT,
+            referenceId: newDeposit.orderId.toString(), // Use the deposit ID as reference
           },
           t // Pass transaction to createTransactionRepo
         );
@@ -184,7 +185,10 @@ export const updateDepositRepo = async (
           {
             walletId: wallet.id,
             amount: amount,
-            status: TransactionStatus.CHARGE,
+            status: TransactionStatus.COMPLETED,
+            type: TransactionType.DEPOSIT,
+            referenceId: updatedDeposit.orderId.toString(), // Use the deposit ID as reference
+
           },
           t
         );

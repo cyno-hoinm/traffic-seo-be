@@ -1,7 +1,8 @@
 import { DataTypes, Model } from "sequelize";
 import { TransactionAttributes } from "../interfaces/Transaction.interface";
-import { sequelizeSystem, Wallet } from "./index.model";
+import { Deposit, sequelizeSystem, Wallet } from "./index.model";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
+import { TransactionType } from "../enums/transactionType.enum";
 
 class Transaction
   extends Model<TransactionAttributes>
@@ -11,7 +12,9 @@ class Transaction
   public walletId!: number;
   public amount!: number;
   public status!: TransactionStatus;
+  public type!: TransactionType
   public isDeleted!: boolean;
+  public referenceId!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -38,6 +41,18 @@ Transaction.init(
     status: {
       type: DataTypes.ENUM(...Object.values(TransactionStatus)),
       allowNull: false,
+    },
+    type: {
+      type: DataTypes.ENUM(...Object.values(TransactionType)),
+      allowNull: false,
+    },
+    referenceId : {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      references:{
+        model: Deposit,
+        key: "id",
+      }
     },
      isDeleted: {
       type: DataTypes.BOOLEAN,
