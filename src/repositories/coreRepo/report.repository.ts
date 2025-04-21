@@ -99,7 +99,7 @@ export const getOneCampaignReportRepo = async (
         status : "ACTIVE",
         isDeleted: false,
       },
-      attributes: ["id", "name","startDate","endDate","totalTraffic","domain"],
+      attributes: ["id", "name","startDate","endDate","totalTraffic","domain","cost"],
       include: [
         {
           model: Link,

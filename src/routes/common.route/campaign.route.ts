@@ -631,6 +631,6 @@ router.post("/", authorization(["create-campaign"]), createCampaign);
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id", authorization(["read-campaigns"]), getCampaignById);
+router.get("/:id", authorization(["read-campaign"]), getCampaignById);
 
 export default router;
