@@ -2,6 +2,7 @@ import express from "express";
 import {
   createTransaction,
   getListTransaction,
+  getOneTransaction,
 } from "../../controllers/moneyController/transaction.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
 
@@ -228,5 +229,110 @@ router.post(
   authorization(["search-transactions"]),
   getListTransaction
 );
+
+/**
+ * @swagger
+ * /transactions/get:
+ *   post:
+ *     summary: Retrieve a single transaction by ID
+ *     description: Fetches a transaction by its ID, optionally joining the Deposit table if the transaction type is DEPOSIT. Returns the transaction details or an error if the transaction is not found or an issue occurs.
+ *     tags:
+ *       - Transactions
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - transactionId
+ *             properties:
+ *               transactionId:
+ *                 type: integer
+ *                 description: The ID of the transaction to retrieve
+ *                 example: 1
+ *               type:
+ *                 type: string
+ *                 enum: [DEPOSIT, PAY_SERVICE, REFUND]
+ *                 description: The type of transaction (optional, used to join related tables like Deposit for DEPOSIT type)
+ *                 example: DEPOSIT
+ *     responses:
+ *       200:
+ *         description: Transaction retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Transactions retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     walletId:
+ *                       type: integer
+ *                       example: 100
+ *                     amount:
+ *                       type: number
+ *                       format: float
+ *                       example: 50.00
+ *                     status:
+ *                       type: string
+ *                       enum: [PENDING, COMPLETED, FAILED]
+ *                       example: COMPLETED
+ *                     type:
+ *                       type: string
+ *                       enum: [DEPOSIT, PAY_SERVICE, REFUND]
+ *                       example: DEPOSIT
+ *                     referenceId:
+ *                       type: string
+ *                       nullable: true
+ *                       example: DEP123
+ *                     isDeleted:
+ *                       type: boolean
+ *                       example: false
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-20T10:00:00Z
+ *                     deposit:
+ *                       type: object
+ *                       nullable: true
+ *                       description: Deposit details, included only if type is DEPOSIT
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         transactionId:
+ *                           type: integer
+ *                           example: 1
+ *                         someDepositField:
+ *                           type: string
+ *                           example: value
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching transactions
+ *                 error:
+ *                   type: string
+ *                   example: Transaction not found
+ */
+router.post("/get", getOneTransaction);
 
 export default router;

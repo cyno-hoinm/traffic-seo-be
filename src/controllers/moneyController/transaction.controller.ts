@@ -3,6 +3,7 @@ import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   createTransactionRepo,
   getListTransactionRepo,
+  getTransactionByIdRepo,
 } from "../../repositories/moneyRepo/transaction.repository";
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { TransactionAttributes } from "../../interfaces/Transaction.interface";
@@ -14,7 +15,7 @@ export const createTransaction = async (
   res: Response<ResponseType<TransactionAttributes>>
 ): Promise<void> => {
   try {
-    const { walletId, amount, status } = req.body;
+    const { walletId, amount, status, type } = req.body;
 
     if (!walletId || amount === undefined || isNaN(amount) || !status) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -25,19 +26,11 @@ export const createTransaction = async (
       return;
     }
 
-    if (![TransactionStatus.PAY, TransactionStatus.REFUND].includes(status)) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Valid status is required (PAY, REFUND)",
-        error: "Invalid field",
-      });
-      return;
-    }
-
     const transaction = await createTransactionRepo({
       walletId,
       amount,
       status,
+      type,
     });
     res.status(statusCode.CREATED).json({
       status: true,
@@ -47,6 +40,8 @@ export const createTransaction = async (
         walletId: transaction.walletId,
         amount: transaction.amount,
         status: transaction.status,
+        type: transaction.type,
+        referenceId: transaction.referenceId,
         createdAt: transaction.createdAt,
         updatedAt: transaction.updatedAt,
       },
@@ -67,7 +62,7 @@ export const getListTransaction = async (
 ): Promise<void> => {
   try {
     const { walletId, status, start_date, end_date, page, limit } = req.body;
-    
+
     const filters: {
       walletId?: number;
       status?: TransactionStatus;
@@ -76,18 +71,24 @@ export const getListTransaction = async (
       page?: number;
       limit?: number;
     } = {};
-    filters.page = typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit = typeof limit === "string" && !isNaN(parseInt(limit)) ? parseInt(limit) : 0;
+    filters.page =
+      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
+    filters.limit =
+      typeof limit === "string" && !isNaN(parseInt(limit))
+        ? parseInt(limit)
+        : 0;
     if (walletId) filters.walletId = Number(walletId);
     if (status) {
       if (
-        ![TransactionStatus.PAY, TransactionStatus.REFUND].includes(
-          status as TransactionStatus
-        )
+        ![
+          TransactionStatus.COMPLETED,
+          TransactionStatus.FAILED,
+          TransactionStatus.PENDING,
+        ].includes(status as TransactionStatus)
       ) {
         res.status(statusCode.BAD_REQUEST).json({
           status: false,
-          message: "Valid status is required (PAY, REFUND)",
+          message: "Valid status is required (COMPLETED, FAILED, PENDING)",
           error: "Invalid field",
         });
         return;
@@ -128,9 +129,33 @@ export const getListTransaction = async (
         walletId: transaction.walletId,
         amount: transaction.amount,
         status: transaction.status,
+        type: transaction.type,
+        referenceId: transaction.referenceId,
         createdAt: transaction.createdAt,
         updatedAt: transaction.updatedAt,
       })),
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching transactions",
+      error: error.message,
+    });
+  }
+};
+
+export const getOneTransaction = async (
+  req: Request,
+  res: Response<ResponseType<TransactionAttributes>>
+): Promise<void> => {
+  try {
+    const { transactionId, type } = req.body;
+
+    const transaction = await getTransactionByIdRepo(transactionId, type);
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Transactions retrieved successfully",
+      data: transaction,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
