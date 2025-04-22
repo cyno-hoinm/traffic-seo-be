@@ -1,7 +1,8 @@
+import { CountryAttributes } from "../../interfaces/Country.interface";
 import { Country } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
-export const createCountryRepo = async (name: string): Promise<Country> => {
+export const createCountryRepo = async (name: string): Promise<CountryAttributes> => {
   try {
     const country = await Country.create({ name });
     return country;
@@ -10,7 +11,7 @@ export const createCountryRepo = async (name: string): Promise<Country> => {
   }
 };
 
-export const getAllCountriesRepo = async (): Promise<Country[]> => {
+export const getAllCountriesRepo = async (): Promise<CountryAttributes[]> => {
   try {
     const countries = await Country.findAll({
       where: { isDeleted: false },
@@ -24,7 +25,7 @@ export const getAllCountriesRepo = async (): Promise<Country[]> => {
 
 export const getCountryByIdRepo = async (
   id: number
-): Promise<Country | null> => {
+): Promise<CountryAttributes | null> => {
   try {
     const country = await Country.findByPk(id);
     return country;
@@ -35,7 +36,7 @@ export const getCountryByIdRepo = async (
 
 export const getCountryByNameRepo = async (
   name: string
-): Promise<Country | null> => {
+): Promise<CountryAttributes | null> => {
   try {
     const country = await Country.findOne({ where: { name } });
     return country;
@@ -47,7 +48,7 @@ export const getCountryByNameRepo = async (
 export const updateCountryRepo = async (
   id: number,
   data: { name: string }
-): Promise<Country | null> => {
+): Promise<CountryAttributes | null> => {
   try {
     const country = await Country.findByPk(id);
     if (!country) return null;

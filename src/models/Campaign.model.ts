@@ -86,10 +86,6 @@ Campaign.init(
       allowNull: false,
       defaultValue: 0,
     },
-    cost: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
     domain: {
       type: DataTypes.STRING,
       allowNull: false,

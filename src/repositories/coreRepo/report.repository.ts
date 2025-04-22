@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { sequelizeSystem } from "../../database/config.database";
+import { sequelizeSystem } from "../../database/postgreDB/config.database";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";

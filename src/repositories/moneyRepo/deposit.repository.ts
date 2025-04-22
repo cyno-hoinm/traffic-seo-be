@@ -6,6 +6,9 @@ import { createTransactionRepo } from "././transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { TransactionType } from "../../enums/transactionType.enum";
+import { DepositAttributes } from "../../interfaces/Deposit.interface";
+import { getConfigByNameRepo } from "../commonRepo/config.repository";
+import { ConfigApp } from "../../constants/config.constants";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -14,7 +17,7 @@ export const getDepositListRepo = async (filters: {
   status?: DepositStatus;
   page?: number;
   limit?: number;
-}): Promise<{ deposits: Deposit[]; total: number }> => {
+}): Promise<{ deposits: DepositAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -68,7 +71,7 @@ export const createDepositRepo = async (data: {
   paymentMethodId: number;
   orderId: string;
   status: DepositStatus;
-}): Promise<any> => {
+}): Promise<DepositAttributes> => {
   // Start a transaction
   return await sequelizeSystem.transaction(async (t: Transaction) => {
     try {
@@ -111,26 +114,37 @@ export const createDepositRepo = async (data: {
 
       // Handle transaction for COMPLETED status
       if (data.status === DepositStatus.COMPLETED) {
-        // Sanitize and validate deposit.amount
-        const amount = parseFloat(
-          data.amount.toString().replace(/[^0-9.]/g, "")
-        );
+        const amount = parseFloat(data.amount.toString().replace(/[^0-9.]/g, ""));
         if (isNaN(amount) || amount <= 0) {
-          throw new ErrorType(
-            "InvalidAmountError",
-            "Invalid deposit amount format"
-          );
+          throw new ErrorType("InvalidAmountError", "Invalid deposit amount format");
         }
-
+      
+        let exchangeValue = 1;
+        if (depositData.paymentMethodId === 1) {
+          const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
+          if (config) {
+            exchangeValue = parseFloat(config.value);
+          } else {
+            throw new ErrorType("ConfigError", "Configuration for USD_TO_CREDIT not found");
+          }
+        } else if (depositData.paymentMethodId === 3) {
+          const config = await getConfigByNameRepo(ConfigApp.VND_TO_CREDIT);
+          if (config) {
+            exchangeValue = parseFloat(config.value);
+          } else {
+            throw new ErrorType("ConfigError", "Configuration for VND_TO_CREDIT not found");
+          }
+        }
+      
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount: amount,
+            amount: amount / exchangeValue,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
-            referenceId: newDeposit.orderId ? newDeposit.orderId.toString() : null, // Use the deposit ID as reference
+            referenceId: newDeposit.orderId,
           },
-          t // Pass transaction to createTransactionRepo
+          t
         );
       }
 
@@ -143,7 +157,7 @@ export const createDepositRepo = async (data: {
 export const updateDepositRepo = async (
   id: number,
   status: DepositStatus
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     const deposit = await Deposit.findByPk(id);
     if (!deposit) {
@@ -206,7 +220,7 @@ export const updateDepositRepo = async (
 
 export const getDepositByIdRepo = async (
   id: number
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     const deposit = await Deposit.findOne({
       where: { id }, // Filter by the provided ID
@@ -232,7 +246,7 @@ export const getDepositByIdRepo = async (
 export const getDepositByOrderIdRepo = async (
   orderId: string,
   userId: number
-): Promise<Deposit | null> => {
+): Promise<DepositAttributes | null> => {
   try {
     if (!Number.isInteger(userId) || userId <= 0) {
       throw new ErrorType("ValidationError", "Invalid order ID or user ID");

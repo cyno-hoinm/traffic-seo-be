@@ -26,7 +26,7 @@ PaymentMethod.init(
     unit: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique:false,
     },
     createdAt: {
       type: DataTypes.DATE,

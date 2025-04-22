@@ -47,11 +47,11 @@ Transaction.init(
       allowNull: false,
     },
     referenceId : {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      references:{
+      type: DataTypes.STRING,
+      allowNull: false,
+      references : {
         model: Deposit,
-        key: "id",
+        key: "orderId",
       }
     },
      isDeleted: {

@@ -9,8 +9,8 @@ import {
 import { ErrorType } from "../../types/Error.type";
 
 export const createUserRepo = async (
-  userData: Omit<UserAttributes, "id" | "createdAt" | "updatedAt">
-): Promise<User> => {
+  userData: UserAttributes
+): Promise<UserAttributes> => {
   try {
     const user = await User.create(userData);
     return user;
@@ -36,7 +36,7 @@ export const findUserByIdRepo = async (
               include: [
                 {
                   model: Permission,
-                  as: "permission",
+                  as: "permissions",
                   attributes: ["name","code"],
                 },
               ],
@@ -56,6 +56,7 @@ export const findUserByIdRepo = async (
 // Helper function to extract permission names
 export const getUserPermissions = async (userId: number): Promise<string[]> => {
   const user = await findUserByIdRepo(userId);
+  // console.log(user);
   if (!user || !user.role || !user.role.rolePermissions) return [];
 
   const permissions = user.role.rolePermissions
@@ -88,7 +89,7 @@ export const findUserByEmailRepo = async (
 
 export const findUserByUsernameRepo = async (
   username: string
-): Promise<User | null> => {
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findOne({
       where: { username, isDeleted: false },
@@ -118,8 +119,8 @@ export const findAllUsersRepo = async (): Promise<UserAttributes[]> => {
 
 export const updateUserRepo = async (
   id: number,
-  userData: Partial<UserAttributes>
-): Promise<User | null> => {
+  userData: Partial<User>
+): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id);
     if (!user) {

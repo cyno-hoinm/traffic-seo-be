@@ -13,6 +13,7 @@ class Link extends Model<LinkAttributes> implements LinkAttributes {
   public traffic!: number;
   public anchorText!: string;
   public status!: LinkStatus;
+  public cost!: number;
   public url!: string;
   public page!: string;
   public isDeleted!: boolean;
@@ -51,6 +52,10 @@ Link.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+    },
+    cost: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
     },
     anchorText: {
       type: DataTypes.STRING,

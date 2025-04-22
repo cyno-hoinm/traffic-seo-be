@@ -10,13 +10,20 @@ import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import { DistributionType } from "../../enums/distribution.enum";
 import { LinkStatus } from "../../enums/linkStatus.enum";
-import { sequelizeSystem } from "../../database/config.database";
-import { Transaction } from "sequelize";
+import { sequelizeSystem } from "../../database/postgreDB/config.database";
+import { Sequelize, Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
-import {Campaign, Keyword, Link} from "../../models/index.model";
+import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { baseApiPython } from "../../config/botAPI.config";
-
+import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
+import { ConfigApp } from "../../constants/config.constants";
+import { ErrorType } from "../../types/Error.type";
+import { compareWalletAmount, getWalletByUserIdRepo, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
+import { getWalletById, updateWallet } from "../moneyController/wallet.controller";
+import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
+import { TransactionStatus } from "../../enums/transactionStatus.enum";
+import { TransactionType } from "../../enums/transactionType.enum";
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -44,7 +51,7 @@ export const getCampaignList = async (
       key?: string;
       userId?: number;
       countryId?: number;
-      campaignTypeId?: number; 
+      campaignTypeId?: number;
       device?: string;
       timeCode?: string;
       startDate?: Date;
@@ -62,7 +69,7 @@ export const getCampaignList = async (
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
     if (campaignTypeId) {
-      filters.campaignTypeId = Number(campaignTypeId); 
+      filters.campaignTypeId = Number(campaignTypeId);
     }
     if (device) filters.device = device as string;
     if (timeCode) filters.timeCode = timeCode as string;
@@ -154,7 +161,6 @@ export const createCampaign = async (
       startDate,
       endDate,
       totalTraffic,
-      cost,
       domain,
       search,
       status,
@@ -174,8 +180,6 @@ export const createCampaign = async (
       !startDate ||
       !endDate ||
       !totalTraffic ||
-      cost === undefined ||
-      isNaN(cost) ||
       !domain ||
       !search ||
       !campaignTypeId ||
@@ -208,7 +212,32 @@ export const createCampaign = async (
       });
       return;
     }
-
+    let keywordTrafficCost = 1;
+    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.KEYWORD_TRAFFIC_COST);
+    if (KEYWORD_TRAFFIC_COST) {
+      keywordTrafficCost = parseFloat(KEYWORD_TRAFFIC_COST.value);
+    } else {
+      throw new ErrorType("ConfigError", "Configuration for KEYWORD_TRAFFIC_COST not found");
+    }
+    let linkTrafficCost = 1;
+    const LINK_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.LINK_TRAFFIC_COST);
+    if (LINK_TRAFFIC_COST) {
+      linkTrafficCost = parseFloat(LINK_TRAFFIC_COST.value);
+    } else {
+      throw new ErrorType("ConfigError", "Configuration for LINK_TRAFFIC_COST not found");
+    }
+    const totalKeywordTraffic = keywords ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
+    const totalLinkTraffic = links ? links.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
+    const totalCost = totalKeywordTraffic*keywordTrafficCost + totalLinkTraffic*linkTrafficCost;
+    const isValidWallet = await compareWalletAmount(userId,totalCost)
+    if (!isValidWallet) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Insufficient balance",
+        error: "Invalid wallet"
+      })
+      return;
+    }
     // Validate keywords if provided
     if (keywords) {
       if (!Array.isArray(keywords)) {
@@ -270,7 +299,7 @@ export const createCampaign = async (
         }
       }
     }
-  
+
     // Use a transaction to ensure data consistency
     const campaign = await sequelizeSystem.transaction(
       async (transaction: Transaction) => {
@@ -286,7 +315,6 @@ export const createCampaign = async (
             startDate: start,
             endDate: end,
             totalTraffic,
-            cost,
             domain,
             search,
             campaignTypeId,
@@ -295,22 +323,40 @@ export const createCampaign = async (
           },
           transaction
         );
-
+        if (!campaign.id) {
+          throw new Error("Failed to create campaign");
+        }
         // Insert keywords if provided
         if (keywords && keywords.length > 0) {
           for (const keyword of keywords) {
-            const keywordData = {
+            const cost = keyword.traffic * 1
+            const keywordData: KeywordAttributes = {
               campaignId: campaign.id,
               name: keyword.name,
               urls: keyword.urls,
+              cost: cost,
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,
             };
-            // Create keyword in database
-            await Keyword.create(keywordData, { transaction });
             // Call Python API for each keyword
-            await baseApiPython("keyword/set", keywordData);
+            const newKeyword = await Keyword.create(keywordData, { transaction });
+            const dataPython = {
+              keywordId: newKeyword.id,
+              keyword: newKeyword.name,
+              urls: newKeyword.urls,
+              distribution: newKeyword.distribution,
+              traffic: newKeyword.traffic || 0,
+              device: campaign.device,
+              domain: campaign.domain,
+              timeStart: campaign.startDate,
+              timeEnd: campaign.endDate,
+              searchTool: campaign.search,
+            }
+            const result = await baseApiPython("keyword/set", dataPython);
+            // console.log(result);
+            // Create keyword in database
+
           }
         }
 
@@ -322,6 +368,7 @@ export const createCampaign = async (
             linkTo: link.linkTo,
             distribution: link.distribution,
             traffic: link.traffic || 0,
+            cost: (link.traffic || 0) * 1,
             anchorText: link.anchorText,
             status: link.status,
             url: link.url,
@@ -331,10 +378,24 @@ export const createCampaign = async (
           await Link.bulkCreate(linkData, { transaction });
         }
 
+        // await updateWalletBalanceByUserId(userId,{balance: totalCost})
+        const wallet = await getWalletByUserIdRepo(userId)
+        if (wallet) {
+          await createTransactionRepo({
+            walletId: wallet.id || 0,
+            amount: totalCost,
+            status: TransactionStatus.COMPLETED,
+            type: TransactionType.PAY_SERVICE,
+          })
+        }
+        else {
+          throw new Error("Wallet not found!");
+        }
+
         return campaign;
       }
     );
-  
+
     // Fetch the campaign with associated keywords and links for response
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [
@@ -342,7 +403,24 @@ export const createCampaign = async (
         { model: Link, as: "links" },
       ],
     });
+    // // SUM cost từ keyword
+    // const keywordCostResult = await Keyword.findOne({
+    //   where: { campaignId: campaignWithAssociations?.id },
+    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
+    //   raw: true,
+    // });
 
+    // // SUM cost từ link
+    // const linkCostResult = await Link.findOne({
+    //   where: { campaignId: campaignWithAssociations?.id },
+    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
+    //   raw: true,
+    // });
+
+    // const totalCost =
+    //   Number(keywordCostResult?.cost || 0) +
+    //   Number(linkCostResult?.cost || 0);
+    // console.log(campaignWithAssociations);
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Campaign created successfully",

@@ -28,6 +28,7 @@ Deposit.init(
     orderId: {
       type: DataTypes.STRING,
       allowNull: true,
+      unique: true, 
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -62,11 +63,11 @@ Deposit.init(
       allowNull: false,
     },
     acceptedBy: {
-      type: DataTypes.NUMBER,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     createdBy: {
-      type: DataTypes.NUMBER,
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
      isDeleted: {

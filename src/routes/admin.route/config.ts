@@ -13,6 +13,7 @@ import linkRoute from "./link.route";
 import reportRoute from "./report.route";
 import botRoute from "./bot.route";
 import oxapayRoute from "../common.route/oxapay.route"
+import configRoute from "../common.route/config.route"
 // Common routes
 import authRoute from "../common.route/auth.route";
 import notificationRoute from "../common.route/notification.route";
@@ -38,5 +39,6 @@ export const protectedRoutes = {
   "/role-permissions": rolePermissionRoute,
   "/report": reportRoute,
   "/bot" : botRoute,
-  "/oxapay": oxapayRoute
+  "/oxapay": oxapayRoute,
+  "/configs": configRoute,
 };
