@@ -28,6 +28,7 @@ Deposit.init(
     orderId: {
       type: DataTypes.STRING,
       allowNull: true,
+      unique: true, 
     },
     userId: {
       type: DataTypes.INTEGER,

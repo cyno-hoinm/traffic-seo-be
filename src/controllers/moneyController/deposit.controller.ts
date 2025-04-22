@@ -146,7 +146,7 @@ export const createDeposit = async (
                 return_url: "https://pickle-zone-customer.vercel.app/",
                 sandbox: oxapayConfig.sandbox
           }
-          console.log('OxapayData: ',data)
+          // console.log('OxapayData: ',data)
 
           const result = await generateInvoice(data)
           res.status(statusCode.OK).json({

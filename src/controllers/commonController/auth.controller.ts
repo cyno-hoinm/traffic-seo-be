@@ -79,7 +79,7 @@ export const loginUser = async (
     });
     return;
   } catch (error: any) {
-    console.log(error);
+    // console.log(error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",

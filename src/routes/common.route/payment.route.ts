@@ -101,10 +101,10 @@ router.post("/oxapay/callback", express.json({
       return
     }
 
-    console.log('✅ Valid OxaPay callback:', data);
+    // console.log('✅ Valid OxaPay callback:', data);
 
     // xử lý logic
-    console.log('Test oxapay callback!!!',data)
+    // console.log('Test oxapay callback!!!',data)
 
     res.status(200).send('ok');
   } catch (err: any) {

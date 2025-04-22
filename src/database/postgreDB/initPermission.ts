@@ -110,7 +110,7 @@ export async function initializePermissions() {
       }
     }
 
-    console.log(`${insertedCount} quyền đã được khởi tạo thành công.`);
+    // console.log(`${insertedCount} quyền đã được khởi tạo thành công.`);
   } catch (error: any) {
     console.error("Lỗi khi khởi tạo quyền:", error);
     if (error.message.includes("unique constraint")) {

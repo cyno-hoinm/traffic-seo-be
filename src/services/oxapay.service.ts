@@ -6,7 +6,7 @@ const baseUrl = oxapayConfig.url;
 
 export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateInvoiceResult> => {
   try {
-    console.log(baseUrl)
+    // console.log(baseUrl)
     const res = await axios.post(`${baseUrl}/payment/invoice`, data, {
       headers: {
         'merchant_api_key': oxapayConfig.merchant,

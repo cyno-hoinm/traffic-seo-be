@@ -11,6 +11,7 @@ import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
+import { startBackupService } from "./services/backUpDatabase.service";
 
 
 dotenv.config();
@@ -57,7 +58,7 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-
+  // startBackupService()
   // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);

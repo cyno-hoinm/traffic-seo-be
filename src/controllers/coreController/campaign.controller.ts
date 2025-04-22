@@ -21,6 +21,7 @@ import { ConfigApp } from "../../constants/config.constants";
 import { ErrorType } from "../../types/Error.type";
 import { compareWalletAmount, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
 import { updateWallet } from "../moneyController/wallet.controller";
+import { timeEnd } from "console";
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -233,6 +234,7 @@ export const createCampaign = async (
         message: "Insufficient balance",
         error: "Invalid wallet"
       })
+      return;
     }
     // Validate keywords if provided
     if (keywords) {
@@ -335,10 +337,24 @@ export const createCampaign = async (
               traffic: keyword.traffic || 0,
               isDeleted: false,
             };
-            // Create keyword in database
-            await Keyword.create(keywordData, { transaction });
             // Call Python API for each keyword
-            await baseApiPython("keyword/set", keywordData);
+            const newKeyword = await Keyword.create(keywordData, { transaction });
+            const dataPython = {
+              keywordId: newKeyword.id,
+              keyword: newKeyword.name,
+              urls: newKeyword.urls,
+              distribution: newKeyword.distribution,
+              traffic: newKeyword.traffic || 0,
+              device: campaign.device,
+              domain: campaign.domain,
+              timeStart: campaign.startDate,
+              timeEnd: campaign.endDate,
+              searchTool: campaign.search,
+            }
+            const result = await baseApiPython("keyword/set", dataPython);
+            // console.log(result);
+            // Create keyword in database
+        
           }
         }
 
@@ -388,7 +404,7 @@ export const createCampaign = async (
     // const totalCost =
     //   Number(keywordCostResult?.cost || 0) +
     //   Number(linkCostResult?.cost || 0);
-
+    // console.log(campaignWithAssociations);
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Campaign created successfully",

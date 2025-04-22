@@ -122,7 +122,7 @@ export const getPermissionsByRoleIdRepo = async (roleId: number): Promise<Permis
       include: [
         {
           model: RolePermission,
-          as: "rolePermission",
+          as: "rolePermissions",
           where: { 
             roleId,
             isDeleted: false // Only include non-deleted role permissions
