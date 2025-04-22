@@ -1,0 +1,6 @@
+export const ConfigApp = {
+  APP_NAME: "APP_NAME",
+  VND_TO_CREDIT: "VND_TO_CREDIT",
+  USD_TO_CREDIT: "USD_TO_CREDIT",
+  MAX_CAMPAIGN: "MAX_CAMPAIGN",
+};

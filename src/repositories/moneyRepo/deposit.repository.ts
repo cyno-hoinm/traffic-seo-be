@@ -8,6 +8,7 @@ import { ErrorType } from "../../types/Error.type";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { getConfigByNameRepo } from "../commonRepo/config.repository";
+import { ConfigApp } from "../../constants/config.constants";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -120,14 +121,14 @@ export const createDepositRepo = async (data: {
       
         let exchangeValue = 1;
         if (depositData.paymentMethodId === 1) {
-          const config = await getConfigByNameRepo("USD_TO_CREDIT");
+          const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
           if (config) {
             exchangeValue = parseFloat(config.value);
           } else {
             throw new ErrorType("ConfigError", "Configuration for USD_TO_CREDIT not found");
           }
         } else if (depositData.paymentMethodId === 3) {
-          const config = await getConfigByNameRepo("VND_TO_CREDIT");
+          const config = await getConfigByNameRepo(ConfigApp.VND_TO_CREDIT);
           if (config) {
             exchangeValue = parseFloat(config.value);
           } else {
