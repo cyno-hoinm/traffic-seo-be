@@ -1,17 +1,16 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelizeSystem } from "./index.model";
-import { PaymentMethodAttributes } from "../interfaces/PaymentMethod.interface";
+import { ConfigAttributes } from "../interfaces/Config.interface";
 
-class PaymentMethod extends Model<PaymentMethodAttributes> implements PaymentMethodAttributes {
-  public id!: number;
+class Config extends Model<ConfigAttributes> implements ConfigAttributes {
+  public id?: number;
   public name!: string;
-  public isDeleted!: boolean;
-  public unit!: string;
+  public value!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-PaymentMethod.init(
+Config.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -23,44 +22,39 @@ PaymentMethod.init(
       allowNull: false,
       unique: true,
     },
-    unit: {
+    value: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique:false,
     },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue('createdAt') as Date;
+        const rawValue = this.getDataValue("createdAt") as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace('Z', '');
+        return adjustedDate.toISOString().replace("Z", "");
       },
-    },
-    isDeleted: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       get() {
-        const rawValue = this.getDataValue('updatedAt') as Date;
+        const rawValue = this.getDataValue("updatedAt") as Date;
         if (!rawValue) return null;
         const adjustedDate = new Date(rawValue);
         adjustedDate.setHours(adjustedDate.getHours() + 7);
-        return adjustedDate.toISOString().replace('Z', '');
+        return adjustedDate.toISOString().replace("Z", "");
       },
     },
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "PaymentMethod",
-    tableName: "paymentMethods",
+    modelName: "Config",
+    tableName: "configs",
     timestamps: true,
   }
 );
 
-export default PaymentMethod;
+export default Config;

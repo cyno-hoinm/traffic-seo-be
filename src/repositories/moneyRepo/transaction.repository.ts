@@ -22,14 +22,14 @@ export const createTransactionRepo = async (
   _transaction?: SequelizeTransaction
 ): Promise<TransactionAttributes> => {
   try {
-    const wallet = await Wallet.findByPk(data.walletId);
+    const wallet = await Wallet.findByPk(data.walletId, { transaction: _transaction });
     if (!wallet) {
       throw new ErrorType("NotFoundError", "Wallet not found");
     }
 
     // Ensure balance and amount are numbers
-    const balance = parseFloat(wallet.balance.toString()); // Convert to number
-    const amount = parseFloat(data.amount.toString()); // Ensure amount is a number
+    const balance = parseFloat(wallet.balance.toString());
+    const amount = parseFloat(data.amount.toString());
 
     if (isNaN(balance) || isNaN(amount)) {
       throw new ErrorType("InvalidDataError", "Balance or amount is invalid");
@@ -39,36 +39,64 @@ export const createTransactionRepo = async (
       throw new ErrorType("InvalidAmountError", "Amount cannot be negative");
     }
 
-    const transaction = await sequelizeSystem.transaction(async (t) => {
-      const newTransaction = await Transaction.create(data, { transaction: t });
+    // Use provided transaction or start a new one
+    const transaction = _transaction || (await sequelizeSystem.transaction());
+
+    try {
+      const newTransaction = await Transaction.create(
+        {
+          walletId: data.walletId,
+          amount: data.amount,
+          status: data.status,
+          type: data.type,
+          referenceId: data.referenceId,
+          isDeleted: false,
+        },
+        {
+          transaction,
+          fields: [
+            "walletId",
+            "amount",
+            "status",
+            "type",
+            "referenceId",
+            "isDeleted",
+          ],
+        }
+      );
 
       if (data.type === TransactionType.PAY_SERVICE) {
         if (balance < amount) {
-          throw new ErrorType(
-            "InsufficientFundsError",
-            "Insufficient wallet balance"
-          );
+          throw new ErrorType("InsufficientFundsError", "Insufficient wallet balance");
         }
         wallet.balance = balance - amount;
-      } else if (
-        data.type === TransactionType.DEPOSIT ||
-        data.type === TransactionType.DEPOSIT
-      ) {
+      } else if (data.type === TransactionType.DEPOSIT) {
         wallet.balance = balance + amount;
       } else {
-        throw new ErrorType(
-          "InvalidStatusError",
-          "Status must be CHARGE, REFUND, or PAY"
-        );
+        throw new ErrorType("InvalidTypeError", "Transaction type must be PAY_SERVICE or DEPOSIT");
       }
 
-      await wallet.save({ transaction: t });
-      return newTransaction;
-    });
+      await wallet.save({ transaction });
+      
+      // Commit only if we started the transaction
+      if (!_transaction) {
+        await transaction.commit();
+      }
 
-    return transaction;
+      return newTransaction;
+    } catch (error) {
+      // Rollback only if we started the transaction
+      if (!_transaction) {
+        await transaction.rollback();
+      }
+      throw error;
+    }
   } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code);
+    throw new ErrorType(
+      error.name || "TransactionCreationError",
+      error.message || "Failed to create transaction",
+      error.code
+    );
   }
 };
 

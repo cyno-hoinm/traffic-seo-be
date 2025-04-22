@@ -11,7 +11,6 @@ import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
-import { connectMongoDB } from "./database/mongoDB/connect";
 
 
 dotenv.config();
@@ -45,7 +44,6 @@ if (cluster.isPrimary && !isDev) {
   const startServer = async () => {
     try {
       await connectDB(); // Connect DB first
-      await connectMongoDB(); // Connect MongoDB
       await redisClient.connect();
       server = app.listen(PORT, () => {
         logger.info(`Worker ${process.pid} started on port ${PORT}`);

@@ -333,6 +333,6 @@ router.post(
  *                   type: string
  *                   example: Transaction not found
  */
-router.post("/get", getOneTransaction);
+router.post("/get", authorization(["read-transaction"]), getOneTransaction);
 
 export default router;

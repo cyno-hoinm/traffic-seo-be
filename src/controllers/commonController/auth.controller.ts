@@ -15,6 +15,7 @@ import statusCode from "../../constants/statusCode";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { ttlInSecondsGlobal } from "../../constants/redis.constant";
 import { getWalletByUserIdRepo } from "../../repositories/moneyRepo/wallet.repository";
+import { UserAttributes } from "../../interfaces/User.interface";
 
 export const loginUser = async (
   req: Request,
@@ -43,16 +44,22 @@ export const loginUser = async (
     }
 
     // Verify password (assuming it's hashed in the database)
-    const isPasswordValid = await comparePassword(password, user.password ? user.password : "");
-
+    const isPasswordValid = await comparePassword(
+      password,
+      user.password?.toString() || ""
+    );
     if (!isPasswordValid) {
       res
         .status(statusCode.UNAUTHORIZED)
         .json({ status: false, message: "Invalid email or password" });
       return;
     }
+    // Convert Sequelize model instance to plain object
+    const userPayload = user.toJSON() as UserAttributes;
 
-    const token = signToken(user);
+    // Remove sensitive fields (e.g., password) from payload
+    const { password: _password, ...payload } = userPayload;
+    const token = signToken(user.toJSON());
 
     res.status(statusCode.OK).json({
       status: true,
@@ -72,6 +79,7 @@ export const loginUser = async (
     });
     return;
   } catch (error: any) {
+    console.log(error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",

@@ -7,6 +7,8 @@ import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
+import { getConfigByNameRepo } from "../commonRepo/config.repository";
+import { ConfigApp } from "../../constants/config.constants";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -112,26 +114,37 @@ export const createDepositRepo = async (data: {
 
       // Handle transaction for COMPLETED status
       if (data.status === DepositStatus.COMPLETED) {
-        // Sanitize and validate deposit.amount
-        const amount = parseFloat(
-          data.amount.toString().replace(/[^0-9.]/g, "")
-        );
+        const amount = parseFloat(data.amount.toString().replace(/[^0-9.]/g, ""));
         if (isNaN(amount) || amount <= 0) {
-          throw new ErrorType(
-            "InvalidAmountError",
-            "Invalid deposit amount format"
-          );
+          throw new ErrorType("InvalidAmountError", "Invalid deposit amount format");
         }
-
+      
+        let exchangeValue = 1;
+        if (depositData.paymentMethodId === 1) {
+          const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
+          if (config) {
+            exchangeValue = parseFloat(config.value);
+          } else {
+            throw new ErrorType("ConfigError", "Configuration for USD_TO_CREDIT not found");
+          }
+        } else if (depositData.paymentMethodId === 3) {
+          const config = await getConfigByNameRepo(ConfigApp.VND_TO_CREDIT);
+          if (config) {
+            exchangeValue = parseFloat(config.value);
+          } else {
+            throw new ErrorType("ConfigError", "Configuration for VND_TO_CREDIT not found");
+          }
+        }
+      
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount: amount,
+            amount: amount / exchangeValue,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
-            referenceId: newDeposit.orderId ? newDeposit.orderId.toString() : null, // Use the deposit ID as reference
+            referenceId: newDeposit.orderId,
           },
-          t // Pass transaction to createTransactionRepo
+          t
         );
       }
 

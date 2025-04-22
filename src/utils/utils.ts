@@ -36,7 +36,7 @@ export async function gracefulShutdown(
 
 export const comparePassword = async (
   password: string,
-  hashedPassword: string
+  hashedPassword: string | ""
 ): Promise<boolean> => {
   return await bcrypt.compare(password, hashedPassword);
 };
@@ -53,7 +53,7 @@ export const hashedPasswordString = async (
  * @param payload - The payload to include in the token (e.g., userId, email).
  * @returns The signed JWT token as a string.
  */
-export const signToken = (payload: object): string => {
+export const signToken = (payload: any): string => {
   const secret = process.env.JWT_SECRET || "DEFAULT_SECRET"; // Ensure fallback works correctly
   const expiresIn = (process.env.JWT_EXPIRES_IN as ms.StringValue) || "1h"; // Default to "1h" if not set
 

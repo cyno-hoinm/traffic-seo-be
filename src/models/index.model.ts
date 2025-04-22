@@ -14,6 +14,7 @@ import Notification from "./Notification.model"; // Add Notification
 import Transaction from "./Transaction.model"; // Add Transaction
 import PaymentMethod from "./PaymentMethod.model";
 import CampaignType from "./CampaignType.model";
+import Config from "./Config.model";
 
 // Initialize models (this ensures they’re loaded)
 export const models = {
@@ -31,54 +32,55 @@ export const models = {
   Notification,
   Transaction,
   PaymentMethod,
-  CampaignType
+  CampaignType,
+  Config
 };
 
 
 // Define associations
 // Define associations
+Role.hasMany(User, { foreignKey: "roleId", as: "user", onDelete: 'SET NULL' });
 User.belongsTo(Role, { foreignKey: "roleId", as: "role", onDelete: 'SET NULL' });
-Role.hasMany(User, { foreignKey: "roleId", as: "users", onDelete: 'SET NULL' });
 
 User.hasOne(Wallet, { foreignKey: "userId", as: "wallet", onDelete: 'SET NULL' });
 Wallet.belongsTo(User, { foreignKey: "userId", as: "user", onDelete: 'SET NULL' });
 
 Campaign.belongsTo(Country, { foreignKey: "countryId", as: "country", onDelete: 'SET NULL' });
-Country.hasMany(Campaign, { foreignKey: "countryId", as: "campaigns", onDelete: 'SET NULL' });
+Country.hasMany(Campaign, { foreignKey: "countryId", as: "campaign", onDelete: 'SET NULL' });
 
 Campaign.belongsTo(User, { foreignKey: "userId", as: "user", onDelete: 'SET NULL' });
-User.hasMany(Campaign, { foreignKey: "userId", as: "campaigns", onDelete: 'SET NULL' });
+User.hasMany(Campaign, { foreignKey: "userId", as: "campaign", onDelete: 'SET NULL' });
 
 Deposit.belongsTo(User, { foreignKey: "userId", as: "user", onDelete: 'SET NULL' });
-User.hasMany(Deposit, { foreignKey: "userId", as: "deposits", onDelete: 'SET NULL' });
+User.hasMany(Deposit, { foreignKey: "userId", as: "deposit", onDelete: 'SET NULL' });
 
 Deposit.belongsTo(Voucher, { foreignKey: "voucherId", as: "voucher", onDelete: 'SET NULL' });
-Voucher.hasMany(Deposit, { foreignKey: "voucherId", as: "deposits", onDelete: 'SET NULL' });
+Voucher.hasMany(Deposit, { foreignKey: "voucherId", as: "deposit", onDelete: 'SET NULL' });
 
-Campaign.belongsTo(CampaignType, { foreignKey: "campaignTypeId", as: "campaignTypes", onDelete: "SET NULL" });
-CampaignType.hasMany(Campaign, { foreignKey: "campaignTypeId", as: "campaigns", onDelete: "SET NULL" });
+Campaign.belongsTo(CampaignType, { foreignKey: "campaignTypeId", as: "campaignType", onDelete: "SET NULL" });
+CampaignType.hasMany(Campaign, { foreignKey: "campaignTypeId", as: "campaign", onDelete: "SET NULL" });
 
 Deposit.belongsTo(PaymentMethod, {
   foreignKey: "paymentMethodId",
-  as: "paymentMethods",
+  as: "paymentMethod",
   onDelete: 'SET NULL',
 });
 PaymentMethod.hasMany(Deposit, {
   foreignKey: "paymentMethodId",
-  as: "deposits",
+  as: "deposit",
   onDelete: 'SET NULL',
 });
 
 Keyword.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign", onDelete: 'SET NULL' });
-Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keywords", onDelete: 'SET NULL' });
+Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keyword", onDelete: 'SET NULL' });
 
 Link.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaign", onDelete: 'SET NULL' });
-Campaign.hasMany(Link, { foreignKey: "campaignId", as: "links", onDelete: 'SET NULL' });
+Campaign.hasMany(Link, { foreignKey: "campaignId", as: "link", onDelete: 'SET NULL' });
 
-Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermissions", onDelete: 'SET NULL' });
+Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermission", onDelete: 'SET NULL' });
 Permission.hasMany(RolePermission, {
   foreignKey: "permissionId",
-  as: "rolePermissions",
+  as: "rolePermission",
   onDelete: 'SET NULL',
 });
 RolePermission.belongsTo(Role, { foreignKey: "roleId", as: "role", onDelete: 'SET NULL' });
@@ -89,13 +91,16 @@ RolePermission.belongsTo(Permission, {
 });
 
 Notification.belongsTo(User, { foreignKey: "userId", as: "user", onDelete: 'SET NULL' });
-User.hasMany(Notification, { foreignKey: "userId", as: "notifications", onDelete: 'SET NULL' });
+User.hasMany(Notification, { foreignKey: "userId", as: "notification", onDelete: 'SET NULL' });
 
 Transaction.belongsTo(Wallet, { foreignKey: "walletId", as: "wallet", onDelete: 'SET NULL' });
-Wallet.hasMany(Transaction, { foreignKey: "walletId", as: "transactions", onDelete: 'SET NULL' });
+Wallet.hasMany(Transaction, { foreignKey: "walletId", as: "transaction", onDelete: 'SET NULL' });
 
-Deposit.hasOne(Transaction, { foreignKey: 'orderId', as: 'transaction',onDelete: 'SET NULL'});
-Transaction.belongsTo(Deposit, { foreignKey: 'referenceId', as: 'deposit',onDelete: 'SET NULL'});
+Transaction.belongsTo(Deposit, {
+  foreignKey: 'referenceId', // Transaction.referenceId
+  as: 'deposit',
+  onDelete: 'SET NULL',
+});
 // Export models
 export {
   Role,
@@ -112,5 +117,6 @@ export {
   Notification,
   Transaction,
   PaymentMethod,
+  Config,
   sequelizeSystem,
 };

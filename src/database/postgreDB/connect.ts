@@ -1,12 +1,14 @@
 import { logger } from "../../config/logger.config";
 import { sequelizeSystem } from "../../models/index.model";
+import { initializePermissions } from "./initPermission";
 
 // Export connect and disconnect functions
 export const connectDB = async (): Promise<void> => {
   try {
     await sequelizeSystem.authenticate();
-    // await sequelizeSystem.sync({ force: false });
-    logger.info("Connected to PostgreSQL" );
+    // await initializePermissions(); // Initialize permissions if needed
+    // await sequelizeSystem.sync({ force: false, alter: true });
+    logger.info("Connected to PostgreSQL");
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL:", error);
     throw error;
