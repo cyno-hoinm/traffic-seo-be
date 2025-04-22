@@ -16,6 +16,11 @@ import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { baseApiPython } from "../../config/botAPI.config";
+import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
+import { ConfigApp } from "../../constants/config.constants";
+import { ErrorType } from "../../types/Error.type";
+import { compareWalletAmount, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
+import { updateWallet } from "../moneyController/wallet.controller";
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -204,7 +209,31 @@ export const createCampaign = async (
       });
       return;
     }
-    const totalKeywordTraffic = keywords.reduce()
+    let keywordTrafficCost = 1;
+    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.KEYWORD_TRAFFIC_COST);
+    if (KEYWORD_TRAFFIC_COST) {
+      keywordTrafficCost = parseFloat(KEYWORD_TRAFFIC_COST.value);
+    } else {
+      throw new ErrorType("ConfigError", "Configuration for KEYWORD_TRAFFIC_COST not found");
+    }
+    let linkTrafficCost = 1;
+    const LINK_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.LINK_TRAFFIC_COST);
+    if (LINK_TRAFFIC_COST) {
+      linkTrafficCost = parseFloat(LINK_TRAFFIC_COST.value);
+    } else {
+      throw new ErrorType("ConfigError", "Configuration for LINK_TRAFFIC_COST not found");
+    }
+    const totalKeywordTraffic = keywords ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
+    const totalLinkTraffic = links ? links.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
+    const totalCost = totalKeywordTraffic*keywordTrafficCost + totalLinkTraffic*linkTrafficCost;
+    const isValidWallet = await compareWalletAmount(userId,totalCost)
+    if (!isValidWallet) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Insufficient balance",
+        error: "Invalid wallet"
+      })
+    }
     // Validate keywords if provided
     if (keywords) {
       if (!Array.isArray(keywords)) {
@@ -330,7 +359,7 @@ export const createCampaign = async (
           }));
           await Link.bulkCreate(linkData, { transaction });
         }
-
+        await updateWalletBalanceByUserId(userId,{balance: totalCost})
         return campaign;
       }
     );
