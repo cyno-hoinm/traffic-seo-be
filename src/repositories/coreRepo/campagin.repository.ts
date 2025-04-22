@@ -95,7 +95,8 @@ export const getCampaignByIdRepo = async (
 ): Promise<Campaign | null> => {
   try {
     const campaign = await Campaign.findByPk(id, {
-      order: [["createdAt", "DESC"]],
+      attributes: ["id", "name", "startDate", "endDate", "totalTraffic", "domain","createdAt","updatedAt"],
+      order: [["createdAt", "DESC"]]
     });
     return campaign;
   } catch (error: any) {

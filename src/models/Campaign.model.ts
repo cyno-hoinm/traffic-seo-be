@@ -18,7 +18,6 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public startDate!: Date;
   public endDate!: Date;
   public totalTraffic!: number;
-  public cost!: number;
   public domain!: string;
   public search!: string;
   public linksCount!: number;
