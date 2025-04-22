@@ -183,19 +183,10 @@ export const deleteRolePermission = async (
   res: Response<ResponseType<RolePermissionAttributes>>
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const rolePermissionId = parseInt(id, 10);
+    // const { id } = req.params;
+    const {roleId, permissionId} = req.body
 
-    if (isNaN(rolePermissionId)) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Invalid input",
-        error: "Invalid role-permission ID",
-      });
-      return;
-    }
-
-    const deleted = await deleteRolePermissionRepo(rolePermissionId);
+    const deleted = await deleteRolePermissionRepo(roleId, permissionId);
 
     if (!deleted) {
       res.status(statusCode.NOT_FOUND).json({

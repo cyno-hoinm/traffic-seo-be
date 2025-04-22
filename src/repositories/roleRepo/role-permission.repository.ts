@@ -90,10 +90,13 @@ export const updateRolePermissionRepo = async (
 
 // Delete role-permission by ID
 export const deleteRolePermissionRepo = async (
-  id: number
+  roleId: number,
+  permissionId: number
 ): Promise<boolean> => {
   try {
-    const rolePermission = await RolePermission.findByPk(id);
+    const rolePermission = await RolePermission.findOne({
+      where: { roleId, permissionId }
+    });
     if (!rolePermission) return false;
     await rolePermission.update({ isDeleted: true });
     return true;
