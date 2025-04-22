@@ -4,6 +4,7 @@ export interface KeywordAttributes {
   id?: number;
   campaignId: number | null; // Nullable if not always present
   name: string;
+  cost: number;
   urls?: string[];
   distribution: DistributionType;
   traffic : number;

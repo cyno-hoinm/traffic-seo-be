@@ -127,7 +127,7 @@ export const getOneCampaignReportRepo = async (
       campaignDomain : campaign.domain || "",
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
-      cost : campaign.cost || 0,
+      cost : 0,
       targetTraffic : campaign.totalTraffic || 0,
       linkCount : campaign.links.length,
       keywordCount : campaign.keywords.length,

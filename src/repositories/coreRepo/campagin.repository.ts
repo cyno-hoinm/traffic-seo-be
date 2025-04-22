@@ -76,7 +76,6 @@ export const createCampaignRepo = async (data: {
   startDate: Date;
   endDate: Date;
   totalTraffic: number;
-  cost: number;
   domain: string;
   search: string;
   campaignTypeId: CampaignTypeAttributes;

@@ -11,7 +11,7 @@ import { CampaignStatus } from "../../enums/campaign.enum";
 import { DistributionType } from "../../enums/distribution.enum";
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { sequelizeSystem } from "../../database/postgreDB/config.database";
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
@@ -153,7 +153,6 @@ export const createCampaign = async (
       startDate,
       endDate,
       totalTraffic,
-      cost,
       domain,
       search,
       status,
@@ -173,8 +172,6 @@ export const createCampaign = async (
       !startDate ||
       !endDate ||
       !totalTraffic ||
-      cost === undefined ||
-      isNaN(cost) ||
       !domain ||
       !search ||
       !campaignTypeId ||
@@ -207,7 +204,7 @@ export const createCampaign = async (
       });
       return;
     }
-
+    const totalKeywordTraffic = keywords.reduce()
     // Validate keywords if provided
     if (keywords) {
       if (!Array.isArray(keywords)) {
@@ -285,7 +282,6 @@ export const createCampaign = async (
             startDate: start,
             endDate: end,
             totalTraffic,
-            cost,
             domain,
             search,
             campaignTypeId,
@@ -300,10 +296,12 @@ export const createCampaign = async (
         // Insert keywords if provided
         if (keywords && keywords.length > 0) {
           for (const keyword of keywords) {
+            const cost = keyword.traffic * 1
             const keywordData: KeywordAttributes = {
               campaignId: campaign.id,
               name: keyword.name,
               urls: keyword.urls,
+              cost: cost,
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,
@@ -323,6 +321,7 @@ export const createCampaign = async (
             linkTo: link.linkTo,
             distribution: link.distribution,
             traffic: link.traffic || 0,
+            cost: (link.traffic || 0) * 1,
             anchorText: link.anchorText,
             status: link.status,
             url: link.url,
@@ -343,6 +342,23 @@ export const createCampaign = async (
         { model: Link, as: "links" },
       ],
     });
+    // // SUM cost từ keyword
+    // const keywordCostResult = await Keyword.findOne({
+    //   where: { campaignId: campaignWithAssociations?.id },
+    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
+    //   raw: true,
+    // });
+
+    // // SUM cost từ link
+    // const linkCostResult = await Link.findOne({
+    //   where: { campaignId: campaignWithAssociations?.id },
+    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
+    //   raw: true,
+    // });
+
+    // const totalCost =
+    //   Number(keywordCostResult?.cost || 0) +
+    //   Number(linkCostResult?.cost || 0);
 
     res.status(statusCode.CREATED).json({
       status: true,
@@ -358,7 +374,6 @@ export const createCampaign = async (
         startDate: campaignWithAssociations?.startDate,
         endDate: campaignWithAssociations?.endDate,
         totalTraffic: campaignWithAssociations?.totalTraffic,
-        cost: campaignWithAssociations?.cost,
         domain: campaignWithAssociations?.domain,
         search: campaignWithAssociations?.search,
         status: campaignWithAssociations?.status,
