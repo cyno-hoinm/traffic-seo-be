@@ -62,11 +62,11 @@ Deposit.init(
       allowNull: false,
     },
     acceptedBy: {
-      type: DataTypes.NUMBER,
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
     createdBy: {
-      type: DataTypes.NUMBER,
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
      isDeleted: {

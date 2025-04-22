@@ -1,16 +1,16 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelizeSystem } from "./index.model";
-import { RoleAttributes } from "../interfaces/Role.interface";
-class Role extends Model<RoleAttributes> implements RoleAttributes {
-  public id!: number;
+import { ConfigAttributes } from "../interfaces/Config.interface";
+
+class Config extends Model<ConfigAttributes> implements ConfigAttributes {
+  public id?: number;
   public name!: string;
-  public isDelete!: boolean;
-  public isDeleted!: boolean;
+  public value!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-Role.init(
+Config.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -22,10 +22,9 @@ Role.init(
       allowNull: false,
       unique: true,
     },
-    isDeleted: {
-      type: DataTypes.BOOLEAN,
+    value: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -52,12 +51,10 @@ Role.init(
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "Role",
-    tableName: "roles",
+    modelName: "Config",
+    tableName: "configs",
     timestamps: true,
   }
 );
 
-
-
-export default Role;
+export default Config;

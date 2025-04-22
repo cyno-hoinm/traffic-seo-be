@@ -9,7 +9,7 @@ Object.entries(publicRoutes).forEach(([path, route]) => {
 });
 // Register protected routes with authentication middleware
 Object.entries(protectedRoutes).forEach(([path, route]) => {
-  adminRouter.use(path, authenticateToken, route);
+  adminRouter.use(path, route);
 });
 
 export default adminRouter;

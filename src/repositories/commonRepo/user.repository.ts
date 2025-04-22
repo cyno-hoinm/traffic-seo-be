@@ -66,7 +66,7 @@ export const getUserPermissions = async (userId: number): Promise<string[]> => {
 
 export const findUserByEmailRepo = async (
   email: string
-): Promise<UserAttributes | null> => {
+): Promise<User | null> => {
   try {
     const user = await User.findOne({
       where: { email, isDeleted: false },

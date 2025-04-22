@@ -1,124 +1,26 @@
 import express from "express";
-import {
-  createVoucher,
-  getAllVouchers,
-  getVoucherById,
-  updateVoucher,
-  deleteVoucher,
-  getVoucherByCode,
-} from "../../controllers/moneyController/voucher.controller"; // Adjust path
 import { authorization } from "../../middleware/auth";
+import {
+  createConfig,
+  deleteConfig,
+  getAllConfigs,
+  getConfigById,
+  getConfigByName,
+  updateConfig,
+} from "../../controllers/commonController/config.controller";
 
 const router = express.Router();
 
 /**
  * @swagger
- * /vouchers:
- *   post:
- *     summary: Create a new voucher
- *     description: Create a new voucher with a random 10-character uppercase code.
- *     tags: [Vouchers]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - value
- *               - status
- *             properties:
- *               value:
- *                 type: number
- *                 description: Voucher value
- *                 example: 50.00
- *               status:
- *                 type: string
- *                 enum: [ACTIVE, USED, EXPIRED]
- *                 description: Voucher status
- *                 example: ACTIVE
- *     responses:
- *       201:
- *         description: Voucher created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Voucher created successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     code:
- *                       type: string
- *                       example: X7K9P2M4Q8
- *                     value:
- *                       type: number
- *                       example: 50.00
- *                     status:
- *                       type: string
- *                       example: ACTIVE
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
- *       400:
- *         description: Bad request - Missing or invalid fields
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Valid value is required
- *                 error:
- *                   type: string
- *                   example: Missing or invalid field
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Error creating voucher
- *                 error:
- *                   type: string
- *                   example: Database error
- */
-router.post("/", authorization(["create-voucher"]),createVoucher);
-
-/**
- * @swagger
- * /vouchers:
+ * /configs:
  *   get:
- *     summary: Get all vouchers
- *     description: Retrieve a list of all vouchers.
- *     tags: [Vouchers]
+ *     summary: Get all configs
+ *     description: Retrieve a list of all configs.
+ *     tags: [Configs]
  *     responses:
  *       200:
- *         description: Vouchers retrieved successfully
+ *         description: Configs retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -129,7 +31,7 @@ router.post("/", authorization(["create-voucher"]),createVoucher);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Vouchers retrieved successfully
+ *                   example: Configs retrieved successfully
  *                 data:
  *                   type: array
  *                   items:
@@ -138,23 +40,20 @@ router.post("/", authorization(["create-voucher"]),createVoucher);
  *                       id:
  *                         type: integer
  *                         example: 1
- *                       code:
+ *                       name:
  *                         type: string
- *                         example: X7K9P2M4Q8
+ *                         example: site_title
  *                       value:
- *                         type: number
- *                         example: 50.00
- *                       status:
  *                         type: string
- *                         example: ACTIVE
+ *                         example: My Website
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-09T07:00:00
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: 2025-04-10T07:00:00 
+ *                         example: 2025-04-09T07:00:00
  *       500:
  *         description: Internal server error
  *         content:
@@ -167,30 +66,41 @@ router.post("/", authorization(["create-voucher"]),createVoucher);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error fetching vouchers
+ *                   example: Error fetching configs
  *                 error:
  *                   type: string
  *                   example: Database error
  */
-router.get("/", authorization(["read-vouchers"]),getAllVouchers);
+router.get("/", authorization(["read-config"]), getAllConfigs);
 
 /**
  * @swagger
- * /vouchers/{id}:
- *   get:
- *     summary: Get a voucher by ID
- *     description: Retrieve a specific voucher by its ID.
- *     tags: [Vouchers]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Voucher ID
+ * /configs:
+ *   post:
+ *     summary: Create a new config
+ *     description: Create a new config with required name and value fields.
+ *     tags: [Configs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - value
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Unique name of the config
+ *                 example: site_title
+ *               value:
+ *                 type: string
+ *                 description: Value of the config
+ *                 example: My Website
  *     responses:
- *       200:
- *         description: Voucher retrieved successfully
+ *       201:
+ *         description: Config created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -201,32 +111,29 @@ router.get("/", authorization(["read-vouchers"]),getAllVouchers);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Voucher retrieved successfully
+ *                   example: Config created successfully
  *                 data:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
  *                       example: 1
- *                     code:
+ *                     name:
  *                       type: string
- *                       example: X7K9P2M4Q8
+ *                       example: site_title
  *                     value:
- *                       type: number
- *                       example: 50.00
- *                     status:
  *                       type: string
- *                       example: ACTIVE
+ *                       example: My Website
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
- *       404:
- *         description: Voucher not found
+ *                       example: 2025-04-09T07:00:00
+ *       400:
+ *         description: Bad request - Missing required fields or duplicate config name
  *         content:
  *           application/json:
  *             schema:
@@ -237,7 +144,103 @@ router.get("/", authorization(["read-vouchers"]),getAllVouchers);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Voucher not found
+ *                   example: Name and value are required
+ *                 error:
+ *                   type: string
+ *                   example: Missing required fields
+ *               examples:
+ *                 missingFields:
+ *                   summary: Missing required fields
+ *                   value:
+ *                     status: false
+ *                     message: Name and value are required
+ *                     error: Missing required fields
+ *                 duplicateName:
+ *                   summary: Duplicate config name
+ *                   value:
+ *                     status: false
+ *                     message: Config with this name already exists
+ *                     error: Duplicate config name
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error creating config
+ *                 error:
+ *                   type: string
+ *                   example: Database error
+ */
+router.post("/", authorization(["create-config"]), createConfig);
+
+/**
+ * @swagger
+ * /configs/{id}:
+ *   get:
+ *     summary: Get a config by ID
+ *     description: Retrieve a specific config by its ID.
+ *     tags: [Configs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Config ID
+ *     responses:
+ *       200:
+ *         description: Config retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Config retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: site_title
+ *                     value:
+ *                       type: string
+ *                       example: My Website
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-09T07:00:00
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-09T07:00:00
+ *       404:
+ *         description: Config not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Config not found
  *                 error:
  *                   type: string
  *                   example: Resource not found
@@ -253,30 +256,30 @@ router.get("/", authorization(["read-vouchers"]),getAllVouchers);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error fetching voucher
+ *                   example: Error fetching config
  *                 error:
  *                   type: string
  *                   example: Database error
  */
-router.get("/:id",authorization(["read-voucher"]), getVoucherById);
+router.get("/:id", authorization(["read-config"]), getConfigById);
 
 /**
  * @swagger
- * /vouchers/code/{code}:
+ * /configs/name/{name}:
  *   get:
- *     summary: Get a voucher by code
- *     description: Retrieve a specific voucher by its unique code.
- *     tags: [Vouchers]
+ *     summary: Get a config by name
+ *     description: Retrieve a specific config by its name.
+ *     tags: [Configs]
  *     parameters:
  *       - in: path
- *         name: code
+ *         name: name
  *         required: true
  *         schema:
  *           type: string
- *         description: Voucher code (10-character uppercase)
+ *         description: Config name
  *     responses:
  *       200:
- *         description: Voucher retrieved successfully
+ *         description: Config retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -287,48 +290,29 @@ router.get("/:id",authorization(["read-voucher"]), getVoucherById);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Voucher retrieved successfully
+ *                   example: Config retrieved successfully
  *                 data:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
  *                       example: 1
- *                     code:
+ *                     name:
  *                       type: string
- *                       example: X7K9P2M4Q8
+ *                       example: site_title
  *                     value:
- *                       type: number
- *                       example: 50.00
- *                     status:
  *                       type: string
- *                       example: ACTIVE
+ *                       example: My Website
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
- *       400:
- *         description: Bad request - Missing code
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Voucher code is required
- *                 error:
- *                   type: string
- *                   example: Missing required field
+ *                       example: 2025-04-09T07:00:00
  *       404:
- *         description: Voucher not found
+ *         description: Config not found
  *         content:
  *           application/json:
  *             schema:
@@ -339,7 +323,7 @@ router.get("/:id",authorization(["read-voucher"]), getVoucherById);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Voucher not found
+ *                   example: Config not found
  *                 error:
  *                   type: string
  *                   example: Resource not found
@@ -355,27 +339,27 @@ router.get("/:id",authorization(["read-voucher"]), getVoucherById);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error fetching voucher by code
+ *                   example: Error fetching config
  *                 error:
  *                   type: string
  *                   example: Database error
  */
-router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
+router.get("/name/:name", authorization(["read-config"]), getConfigByName);
 
 /**
  * @swagger
- * /vouchers/{id}:
+ * /configs/{id}:
  *   put:
- *     summary: Update a voucher by ID
- *     description: Update the value and/or status of an existing voucher.
- *     tags: [Vouchers]
+ *     summary: Update a config
+ *     description: Update an existing config by its ID with new name or value.
+ *     tags: [Configs]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: Voucher ID
+ *         description: Config ID
  *     requestBody:
  *       required: true
  *       content:
@@ -383,18 +367,17 @@ router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
  *           schema:
  *             type: object
  *             properties:
- *               value:
- *                 type: number
- *                 description: New value of the voucher
- *                 example: 75.00
- *               status:
+ *               name:
  *                 type: string
- *                 enum: [ACTIVE, USED, EXPIRED]
- *                 description: New status of the voucher
- *                 example: USED
+ *                 description: New name of the config
+ *                 example: site_title
+ *               value:
+ *                 type: string
+ *                 description: New value of the config
+ *                 example: New Website
  *     responses:
  *       200:
- *         description: Voucher updated successfully
+ *         description: Config updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -405,32 +388,29 @@ router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Voucher updated successfully
+ *                   example: Config updated successfully
  *                 data:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: integer
  *                       example: 1
- *                     code:
+ *                     name:
  *                       type: string
- *                       example: X7K9P2M4Q8
+ *                       example: site_title
  *                     value:
- *                       type: number
- *                       example: 75.00
- *                     status:
  *                       type: string
- *                       example: USED
+ *                       example: New Website
  *                     createdAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-09T07:00:00
  *                     updatedAt:
  *                       type: string
  *                       format: date-time
- *                       example: 2025-04-10T07:00:00 
+ *                       example: 2025-04-10T07:00:00
  *       400:
- *         description: Bad request - Invalid fields
+ *         description: Bad request - Missing required fields or duplicate config name
  *         content:
  *           application/json:
  *             schema:
@@ -441,12 +421,25 @@ router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Valid value or status is required
+ *                   example: At least one field (name or value) is required
  *                 error:
  *                   type: string
- *                   example: Invalid field
+ *                   example: Missing required fields
+ *               examples:
+ *                 missingFields:
+ *                   summary: Missing required fields
+ *                   value:
+ *                     status: false
+ *                     message: At least one field (name or value) is required
+ *                     error: Missing required fields
+ *                 duplicateName:
+ *                   summary: Duplicate config name
+ *                   value:
+ *                     status: false
+ *                     message: Config with this name already exists
+ *                     error: Duplicate config name
  *       404:
- *         description: Voucher not found
+ *         description: Config not found
  *         content:
  *           application/json:
  *             schema:
@@ -457,7 +450,7 @@ router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Voucher not found
+ *                   example: Config not found
  *                 error:
  *                   type: string
  *                   example: Resource not found
@@ -473,30 +466,30 @@ router.get("/code/:code", authorization(["read-voucher"]),getVoucherByCode);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error updating voucher
+ *                   example: Error updating config
  *                 error:
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id",authorization(["update-voucher"]), updateVoucher);
+router.put("/:id", authorization(["update-config"]), updateConfig);
 
 /**
  * @swagger
- * /vouchers/{id}:
+ * /configs/{id}:
  *   delete:
- *     summary: Delete a voucher by ID
- *     description: Delete an existing voucher.
- *     tags: [Vouchers]
+ *     summary: Delete a config
+ *     description: Delete a specific config by its ID.
+ *     tags: [Configs]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: Voucher ID
+ *         description: Config ID
  *     responses:
  *       200:
- *         description: Voucher deleted successfully
+ *         description: Config deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -507,9 +500,9 @@ router.put("/:id",authorization(["update-voucher"]), updateVoucher);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Voucher deleted successfully
+ *                   example: Config deleted successfully
  *       404:
- *         description: Voucher not found
+ *         description: Config not found
  *         content:
  *           application/json:
  *             schema:
@@ -520,7 +513,7 @@ router.put("/:id",authorization(["update-voucher"]), updateVoucher);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Voucher not found
+ *                   example: Config not found
  *                 error:
  *                   type: string
  *                   example: Resource not found
@@ -536,11 +529,11 @@ router.put("/:id",authorization(["update-voucher"]), updateVoucher);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Error deleting voucher
+ *                   example: Error deleting config
  *                 error:
  *                   type: string
  *                   example: Database error
  */
-router.delete("/:id", authorization(["delete-voucher"]),deleteVoucher);
+router.delete("/:id", authorization(["delete-config"]), deleteConfig);
 
 export default router;
