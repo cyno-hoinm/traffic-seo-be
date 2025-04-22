@@ -18,7 +18,6 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public startDate!: Date;
   public endDate!: Date;
   public totalTraffic!: number;
-  public cost!: number;
   public domain!: string;
   public search!: string;
   public linksCount!: number;
@@ -86,10 +85,6 @@ Campaign.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-    },
-    cost: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
     },
     domain: {
       type: DataTypes.STRING,

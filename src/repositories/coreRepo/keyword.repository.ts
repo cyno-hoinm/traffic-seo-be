@@ -56,6 +56,7 @@ export const  createKeywordRepo = async (data: {
   urls: string[];
   traffic: number;
   distribution: DistributionType;
+  cost: number;
 }): Promise<any> => {
   try {
     const campaign = await Campaign.findByPk(data.campaignId);
@@ -66,6 +67,7 @@ export const  createKeywordRepo = async (data: {
       keyword: keyword.name,
       traffic: keyword.traffic,
       distribution: keyword.distribution,
+      cost: keyword.cost,
       device: campaign?.device,
       domain: campaign?.domain,
       timeStart: campaign?.startDate.toString(),

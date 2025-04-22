@@ -85,6 +85,7 @@ export const getLinkList = async (
           anchorText: link.anchorText,
           status: link.status,
           url: link.url,
+          cost: link.cost,
           page: link.page,
           createdAt: link.createdAt,
           updatedAt: link.updatedAt,
@@ -146,7 +147,7 @@ export const createLink = async (
       });
       return;
     }
-
+    const cost = traffic * 1
     const newLink = await createLinkRepo({
       campaignId,
       link,
@@ -157,6 +158,7 @@ export const createLink = async (
       url,
       page,
       traffic,
+      cost,
     });
 
     res.status(statusCode.CREATED).json({
@@ -171,6 +173,7 @@ export const createLink = async (
         traffic: newLink.traffic,
         anchorText: newLink.anchorText,
         status: newLink.status,
+        cost: newLink.cost,
         url: newLink.url,
         page: newLink.page,
         createdAt: newLink.createdAt,
@@ -214,6 +217,7 @@ export const getLinkById = async (
         linkTo: link.linkTo,
         distribution: link.distribution,
         traffic: link.traffic,
+        cost: link.cost,
         anchorText: link.anchorText,
         status: link.status,
         url: link.url,

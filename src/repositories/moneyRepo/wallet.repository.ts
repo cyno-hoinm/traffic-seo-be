@@ -53,13 +53,50 @@ export const deleteWalletRepo = async (id: number): Promise<boolean> => {
 export const getWalletByUserIdRepo = async (userId: number): Promise<WalletAttributes | null> => {
   try {
     const wallet = await Wallet.findOne({
-      where: { userId }, 
+      where: { userId },
     });
 
     if (!wallet) {
       return null;
     }
     return wallet.get({ plain: true }) as WalletAttributes;
+  } catch (error: any) {
+    // Handle Sequelize or other errors
+    const errorMessage = error.message || 'Failed to fetch wallet';
+    const errorCode = error.code || 'DATABASE_ERROR';
+    throw new ErrorType(error.name || 'SequelizeError', errorMessage, errorCode);
+  }
+};
+
+export const updateWalletBalanceByUserId = async (userId: number,  data: { balance: number }): Promise<WalletAttributes | null> => {
+  try {
+    const wallet = await Wallet.findOne({
+      where: { userId },
+    });
+
+    if (!wallet) {
+      return null;
+    }
+    await wallet.update({ balance: data.balance });
+    return wallet;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const compareWalletAmount = async (userId: number, cost: number): Promise<boolean | null> => {
+  try {
+    const wallet = await Wallet.findOne({
+      where: { userId },
+    });
+
+    if (!wallet) {
+      return false;
+    }
+
+    const walletValue = wallet.get({ plain: true }) as WalletAttributes;
+    if (walletValue.balance<cost) return false
+    return true
   } catch (error: any) {
     // Handle Sequelize or other errors
     const errorMessage = error.message || 'Failed to fetch wallet';

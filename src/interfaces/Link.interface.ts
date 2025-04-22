@@ -12,6 +12,7 @@ export interface LinkAttributes {
   status: LinkStatus;
   url: string;
   page: string;
+  cost: number;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

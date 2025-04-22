@@ -60,6 +60,7 @@ export const createLinkRepo = async (data: {
   status: LinkStatus;
   url: string;
   page: string;
+  cost: number;
   traffic: number;
 }): Promise<LinkAttributes> => {
   try {
