@@ -32,7 +32,7 @@ export const findUserByIdRepo = async (
           include: [
             {
               model: RolePermission,
-              as: "rolePermissions",
+              as: "rolePermission",
               include: [
                 {
                   model: Permission,
@@ -56,9 +56,10 @@ export const findUserByIdRepo = async (
 // Helper function to extract permission names
 export const getUserPermissions = async (userId: number): Promise<string[]> => {
   const user = await findUserByIdRepo(userId);
-  if (!user || !user.role || !user.role.rolePermissions) return [];
 
-  const permissions = user.role.rolePermissions
+  if (!user || !user.role || !user.role.rolePermission) return [];
+
+  const permissions = user.role.rolePermission
     .map((rp: any) => rp.permission?.code)
     .filter((code: string | undefined) => code); // Filter out undefined/null values
   return permissions;

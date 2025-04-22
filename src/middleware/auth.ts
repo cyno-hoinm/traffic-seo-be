@@ -12,7 +12,6 @@ export const authenticateToken = async (
   res: Response<ResponseType<null>>,
   next: NextFunction
 ): Promise<void> => {
-
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
@@ -64,39 +63,39 @@ export const authorization =
     next: NextFunction
   ): Promise<void> => {
     // Check if user data exists (set by authenticateToken middleware)
-    // if (!req.data || !req.data.id) {
-    //   res.status(statusCode.UNAUTHORIZED).json({
-    //     status: false,
-    //     message: "Unauthorized.",
-    //   });
-    //   return;
-    // }
+    if (!req.data || !req.data.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized.",
+      });
+      return;
+    }
 
-    // const userId = req.data.id;
+    const userId = req.data.id;
 
     try {
-      // // Fetch user details, including their role and permissions
-      // const permissions = await getUserPermissions(userId);
-      // if (!permissions) {
-      //   res.status(statusCode.FORBIDDEN).json({
-      //     status: false,
-      //     message: "Forbidden.",
-      //   });
-      //   return;
-      // }
+      // Fetch user details, including their role and permissions
+      const permissions = await getUserPermissions(userId);
+      if (!permissions) {
+        res.status(statusCode.FORBIDDEN).json({
+          status: false,
+          message: "Forbidden.",
+        });
+        return;
+      }
 
-      // // Check if user has all required permissions
-      // const hasPermission = requiredPermissions.every((perm) =>
-      //   permissions.includes(perm)
-      // );
+      // Check if user has all required permissions
+      const hasPermission = requiredPermissions.every((perm) =>
+        permissions.includes(perm)
+      );
 
-      // if (hasPermission) {
-      //   res.status(statusCode.FORBIDDEN).json({
-      //     status: false,
-      //     message: "Insufficient permissions.",
-      //   });
-      //   return;
-      // }
+      if (!hasPermission) {
+        res.status(statusCode.FORBIDDEN).json({
+          status: false,
+          message: "Insufficient permissions.",
+        });
+        return;
+      }
 
       next();
     } catch (error: any) {
