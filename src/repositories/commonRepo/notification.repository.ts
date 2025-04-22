@@ -1,3 +1,4 @@
+import { NotificationAttributes } from "../../interfaces/Notification.interface";
 import { Notification } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 
@@ -7,7 +8,7 @@ export const createNotificationRepo = async (data: {
   name: string;
   content: string;
   type: string;
-}): Promise<Notification> => {
+}): Promise<NotificationAttributes> => {
   try {
     const notification = await Notification.create(data);
     return notification;
@@ -22,7 +23,7 @@ export const getNotificationsByUserIdAndTypeRepo = async (filters: {
   type?: string;
   page?: number;
   limit?: number;
-}): Promise<{ notifications: Notification[]; total: number }> => {
+}): Promise<{ notifications: NotificationAttributes[]; total: number }> => {
   try {
     const where: any = { userId: filters.userId };
 

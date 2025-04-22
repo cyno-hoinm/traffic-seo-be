@@ -8,41 +8,6 @@ class Role extends Model<RoleAttributes> implements RoleAttributes {
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-
-  // Static method to initialize roles
-  public static async initializeRoles(): Promise<void> {
-    try {
-      // Ensure the table exists
-      await this.sync();
-
-      // Check and create admin role
-      const existingAdmin = await this.findOne({ where: { name: "admin" } });
-      if (!existingAdmin) {
-        await this.create({
-          name: "admin",
-          isDeleted: false,
-        });
-      } else {
-
-      }
-
-      // Check and create customer role
-      const existingCustomer = await this.findOne({
-        where: { name: "customer" },
-      });
-      if (!existingCustomer) {
-        await this.create({
-          name: "customer",
-          isDeleted: false,
-        });
-
-      } else {
-
-      }
-    } catch (error: any) {
-      console.error("Error initializing roles:", error);
-    }
-  }
 }
 
 Role.init(
@@ -93,9 +58,6 @@ Role.init(
   }
 );
 
-// // Run initialization when the model is imported (optional)
-// (async () => {
-//   await Role.initializeRoles();
-// })();
+
 
 export default Role;

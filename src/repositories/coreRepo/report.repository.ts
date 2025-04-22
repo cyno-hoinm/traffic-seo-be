@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { sequelizeSystem } from "../../database/config.database";
+import { sequelizeSystem } from "../../database/postgreDB/config.database";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
@@ -127,7 +127,7 @@ export const getOneCampaignReportRepo = async (
       campaignDomain : campaign.domain || "",
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
-      cost : campaign.cost || 0,
+      cost : 0,
       targetTraffic : campaign.totalTraffic || 0,
       linkCount : campaign.links.length,
       keywordCount : campaign.keywords.length,

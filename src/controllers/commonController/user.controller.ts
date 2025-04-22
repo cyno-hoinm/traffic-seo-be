@@ -14,6 +14,7 @@ import {
 import { UserAttributes } from "../../interfaces/User.interface";
 import statusCode from "../../constants/statusCode";
 import { ResponseType } from "../../types/Response.type";
+import {User} from "../../models/index.model";
 
 // Create a new user
 export const createUser = async (
@@ -55,11 +56,12 @@ export const createUser = async (
     }
 
     const hashedPassword = await hashedPasswordString(password, 10);
-    const userData: Omit<UserAttributes, "id" | "createdAt" | "updatedAt"> = {
+    const userData: UserAttributes = {
       username,
       password: hashedPassword,
       email,
       roleId,
+      isDeleted: false,
     };
     const newUser = await createUserRepo(userData);
 

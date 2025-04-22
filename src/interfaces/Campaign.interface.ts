@@ -3,7 +3,7 @@ import { CampaignTypeAttributes } from "./CampaignType.interface";
 import { KeywordAttributes } from "./Keyword.interface";
 import { LinkAttributes } from "./Link.interface";
 
-export interface CampaignAttributes {
+export interface CampaignAttributes  {
   id?: number;
   userId: number;
   countryId: number;
@@ -14,7 +14,7 @@ export interface CampaignAttributes {
   startDate: Date;
   endDate: Date;
   totalTraffic: number;
-  cost: number;
+  cost?: number;
   domain: string;
   search: string;
   linksCount?: number;

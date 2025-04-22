@@ -1,37 +1,30 @@
 import { DataTypes, Model } from "sequelize";
-import { WalletAttributes } from "../interfaces/Wallet.interface";
-import { sequelizeSystem } from "../database/postgreDB/config.database";
-import User from "./User.model";
+import { sequelizeSystem } from "./index.model";
+import { ConfigAttributes } from "../interfaces/Config.interface";
 
-class Wallet extends Model<WalletAttributes> implements WalletAttributes {
-  public id!: number;
-  public userId!: number;
-  public balance!: number;
-  public isDeleted!: boolean;
+class Config extends Model<ConfigAttributes> implements ConfigAttributes {
+  public id?: number;
+  public name!: string;
+  public value!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-Wallet.init(
+Config.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      unique: true,
-      references: {
-        model: User,
-        key: "id",
-      },
-    },
-    balance: {
-      type: DataTypes.DECIMAL(10, 2),
+    name: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 0,
+      unique: true,
+    },
+    value: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -43,11 +36,6 @@ Wallet.init(
         adjustedDate.setHours(adjustedDate.getHours() + 7);
         return adjustedDate.toISOString().replace("Z", "");
       },
-    },
-    isDeleted: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
     },
     updatedAt: {
       type: DataTypes.DATE,
@@ -63,10 +51,10 @@ Wallet.init(
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "Wallet",
-    tableName: "wallets",
+    modelName: "Config",
+    tableName: "configs",
     timestamps: true,
   }
 );
 
-export default Wallet;
+export default Config;

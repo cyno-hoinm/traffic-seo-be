@@ -4,6 +4,7 @@ import { Campaign, Link, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
 import statusCode from "../../constants/statusCode";
+import { LinkAttributes } from "../../interfaces/Link.interface";
 
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
@@ -12,7 +13,7 @@ export const getLinkListRepo = async (filters: {
   end_date?: Date;
   page?: number;
   limit?: number;
-}): Promise<{ links: Link[]; total: number }> => {
+}): Promise<{ links: LinkAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -59,8 +60,9 @@ export const createLinkRepo = async (data: {
   status: LinkStatus;
   url: string;
   page: string;
+  cost: number;
   traffic: number;
-}): Promise<Link> => {
+}): Promise<LinkAttributes> => {
   try {
     const link = await Link.create(data);
     return link;
@@ -69,7 +71,7 @@ export const createLinkRepo = async (data: {
   }
 };
 
-export const getLinkByIdRepo = async (id: number): Promise<Link | null> => {
+export const getLinkByIdRepo = async (id: number): Promise<LinkAttributes | null> => {
   try {
     const link = await Link.findByPk(id);
     return link;
@@ -138,7 +140,7 @@ export const updateLinkRepo = async (
     page: string;
     isDeleted: boolean;
   }>
-): Promise<Link> => {
+): Promise<LinkAttributes> => {
   try {
     const link = await Link.findByPk(id);
     if (!link) {

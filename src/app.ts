@@ -4,14 +4,14 @@ import cluster from "cluster";
 import os from "os";
 import debug from "debug";
 import { logger } from "./config/logger.config";
-import { connectDB } from "./database/connect"; // Export sequelizeSystem
+import { connectDB } from "./database/postgreDB/connect"; // Export sequelizeSystem
 import { gracefulShutdown } from "./utils/utils";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
-import payOSPaymentMethod from "./config/payOs.config";
+import { startBackupService } from "./services/backUpDatabase.service";
 
 
 dotenv.config();
@@ -58,7 +58,7 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-
+  // startBackupService()
   // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);

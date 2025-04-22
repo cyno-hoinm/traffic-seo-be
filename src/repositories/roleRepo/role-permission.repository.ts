@@ -27,7 +27,7 @@ export const findRolePermissionByIdRepo = async (
       attributes: { exclude: ["roleId", "permissionId"] },
       include: [
         { model: Role, as: "role" }, 
-        { model: Permission, as: "permission" }, 
+        { model: Permission, as: "permissions" }, 
       ],
     });
     return rolePermission
@@ -50,7 +50,7 @@ export const findAllRolePermissionsRepo = async (): Promise<
       attributes: { exclude: ["roleId", "permissionId"] },
       include: [
         { model: Role, as: "role" }, 
-        { model: Permission, as: "permission" }, 
+        { model: Permission, as: "permissions" }, 
       ],
       order: [["createdAt", "DESC"]], 
     });
@@ -74,7 +74,7 @@ export const updateRolePermissionRepo = async (
       attributes: { exclude: ["roleId", "permissionId"] },
       include: [
         { model: Role, as: "role" },
-        { model: Permission, as: "permission" },
+        { model: Permission, as: "permissions" },
       ],
     });
     if (!rolePermission) return null;

@@ -5,11 +5,12 @@ import { DistributionType } from "../enums/distribution.enum";
 
 class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
-  public campaignId!: number;
+  public campaignId!: number | null; // Nullable if not always present
   public name!: string;
   public urls!: string[]; // Array of URLs
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public cost!: number;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -40,6 +41,10 @@ Keyword.init(
     },
     distribution: {
       type: DataTypes.ENUM(...Object.values(DistributionType)), // Enum type
+      allowNull: false,
+    },
+    cost: {
+      type: DataTypes.FLOAT,
       allowNull: false,
     },
     traffic: {

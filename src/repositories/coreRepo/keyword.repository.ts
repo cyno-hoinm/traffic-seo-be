@@ -2,8 +2,8 @@ import { Campaign, Keyword, sequelizeSystem } from "../../models/index.model";
 import { DistributionType } from "../../enums/distribution.enum";
 import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
-import { url } from "inspector";
-import { time } from "console";
+import { KeywordAttributes } from "../../interfaces/Keyword.interface";
+
 
 export const getKeywordListRepo = async (filters: {
   campaignId?: number;
@@ -12,7 +12,7 @@ export const getKeywordListRepo = async (filters: {
   end_date?: Date;
   page?: number;
   limit?: number;
-}): Promise<{ keywords: Keyword[]; total: number }> => {
+}): Promise<{ keywords: KeywordAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -56,6 +56,7 @@ export const  createKeywordRepo = async (data: {
   urls: string[];
   traffic: number;
   distribution: DistributionType;
+  cost: number;
 }): Promise<any> => {
   try {
     const campaign = await Campaign.findByPk(data.campaignId);
@@ -66,6 +67,7 @@ export const  createKeywordRepo = async (data: {
       keyword: keyword.name,
       traffic: keyword.traffic,
       distribution: keyword.distribution,
+      cost: keyword.cost,
       device: campaign?.device,
       domain: campaign?.domain,
       timeStart: campaign?.startDate.toString(),
@@ -79,7 +81,7 @@ export const  createKeywordRepo = async (data: {
 
 export const getKeywordByIdRepo = async (
   id: number
-): Promise<Keyword | null> => {
+): Promise<KeywordAttributes | null> => {
   try {
     const keyword = await Keyword.findByPk(id);
     return keyword;
@@ -137,7 +139,7 @@ export const getKeywordsByDistributionType = async (
 
 export const getKeywordByCampaignIdRepo = async (
   id: number
-): Promise<Keyword[] | null> => {
+): Promise<KeywordAttributes[] | null> => {
   try {
     // Validate campaign ID
     if (!Number.isInteger(id) || id <= 0) {
@@ -180,7 +182,7 @@ export const updateKeywordRepo = async (
     distribution: DistributionType;
     isDeleted: boolean;
   }>
-): Promise<Keyword> => {
+): Promise<KeywordAttributes> => {
   try {
     const keyword = await Keyword.findByPk(id);
     if (!keyword) {

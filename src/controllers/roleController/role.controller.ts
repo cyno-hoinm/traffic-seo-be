@@ -112,7 +112,7 @@ export const getRoleById = async (
         name: role.name,
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
-        permissions : permissions
+        permissions : permissions || [],
       },
     });
   } catch (error: any) {

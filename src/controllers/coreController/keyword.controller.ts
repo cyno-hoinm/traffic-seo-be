@@ -84,6 +84,7 @@ export const getKeywordList = async (
           campaignId: keyword.campaignId,
           name: keyword.name,
           urls: keyword.url,
+          cost: keyword.cost,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
           createdAt: keyword.createdAt,
@@ -134,13 +135,14 @@ export const createKeyword = async (
       });
       return;
     }
-
+    const cost = traffic * 1 //cost per traffic
     const keyword = await createKeywordRepo({
       campaignId,
       name,
       urls,
       traffic,
       distribution,
+      cost
     });
 
     const newKeyword = await baseApiPython("keyword/set", keyword);
@@ -156,6 +158,7 @@ export const createKeyword = async (
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
+        cost: keyword.cost,
         updatedAt: keyword.updatedAt,
       },
     });
@@ -196,6 +199,7 @@ export const getKeywordById = async (
         urls: keyword.urls,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
+        cost: keyword.cost,
         createdAt: keyword.createdAt,
         updatedAt: keyword.updatedAt,
       },
