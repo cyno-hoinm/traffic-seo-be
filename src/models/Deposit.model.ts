@@ -62,7 +62,7 @@ Deposit.init(
       allowNull: false,
     },
     acceptedBy: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     createdBy: {

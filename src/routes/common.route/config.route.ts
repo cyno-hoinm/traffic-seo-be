@@ -348,18 +348,18 @@ router.get("/name/:name", authorization(["read-config"]), getConfigByName);
 
 /**
  * @swagger
- * /configs/{id}:
- *   put:
+ * /configs/{name}:
+ *   patch:
  *     summary: Update a config
- *     description: Update an existing config by its ID with new name or value.
+ *     description: Update an existing config by name with value.
  *     tags: [Configs]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: name
  *         required: true
  *         schema:
- *           type: integer
- *         description: Config ID
+ *           type: string
+ *         description: Config name
  *     requestBody:
  *       required: true
  *       content:
@@ -367,10 +367,6 @@ router.get("/name/:name", authorization(["read-config"]), getConfigByName);
  *           schema:
  *             type: object
  *             properties:
- *               name:
- *                 type: string
- *                 description: New name of the config
- *                 example: site_title
  *               value:
  *                 type: string
  *                 description: New value of the config
@@ -471,7 +467,7 @@ router.get("/name/:name", authorization(["read-config"]), getConfigByName);
  *                   type: string
  *                   example: Database error
  */
-router.put("/:id", authorization(["update-config"]), updateConfig);
+router.patch("/:name", authorization(["update-config"]), updateConfig);
 
 /**
  * @swagger

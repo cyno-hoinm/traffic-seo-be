@@ -96,8 +96,11 @@ User.hasMany(Notification, { foreignKey: "userId", as: "notification", onDelete:
 Transaction.belongsTo(Wallet, { foreignKey: "walletId", as: "wallet", onDelete: 'SET NULL' });
 Wallet.hasMany(Transaction, { foreignKey: "walletId", as: "transaction", onDelete: 'SET NULL' });
 
-Deposit.hasOne(Transaction, { foreignKey: 'orderId', as: 'transaction',onDelete: 'SET NULL'});
-Transaction.belongsTo(Deposit, { foreignKey: 'referenceId', as: 'deposit',onDelete: 'SET NULL'});
+Transaction.belongsTo(Deposit, {
+  foreignKey: 'referenceId', // Transaction.referenceId
+  as: 'deposit',
+  onDelete: 'SET NULL',
+});
 // Export models
 export {
   Role,

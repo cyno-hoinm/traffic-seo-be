@@ -36,22 +36,32 @@ export const getAllConfigsRepo = async (): Promise<ConfigAttributes[]> => {
 };
 
 // Get a config by ID
-export const getConfigByIdRepo = async (id: number): Promise<ConfigAttributes> => {
+export const getConfigByIdRepo = async (
+  id: number
+): Promise<ConfigAttributes> => {
   const config = await Config.findByPk(id);
   if (!config) {
-    throw new ErrorType("NotFoundError", "Config not found", statusCode.NOT_FOUND);
+    throw new ErrorType(
+      "NotFoundError",
+      "Config not found",
+      statusCode.NOT_FOUND
+    );
   }
   return config.toJSON() as ConfigAttributes;
 };
 
 // Update a config by ID
 export const updateConfigRepo = async (
-  id: number,
+  name: string,
   configData: Partial<Omit<ConfigAttributes, "id" | "createdAt" | "updatedAt">>
 ): Promise<ConfigAttributes> => {
-  const config = await Config.findByPk(id);
+  const config = await Config.findOne({ where: { name } });
   if (!config) {
-    throw new ErrorType("NotFoundError", "Config not found", statusCode.NOT_FOUND);
+    throw new ErrorType(
+      "NotFoundError",
+      "Config not found",
+      statusCode.NOT_FOUND
+    );
   }
   if (configData.name && configData.name !== config.name) {
     const existingConfig = await Config.findOne({
@@ -73,7 +83,11 @@ export const updateConfigRepo = async (
 export const deleteConfigRepo = async (id: number): Promise<void> => {
   const config = await Config.findByPk(id);
   if (!config) {
-    throw new ErrorType("NotFoundError", "Config not found", statusCode.NOT_FOUND);
+    throw new ErrorType(
+      "NotFoundError",
+      "Config not found",
+      statusCode.NOT_FOUND
+    );
   }
   await config.destroy();
 };

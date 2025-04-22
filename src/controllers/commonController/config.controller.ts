@@ -156,8 +156,8 @@ export const updateConfig = async (
   res: Response<ResponseType<ConfigAttributes>>
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const { name, value } = req.body;
+    const { name } = req.params;
+    const { value } = req.body;
 
     if (!name && !value) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -168,7 +168,7 @@ export const updateConfig = async (
       return;
     }
 
-    const config = await updateConfigRepo(Number(id), { name, value });
+    const config = await updateConfigRepo(name, { value });
 
     if (!config) {
       res.status(statusCode.NOT_FOUND).json({

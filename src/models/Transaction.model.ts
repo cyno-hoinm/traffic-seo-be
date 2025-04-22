@@ -47,7 +47,7 @@ Transaction.init(
       allowNull: false,
     },
     referenceId : {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
       references:{
         model: Deposit,
