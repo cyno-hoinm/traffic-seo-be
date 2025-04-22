@@ -19,9 +19,11 @@ import { baseApiPython } from "../../config/botAPI.config";
 import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
 import { ErrorType } from "../../types/Error.type";
-import { compareWalletAmount, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
-import { updateWallet } from "../moneyController/wallet.controller";
-import { timeEnd } from "console";
+import { compareWalletAmount, getWalletByUserIdRepo, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
+import { getWalletById, updateWallet } from "../moneyController/wallet.controller";
+import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
+import { TransactionStatus } from "../../enums/transactionStatus.enum";
+import { TransactionType } from "../../enums/transactionType.enum";
 
 // Get campaign list with filters
 export const getCampaignList = async (
@@ -354,7 +356,7 @@ export const createCampaign = async (
             const result = await baseApiPython("keyword/set", dataPython);
             // console.log(result);
             // Create keyword in database
-        
+
           }
         }
 
@@ -375,7 +377,21 @@ export const createCampaign = async (
           }));
           await Link.bulkCreate(linkData, { transaction });
         }
-        await updateWalletBalanceByUserId(userId,{balance: totalCost})
+
+        // await updateWalletBalanceByUserId(userId,{balance: totalCost})
+        const wallet = await getWalletByUserIdRepo(userId)
+        if (wallet) {
+          await createTransactionRepo({
+            walletId: wallet.id || 0,
+            amount: totalCost,
+            status: TransactionStatus.COMPLETED,
+            type: TransactionType.PAY_SERVICE,
+          })
+        }
+        else {
+          throw new Error("Wallet not found!");
+        }
+
         return campaign;
       }
     );
