@@ -48,7 +48,7 @@ Transaction.init(
     },
     referenceId : {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references : {
         model: Deposit,
         key: "orderId",
