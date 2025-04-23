@@ -14,7 +14,7 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public name!: string;
   public campaignTypeId!: CampaignTypeAttributes;
   public device!: string;
-  public timeCode!: string;
+  public title!: string;
   public startDate!: Date;
   public endDate!: Date;
   public totalTraffic!: number;
@@ -69,7 +69,7 @@ Campaign.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    timeCode: {
+    title: {
       type: DataTypes.STRING,
       allowNull: false,
     },

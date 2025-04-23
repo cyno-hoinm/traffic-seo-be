@@ -12,7 +12,7 @@ export const getCampaignListRepo = async (filters: {
   countryId?: number;
   campaignTypeId?: number;
   device?: string;
-  timeCode?: string;
+  title?: string;
   startDate?: Date;
   endDate?: Date;
   status?: CampaignStatus;
@@ -35,7 +35,7 @@ export const getCampaignListRepo = async (filters: {
     if (filters.countryId) where.countryId = filters.countryId;
     if (filters.campaignTypeId) where.campaignTypeId = filters.campaignTypeId;
     if (filters.device) where.device = filters.device;
-    if (filters.timeCode) where.timeCode = filters.timeCode;
+    if (filters.title) where.title = filters.title;
     if (filters.startDate) where.startDate = { [Op.gte]: filters.startDate };
     if (filters.endDate) where.endDate = { [Op.lte]: filters.endDate };
     if (filters.status) where.status = filters.status;
@@ -46,8 +46,8 @@ export const getCampaignListRepo = async (filters: {
       include: [
         {
           model: User,
-          as : "users",
-          attributes: ['username'], // Only fetch the username
+          as: "users",
+          attributes: ["username"], // Only fetch the username
         },
       ],
     };
@@ -73,22 +73,25 @@ export const getCampaignListRepo = async (filters: {
   }
 };
 
-export const createCampaignRepo = async (data: {
-  userId: number;
-  countryId: number;
-  name: string;
-  type: string;
-  device: string;
-  timeCode: string;
-  startDate: Date;
-  endDate: Date;
-  totalTraffic: number;
-  domain: string;
-  search: string;
-  campaignTypeId: CampaignTypeAttributes;
-  status: CampaignStatus;
-  isDeleted: boolean;
-}, transaction?: Transaction): Promise<CampaignAttributes> => {
+export const createCampaignRepo = async (
+  data: {
+    userId: number;
+    countryId: number;
+    name: string;
+    type: string;
+    device: string;
+    title: string;
+    startDate: Date;
+    endDate: Date;
+    totalTraffic: number;
+    domain: string;
+    search: string;
+    campaignTypeId: CampaignTypeAttributes;
+    status: CampaignStatus;
+    isDeleted: boolean;
+  },
+  transaction?: Transaction
+): Promise<CampaignAttributes> => {
   try {
     const campaign = await Campaign.create(data, { transaction });
     return campaign;
@@ -102,8 +105,18 @@ export const getCampaignByIdRepo = async (
 ): Promise<CampaignAttributes | null> => {
   try {
     const campaign = await Campaign.findByPk(id, {
-      attributes: ["id", "name", "startDate", "endDate", "totalTraffic", "domain","createdAt","updatedAt"],
-      order: [["createdAt", "DESC"]]
+      attributes: [
+        "id",
+        "title",
+        "name",
+        "startDate",
+        "endDate",
+        "totalTraffic",
+        "domain",
+        "createdAt",
+        "updatedAt",
+      ],
+      order: [["createdAt", "DESC"]],
     });
     return campaign;
   } catch (error: any) {
@@ -120,10 +133,10 @@ export const getCampaignReport = async (
   try {
     // Validate date formats if provided
     if (startDate && !isValidDate(startDate)) {
-      throw new ErrorType('ValidationError', 'Invalid start date format');
+      throw new ErrorType("ValidationError", "Invalid start date format");
     }
     if (endDate && !isValidDate(endDate)) {
-      throw new ErrorType('ValidationError', 'Invalid end date format');
+      throw new ErrorType("ValidationError", "Invalid end date format");
     }
 
     // Build where clause
@@ -146,7 +159,10 @@ export const getCampaignReport = async (
     }
 
     if (!sequelizeSystem) {
-      throw new ErrorType('InitializationError', 'Sequelize instance is not initialized');
+      throw new ErrorType(
+        "InitializationError",
+        "Sequelize instance is not initialized"
+      );
     }
 
     const results = await Campaign.findAll({
@@ -154,29 +170,36 @@ export const getCampaignReport = async (
       include: [
         {
           model: CampaignType,
-          as: 'campaignTypes',
-          attributes: ['name'],
+          as: "campaignTypes",
+          attributes: ["name"],
           required: true, // Inner join to ensure only campaigns with valid campaign types are included
         },
       ],
-      group: ['Campaign.campaignTypeId', 'campaignTypes.name'],
+      group: ["Campaign.campaignTypeId", "campaignTypes.name"],
       attributes: [
-        'campaignTypeId',
-        [sequelizeSystem.fn('COUNT', sequelizeSystem.col('Campaign.campaignTypeId')), 'count'],
+        "campaignTypeId",
+        [
+          sequelizeSystem.fn(
+            "COUNT",
+            sequelizeSystem.col("Campaign.campaignTypeId")
+          ),
+          "count",
+        ],
       ],
       raw: true,
     });
 
     return results.map((item: any) => ({
       campaignTypeId: item.campaignTypeId,
-      campaignTypeName: item['campaignTypes.name'],
+      campaignTypeName: item["campaignTypes.name"],
+      campaignTitle: item["campaignTypes.title"],
       count: parseInt(item.count, 10),
     }));
   } catch (error) {
-    console.error('Error fetching campaign report:', error);
+    console.error("Error fetching campaign report:", error);
     throw error instanceof ErrorType
       ? error
-      : new ErrorType('UnknownError', 'Failed to fetch campaign report');
+      : new ErrorType("UnknownError", "Failed to fetch campaign report");
   }
 };
 export interface CampaignReportList {
