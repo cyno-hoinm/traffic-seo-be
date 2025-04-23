@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { createDepositRepo } from "../../repositories/moneyRepo/deposit.repository";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import crypto from "crypto";
+import { generateSignature } from "../../utils/generate";
 
 const router = express.Router();
 
@@ -28,10 +29,10 @@ router.post(
       }
       console.log("ordercode after :", data.orderCode);
       // Verify webhook signature
-      const computedSignature = crypto
-        .createHmac("sha256", PAYOS_WEBHOOK_SECRET)
-        .update(JSON.stringify(data.orderCode))
-        .digest("hex");
+      const computedSignature = generateSignature(
+        data.orderCode,
+        PAYOS_WEBHOOK_SECRET
+      );
       console.log(computedSignature);
       if (computedSignature !== signature) {
         console.error("Invalid webhook signature");
