@@ -19,14 +19,14 @@ router.post(
       });
       // const signature = req.headers['x-payos-signature'] as string | undefined;
       const { code, success, data, desc, signature } = req.body;
-      
+
       // Check if signature is provided
       if (!signature) {
         console.error("Missing webhook signature");
         res.status(401).json({ status: false, message: "Missing signature" });
         return;
       }
-
+      console.log("ordercode after :", data.orderCode);
       // Verify webhook signature
       const computedSignature = crypto
         .createHmac("sha256", PAYOS_WEBHOOK_SECRET)
@@ -38,8 +38,6 @@ router.post(
         res.status(401).json({ status: false, message: "Invalid signature" });
         return;
       }
-
-
 
       // Respond to PayOS to acknowledge receipt
       res

@@ -24,14 +24,8 @@ export function uuidToNumber(uuid: string): number {
 }
 
 export const generateSignature = (data: any, secretKey: any) => {
-  const sortedData = Object.keys(data)
-    .sort()
-    .reduce((acc: any, key: any) => {
-      acc[key] = data[key];
-      return acc;
-    }, {});
-  const dataStr = Object.entries(sortedData)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
-  return crypto.createHmac("sha256", secretKey).update(dataStr).digest("hex");
+  return crypto
+    .createHmac("sha256", secretKey)
+    .update(JSON.stringify(data))
+    .digest("hex");
 };
