@@ -39,7 +39,7 @@ router.post("/oxapay", async (req: any, res: Response):Promise<void> => {
       voucherId: orderInfo.voucherId,
       amount:data.amount,
       paymentMethodId: 1,
-      orderId: data.trackId,
+      orderId: data.track_id,
       status: DepositStatus.COMPLETED,
     })
 
