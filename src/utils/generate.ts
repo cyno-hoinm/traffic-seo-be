@@ -23,9 +23,10 @@ export function uuidToNumber(uuid: string): number {
   return hash;
 }
 
-export const generateSignature = (data: string, secretKey: any) => {
+export const generateSignature = (data: string, secretKey: string): string => {
   return crypto
     .createHmac("sha256", secretKey)
-    .update(JSON.stringify(data))
-    .digest("hex");
+    .update(data) // Hash the raw string directly
+    .digest("hex")
+    .toLowerCase(); // Normalize to lowercase for consistency
 };
