@@ -85,10 +85,10 @@ export const authorization =
       }
 
       // Check if user has all required permissions
-      // const hasPermission = requiredPermissions.every((perm) =>
-      //   permissions.includes(perm)
-      // );
-      const hasPermission = true
+      const hasPermission = requiredPermissions.every((perm) =>
+        permissions.includes(perm)
+      );
+      // const hasPermission = true
       if (!hasPermission) {
         res.status(statusCode.FORBIDDEN).json({
           status: false,

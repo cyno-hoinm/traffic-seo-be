@@ -60,11 +60,10 @@ export const getUserPermissions = async (userId: number): Promise<string[]> => {
   if (!user || !user.role || !user.role.rolePermissions) return [];
 
   const permissions = user.role.rolePermissions
-    .map((rp: any) => rp.permission?.code)
+    .map((rp: any) => rp.permissions?.code)
     .filter((code: string | undefined) => code); // Filter out undefined/null values
   return permissions;
 };
-
 export const findUserByEmailRepo = async (
   email: string
 ): Promise<User | null> => {
