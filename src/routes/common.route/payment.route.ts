@@ -5,12 +5,12 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-const PAYOS_WEBHOOK_SECRET = process.env.PAY_OS_CHECKSUM || '';
+export const PAYOS_WEBHOOK_SECRET = process.env.PAY_OS_CHECKSUM || '';
 
 router.post('/payos-webhook', express.json(), async (req: Request, res: Response): Promise<void> => {
   try {
     // Extract signature and body from request
-    console.log(req.headers);
+    console.log('Webhook received:', { headers: req.headers, body: req.body });
     const signature = req.headers['x-payos-signature'] as string | undefined;
     const body = req.body;
 
