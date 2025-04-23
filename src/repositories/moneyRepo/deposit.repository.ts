@@ -148,7 +148,7 @@ export const createDepositRepo = async (data: {
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount: (amount / exchangeValue) * voucherValue,
+            amount: (amount / exchangeValue) * (voucherValue / 100),
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
             referenceId: newDeposit.orderId,
