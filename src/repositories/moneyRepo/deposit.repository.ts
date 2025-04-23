@@ -1,4 +1,4 @@
-import { Deposit, PaymentMethod, Wallet } from "../../models/index.model";
+import { Deposit, PaymentMethod, User, Wallet } from "../../models/index.model";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { sequelizeSystem } from "../../models/index.model";
 import { Op, Transaction } from "sequelize";
@@ -40,6 +40,13 @@ export const getDepositListRepo = async (filters: {
     const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as : "users",
+          attributes: ['username'], // Only fetch the username
+        },
+      ],
     };
 
     // Apply pagination only if page and limit are not 0

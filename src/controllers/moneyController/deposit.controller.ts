@@ -85,6 +85,7 @@ export const getDepositList = async (
         deposits: deposits.map((deposit: DepositAttributes) => ({
           id: deposit.id,
           userId: deposit.userId,
+          username : deposit.users?.username,
           orderId: deposit.orderId,
           paymentMethodId: deposit.paymentMethodId,
           voucherId: deposit.voucherId,

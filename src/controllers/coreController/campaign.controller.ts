@@ -119,6 +119,7 @@ export const getCampaignList = async (
         campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => ({
           id: campaign.id,
           userId: campaign.userId,
+          username : campaign.users?.username,
           countryId: campaign.countryId,
           name: campaign.name,
           campaignTypeId: campaign.campaignTypeId,

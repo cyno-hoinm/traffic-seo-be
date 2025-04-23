@@ -3,6 +3,7 @@ import {
   Deposit,
   sequelizeSystem,
   Transaction,
+  User,
   Wallet,
 } from "../../models/index.model";
 import { Op } from "sequelize";
@@ -130,8 +131,21 @@ export const getListTransactionRepo = async (filters: {
     const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: Wallet,
+          as : "wallet",
+          attributes: ['id', 'userId'], // Only fetch necessary fields
+          include: [
+            {
+              model: User,
+              as : "users",
+              attributes: ['username'], // Only fetch the username
+            },
+          ],
+        },
+      ],
     };
-
     if (
       filters.page &&
       filters.limit &&

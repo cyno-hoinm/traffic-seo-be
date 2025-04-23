@@ -58,7 +58,7 @@ export const createTransaction = async (
 // Get list of transactions with filters
 export const getListTransaction = async (
   req: Request,
-  res: Response<ResponseType<TransactionAttributes[]>>
+  res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
     const { walletId, status, start_date, end_date, page, limit } = req.body;
@@ -121,19 +121,24 @@ export const getListTransaction = async (
     }
 
     const transactions = await getListTransactionRepo(filters);
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Transactions retrieved successfully",
-      data: transactions.map((transaction: TransactionAttributes) => ({
-        id: transaction.id,
-        walletId: transaction.walletId,
-        amount: transaction.amount,
-        status: transaction.status,
-        type: transaction.type,
-        referenceId: transaction.referenceId,
-        createdAt: transaction.createdAt,
-        updatedAt: transaction.updatedAt,
-      })),
+      data: {
+        transaction: transactions.map((transaction: TransactionAttributes) => ({
+          id: transaction.id,
+          walletId: transaction.walletId,
+          username : transaction.wallet?.users?.username,
+          amount: transaction.amount,
+          status: transaction.status,
+          type: transaction.type,
+          referenceId: transaction.referenceId,
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
+        })),
+        total: transactions.length,
+      },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

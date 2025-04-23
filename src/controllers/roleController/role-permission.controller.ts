@@ -184,9 +184,10 @@ export const deleteRolePermission = async (
 ): Promise<void> => {
   try {
     // const { id } = req.params;
-    const {roleId, permissionId} = req.body
-
-    const deleted = await deleteRolePermissionRepo(roleId, permissionId);
+    const {roleId, permissionId} = req.params
+    const rolePermissionId = parseInt(roleId, 10);
+    const permissionIntId = parseInt(permissionId, 10);
+    const deleted = await deleteRolePermissionRepo(rolePermissionId, permissionIntId);
 
     if (!deleted) {
       res.status(statusCode.NOT_FOUND).json({
