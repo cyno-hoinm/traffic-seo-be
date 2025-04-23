@@ -83,8 +83,9 @@ router.post("/oxapay/callback", express.json({
   }
 }), async (req: Request, res: Response) => {
   try {
-    console.log(req)
+    console.log(req.body)
     const rawBody = (req as any).rawBody?.toString();
+    console.log('RawBody: ',rawBody)
     const hmacHeader = req.headers['hmac'] as string;
 
     if (!rawBody || !hmacHeader) {
