@@ -90,7 +90,7 @@ export const createDepositRepo = async (data: {
         attributes: ["id", "orderId","userId","voucherId","amount","status","createdBy","paymentMethodId"],
       });
       if (existingDeposit) {
-        throw new ErrorType(  
+        throw new ErrorType(
           "DuplicateOrderIdError",
           `Deposit with orderId ${data.orderId} already exists`
         );
@@ -127,7 +127,7 @@ export const createDepositRepo = async (data: {
         if (isNaN(amount) || amount <= 0) {
           throw new ErrorType("InvalidAmountError", "Invalid deposit amount format");
         }
-      
+
         let exchangeValue = 1;
         if (depositData.paymentMethodId === 1) {
           const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
@@ -144,14 +144,14 @@ export const createDepositRepo = async (data: {
             throw new ErrorType("ConfigError", "Configuration for VND_TO_CREDIT not found");
           }
         }
-      
+        const transactionAmount = (amount / exchangeValue)
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount: (amount / exchangeValue) * (voucherValue / 100),
+            amount: transactionAmount + (transactionAmount * (voucherValue / 100)),
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
-            referenceId: newDeposit.orderId,
+            referenceId: String(newDeposit.id),
           },
           t
         );
