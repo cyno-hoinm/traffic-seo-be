@@ -1,6 +1,6 @@
 import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
-import { Campaign, sequelizeSystem } from "../../models/index.model";
+import { Campaign, sequelizeSystem, User } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 import CampaignType from "../../models/CampaignType.model";
@@ -43,6 +43,13 @@ export const getCampaignListRepo = async (filters: {
     const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as : "users",
+          attributes: ['username'], // Only fetch the username
+        },
+      ],
     };
 
     // Apply pagination only if page and limit are not 0

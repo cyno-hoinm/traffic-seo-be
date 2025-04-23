@@ -2,10 +2,12 @@ import { CampaignStatus } from "../enums/campaign.enum";
 import { CampaignTypeAttributes } from "./CampaignType.interface";
 import { KeywordAttributes } from "./Keyword.interface";
 import { LinkAttributes } from "./Link.interface";
+import { UserAttributes } from "./User.interface";
 
 export interface CampaignAttributes  {
   id?: number;
   userId: number;
+  users? : UserAttributes
   countryId: number;
   name: string;
   campaignTypeId: CampaignTypeAttributes;

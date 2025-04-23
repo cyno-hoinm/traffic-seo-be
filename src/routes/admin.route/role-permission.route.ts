@@ -219,26 +219,23 @@ router.put("/:id", authorization(["update-role-permission"]),updateRolePermissio
 
 /**
  * @swagger
- * /role-permissions/delete:
+ * /role-permissions/{roleId}/{permissionId}:
  *   delete:
  *     summary: Delete a role-permission by role ID and permission ID
  *     tags: [RolePermissions]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - roleId
- *               - permissionId
- *             properties:
- *               roleId:
- *                 type: integer
- *                 description: The role ID
- *               permissionId:
- *                 type: integer
- *                 description: The permission ID
+ *     parameters:
+ *       - in: path
+ *         name: roleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The role ID
+ *       - in: path
+ *         name: permissionId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The permission ID
  *     responses:
  *       200:
  *         description: Role-permission deleted successfully
@@ -258,5 +255,6 @@ router.put("/:id", authorization(["update-role-permission"]),updateRolePermissio
  *       500:
  *         description: Internal server error
  */
-router.delete("/delete", authorization(["delete-role-permission"]), deleteRolePermission);
+router.delete("/:roleId/:permissionId", authorization(["delete-role-permission"]), deleteRolePermission);
+
 export default router;
