@@ -12,7 +12,8 @@ import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
 import { startBackupService } from "./services/backUpDatabase.service";
-
+import callbackRoute from "./routes/common.route/callback.route"
+import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -39,7 +40,14 @@ if (cluster.isPrimary && !isDev) {
   });
 } else {
   const app = express();
+
   configureMiddleware(app);
+  app.use('/callback', bodyParser.json({
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString(); // ← bắt raw body tại đây
+    }
+  }));
+  app.use("/callback", callbackRoute);
   configureRoutes(app);
   let server: Server;
   const startServer = async () => {

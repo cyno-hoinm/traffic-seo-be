@@ -140,7 +140,7 @@ export const createDeposit = async (
                 lifeTime: parseInt(String(oxapayConfig.lifeTime)),
                 fee_paid_by_payer: parseInt(String(oxapayConfig.feePaidByPayer)),
                 under_paid_cover:  parseInt(String(oxapayConfig.underPaidCover)),
-                callback_url: `${process.env.DEV_URL}/oxapay/callback`,
+                callback_url: `${process.env.DEV_URL}/callback/oxapay`,
                 // callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
                 //   orderId
                 // )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
