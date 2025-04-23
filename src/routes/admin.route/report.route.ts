@@ -1,5 +1,5 @@
 import express from "express";
-import { countCampaignReport, countKeyWordDistribution, countLinksReport, getCampaignReportUser, getOneCampaignReport } from "../../controllers/coreController/report.controller";
+import { countCampaignReport, countKeyWordDistribution, countLinksReport, getCampaignReportAll, getCampaignReportUser, getOneCampaignReport } from "../../controllers/coreController/report.controller";
 import { authorization } from "../../middleware/auth";
 const router = express.Router();
 /**
@@ -68,7 +68,7 @@ const router = express.Router();
  *                 error:
  *                   type: string
  */
-router.post("/campaign-report", authorization(["read-report"]), countCampaignReport);
+router.post("/campaign-report", authorization(["read-report-admin"]), countCampaignReport);
 // /**
 //  * @swagger
 //  * /report/keyword-distribution:
@@ -188,93 +188,176 @@ router.post("/campaign-report", authorization(["read-report"]), countCampaignRep
 //  *                   type: string
 //  */
 // router.post("/links-report", authorization(["read-report"]), countLinksReport);
-// /**
-//  * @swagger
-//  * /report/campaigns-report/user:
-//  *   post:
-//  *     summary: Fetch campaign reports for a user
-//  *     tags: [Reports]
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             type: object
-//  *             properties:
-//  *               userId:
-//  *                 type: string
-//  *                 description: Unique identifier of the user to filter campaigns
-//  *                 example: "user456"
-//  *               start_date:
-//  *                 type: string
-//  *                 format: date
-//  *                 description: Optional start date to filter campaigns (inclusive)
-//  *                 example: "2025-01-01"
-//  *               end_date:
-//  *                 type: string
-//  *                 format: date
-//  *                 description: Optional end date to filter campaigns (inclusive)
-//  *                 example: "2025-12-31"
-//  *             required:
-//  *               - userId
-//  *     responses:
-//  *       200:
-//  *         description: Successfully fetched campaign reports
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 status:
-//  *                   type: boolean
-//  *                   description: Indicates if the request was successful
-//  *                   example: true
-//  *                 message:
-//  *                   type: string
-//  *                   description: Descriptive message about the response
-//  *                   example: "Campaign report fetched successfully"
-//  *                 data:
-//  *                   type: array
-//  *                   items:
-//  *                     type: object
-//  *                     properties:
-//  *                       campaignId:
-//  *                         type: string
-//  *                         description: Unique identifier of the campaign
-//  *                         example: "123"
-//  *                       campaignName:
-//  *                         type: string
-//  *                         description: Name of the campaign
-//  *                         example: "Summer Sale"
-//  *                       linkCount:
-//  *                         type: integer
-//  *                         description: Number of links associated with the campaign
-//  *                         example: 5
-//  *                       keywordCount:
-//  *                         type: integer
-//  *                         description: Number of keywords associated with the campaign
-//  *                         example: 10
-//  *       500:
-//  *         description: Internal server error
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 status:
-//  *                   type: boolean
-//  *                   description: Indicates if the request failed
-//  *                   example: false
-//  *                 message:
-//  *                   type: string
-//  *                   description: Error message
-//  *                   example: "Error fetching campaign"
-//  *                 error:
-//  *                   type: string
-//  *                   description: Details of the error
-//  *                   example: "Sequelize instance is not defined"
-//  */
-// router.post("/campaigns-report/user", authorization(["read-report"]), getCampaignReportUser);
+/**
+ * @swagger
+ * /report/campaigns-report/user:
+ *   post:
+ *     summary: Fetch campaign reports for a user
+ *     tags: [Reports]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: Unique identifier of the user to filter campaigns
+ *                 example: "user456"
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Optional start date to filter campaigns (inclusive)
+ *                 example: "2025-01-01"
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Optional end date to filter campaigns (inclusive)
+ *                 example: "2025-12-31"
+ *             required:
+ *               - userId
+ *     responses:
+ *       200:
+ *         description: Successfully fetched campaign reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: Indicates if the request was successful
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Descriptive message about the response
+ *                   example: "Campaign report fetched successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       campaignId:
+ *                         type: string
+ *                         description: Unique identifier of the campaign
+ *                         example: "123"
+ *                       campaignName:
+ *                         type: string
+ *                         description: Name of the campaign
+ *                         example: "Summer Sale"
+ *                       linkCount:
+ *                         type: integer
+ *                         description: Number of links associated with the campaign
+ *                         example: 5
+ *                       keywordCount:
+ *                         type: integer
+ *                         description: Number of keywords associated with the campaign
+ *                         example: 10
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: Indicates if the request failed
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Error fetching campaign"
+ *                 error:
+ *                   type: string
+ *                   description: Details of the error
+ *                   example: "Sequelize instance is not defined"
+ */
+router.post("/campaigns-report/user", authorization(["read-report"]), getCampaignReportUser);
+/**
+ * @swagger
+ * /report/campaigns-report/all:
+ *   post:
+ *     summary: Fetch campaign reports all system
+ *     tags: [Reports]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Optional start date to filter campaigns (inclusive)
+ *                 example: "2025-01-01"
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Optional end date to filter campaigns (inclusive)
+ *                 example: "2025-12-31"
+ *             required:
+ *               - userId
+ *     responses:
+ *       200:
+ *         description: Successfully fetched campaign reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: Indicates if the request was successful
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Descriptive message about the response
+ *                   example: "Campaign report fetched successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       campaignId:
+ *                         type: string
+ *                         description: Unique identifier of the campaign
+ *                         example: "123"
+ *                       campaignName:
+ *                         type: string
+ *                         description: Name of the campaign
+ *                         example: "Summer Sale"
+ *                       linkCount:
+ *                         type: integer
+ *                         description: Number of links associated with the campaign
+ *                         example: 5
+ *                       keywordCount:
+ *                         type: integer
+ *                         description: Number of keywords associated with the campaign
+ *                         example: 10
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: Indicates if the request failed
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Error message
+ *                   example: "Error fetching campaign"
+ *                 error:
+ *                   type: string
+ *                   description: Details of the error
+ *                   example: "Sequelize instance is not defined"
+ */
+router.post("/campaigns-report/all", authorization(["read-report-admin"]), getCampaignReportAll);
 /**
  * @swagger
  * /report/campaign-report/campaign:
@@ -349,5 +432,5 @@ router.post("/campaign-report", authorization(["read-report"]), countCampaignRep
  *                   description: Details of the error
  *                   example: "Sequelize instance is not defined"
  */
-router.post("/campaign-report/campaign", authorization(["read-report"]), getOneCampaignReport);
+router.post("/campaign-report/campaign", authorization(["read-report-admin"]), getOneCampaignReport);
 export default router;  

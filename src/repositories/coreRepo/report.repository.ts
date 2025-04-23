@@ -6,20 +6,22 @@ import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 
 export const getCampaignsReportUserRepo = async (
-  userId: string, // Required: filter campaigns by userId
-  startDate?: string, // Optional: filter campaigns by start_date
-  endDate?: string // Optional: filter campaigns by end_date
+  userId: string,
+  startDate?: string,
+  endDate?: string
 ): Promise<
   {
     campaignId: string;
     campaignName: string;
     linkCount: number;
     keywordCount: number;
+    activeLink: number;
+    activeKeyword: number;
   }[]
 > => {
   try {
     if (!sequelizeSystem) {
-      throw new Error("Sequelize instance is not defined");
+      throw new Error('Sequelize instance is not defined');
     }
 
     // Campaign filter
@@ -42,21 +44,34 @@ export const getCampaignsReportUserRepo = async (
     const queryOptions: any = {
       where: campaignWhere,
       attributes: [
-        "id",
-        "name",
-        // Subquery for counting links
+        'id',
+        'name',
+        // Subquery for counting all links
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
+          ),
+          'linkCount',
+        ],
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
           ),
-          "linkCount",
+          'activeLink',
         ],
-        // Subquery for counting keywords
+        // Subquery for counting all keywords
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
+          ),
+          'keywordCount',
+        ],
+        // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
           ),
-          "keywordCount",
+          'activeKeyword',
         ],
       ],
       raw: true,
@@ -69,6 +84,8 @@ export const getCampaignsReportUserRepo = async (
       campaignName: item.name,
       linkCount: parseInt(item.linkCount) || 0,
       keywordCount: parseInt(item.keywordCount) || 0,
+      activeLink: parseInt(item.activeLink) || 0,
+      activeKeyword: parseInt(item.activeKeyword) || 0,
     }));
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -137,5 +154,91 @@ export const getOneCampaignReportRepo = async (
   } catch (error) {
     console.error("Error fetching campaign details:", error);
     throw error;
+  }
+};
+
+
+export const getCampaignsReportAllRepo = async (
+  startDate?: string,
+  endDate?: string
+): Promise<
+  {
+    campaignId: string;
+    campaignName: string;
+    linkCount: number;
+    keywordCount: number;
+    activeLink: number;
+    activeKeyword: number;
+  }[]
+> => {
+  try {
+    if (!sequelizeSystem) {
+      throw new Error('Sequelize instance is not defined');
+    }
+
+    // Campaign filter
+    const campaignWhere: any = {
+      isDeleted: false,
+    };
+
+    // Date range filter for campaigns
+    if (startDate || endDate) {
+      campaignWhere[Op.and] = [];
+      if (startDate) {
+        campaignWhere[Op.and].push({ startDate: { [Op.gte]: startDate } });
+      }
+      if (endDate) {
+        campaignWhere[Op.and].push({ endDate: { [Op.lte]: endDate } });
+      }
+    }
+
+    const queryOptions: any = {
+      where: campaignWhere,
+      attributes: [
+        'id',
+        'name',
+        // Subquery for counting all links
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
+          ),
+          'linkCount',
+        ],
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
+          ),
+          'activeLink',
+        ],
+        // Subquery for counting all keywords
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
+          ),
+          'keywordCount',
+        ],
+        // Subquery for counting active (non-deleted) keywords
+        [
+          sequelizeSystem.literal(
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
+          ),
+          'activeKeyword',
+        ],
+      ],
+      raw: true,
+    };
+
+    const result = await Campaign.findAll(queryOptions);
+
+    return result.map((item: any) => ({
+      campaignId: item.id,
+      campaignName: item.name,
+      linkCount: parseInt(item.linkCount) || 0,
+      keywordCount: parseInt(item.keywordCount) || 0,
+      activeLink: parseInt(item.activeLink) || 0,
+      activeKeyword: parseInt(item.activeKeyword) || 0,
+    }));
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
   }
 };
