@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-router.post("/oxapay", async (req: Request, res: Response):Promise<void> => {
+router.post("/oxapay", async (req: any, res: Response):Promise<void> => {
   try {
     const rawBody = (req as any).rawBody;
     console.log('RawBody: ',rawBody)

@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Application, Request,Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { errorHandler, requestLogger } from "./logger";
@@ -11,6 +11,7 @@ export const configureMiddleware = (app: Application) => {
   app.use(requestLogger);
 
   // Body parsing middleware
+
   app.use(compression());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

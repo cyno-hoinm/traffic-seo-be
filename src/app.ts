@@ -40,13 +40,13 @@ if (cluster.isPrimary && !isDev) {
   });
 } else {
   const app = express();
-
-  configureMiddleware(app);
   app.use('/callback', bodyParser.json({
     verify: (req: any, res, buf) => {
       req.rawBody = buf.toString(); // ← bắt raw body tại đây
     }
   }));
+  configureMiddleware(app);
+
   app.use("/callback", callbackRoute);
   configureRoutes(app);
   let server: Server;
