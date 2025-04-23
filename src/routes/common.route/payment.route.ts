@@ -5,75 +5,62 @@ import { DepositStatus } from "../../enums/depositStatus.enum";
 
 const router = express.Router();
 
-router.get("/cancel", async (req: Request, res: Response): Promise<void> => {
+const PAYOS_WEBHOOK_SECRET = process.env.PAY_OS_CHECKSUM || '';
+
+router.post('/payos-webhook', express.json(), async (req: Request, res: Response): Promise<void> => {
   try {
-    // Extract query parameters
-    const { orderId, userId, voucherId, paymentMethodId, amount, createdBy } =
-      req.query;
-    // Optional: Validate other parameters if needed
-    if (amount && (isNaN(Number(amount)) || Number(amount) <= 0)) {
-      res.status(400).json({ error: "Invalid or negative amount" });
-      return;
-    }
-    if (userId && isNaN(Number(userId))) {
-      res.status(400).json({ error: "Invalid user ID" });
-      return;
-    }
-    const parsedCreatedBy = createdBy ? Number(createdBy) : 0; // Explicitly convert to number
-    const parsedPaymentMethodId = paymentMethodId ? Number(paymentMethodId) : 0; // Default to 0 if undefined
-    const result = await createDepositRepo({
-      createdBy: parsedCreatedBy,
-      userId: Number(userId), // Ensure userId is also a number
-      voucherId: voucherId ? Number(voucherId) : 0, // Handle optional fields
-      amount: Number(amount), // Ensure amount is a number
-      paymentMethodId: parsedPaymentMethodId, // Use parsed value
-      orderId: orderId?.toString() || "", // Handle optional fields
-      status: DepositStatus.FAILED, // Set status to REFUND
-    });
-    res.redirect(`${process.env.FRONT_END_URL}/en/deposit/failed`)
-    return;
-  } catch (error: any) {
-    console.error("Error cancelling deposit:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to cancel deposit", detail: error.message });
-  }
-});
-router.get("/success", async (req: Request, res: Response): Promise<void> => {
-  try {
-    // Extract query parameters
-    const { orderId, userId, voucherId, paymentMethodId, amount, createdBy } =
-      req.query;
+    // Extract signature and body from request
+    const signature = req.headers['x-payos-signature'] as string | undefined;
+    const body = req.body;
 
-    // Optional: Validate other parameters if needed
-    if (amount && (isNaN(Number(amount)) || Number(amount) <= 0)) {
-      res.status(400).json({ error: "Invalid or negative amount" });
-      return;
-    }
-    if (userId && isNaN(Number(userId))) {
-      res.status(400).json({ error: "Invalid user ID" });
+    // Check if signature is provided
+    if (!signature) {
+      console.error('Missing webhook signature');
+      res.status(401).json({ status: false, message: 'Missing signature' });
       return;
     }
 
-    const parsedCreatedBy = createdBy ? Number(createdBy) : 0; // Explicitly convert to number
-    const parsedPaymentMethodId = paymentMethodId ? Number(paymentMethodId) : 0; // Default to 0 if undefined
+    // Verify webhook signature
+    const computedSignature = crypto
+      .createHmac('sha256', PAYOS_WEBHOOK_SECRET)
+      .update(JSON.stringify(body))
+      .digest('hex');
 
-    const result = await createDepositRepo({
-      createdBy: parsedCreatedBy,
-      userId: Number(userId), // Ensure userId is also a number
-      voucherId: voucherId ? Number(voucherId) : 0, // Handle optional fields
-      amount: Number(amount), // Ensure amount is a number
-      paymentMethodId: parsedPaymentMethodId, // Use parsed value
-      orderId: orderId?.toString() || "", // Handle optional fields
-      status: DepositStatus.COMPLETED, // Set status to COMPLETED
-    });
+    if (computedSignature !== signature) {
+      console.error('Invalid webhook signature');
+      res.status(401).json({ status: false, message: 'Invalid signature' });
+      return;
+    }
 
-    res.redirect(`${process.env.FRONT_END_URL}/en/deposit/${result.id}`)
-  } catch (error: any) {
-    console.error("Error processing deposit:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to process deposit", detail: error.message });
+    // Process webhook data
+    const { orderCode, status, amount, description } = body;
+
+    // Handle payment status
+    switch (status) {
+      case 'PAID':
+        // Update your database or perform actions for successful payment
+        console.log(`Payment successful for orderCode: ${orderCode}, amount: ${amount}`);
+        // Example: await updateOrderStatus(orderCode, 'PAID');
+        break;
+      case 'CANCELLED':
+        // Handle cancelled payment
+        console.log(`Payment cancelled for orderCode: ${orderCode}`);
+        // Example: await updateOrderStatus(orderCode, 'CANCELLED');
+        break;
+      case 'PENDING':
+        // Handle pending payment (optional)
+        console.log(`Payment pending for orderCode: ${orderCode}`);
+        // Example: await updateOrderStatus(orderCode, 'PENDING');
+        break;
+      default:
+        console.log(`Unknown status for orderCode: ${orderCode}`);
+    }
+
+    // Respond to PayOS to acknowledge receipt
+    res.status(200).json({ status: true, message: 'Webhook processed successfully' });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).json({ status: false, message: 'Internal server error' });
   }
 });
 
