@@ -28,15 +28,8 @@ router.post(
         res.status(401).json({ status: false, message: "Missing signature" });
         return;
       }
-      console.log("ordercode after :", returnData.orderCode);
-      // Verify webhook signature
-      const inputSignatureConvert = returnData.orderCode.toString();
-      const computedSignature = generateSignature(
-        inputSignatureConvert,
-        PAYOS_WEBHOOK_SECRET
-      );
-      console.log(computedSignature);
-      if (computedSignature !== signature) {
+  
+      if (returnData.orderCode !== signature) {
         console.error("Invalid webhook signature");
         res.status(401).json({ status: false, message: "Invalid signature" });
         return;

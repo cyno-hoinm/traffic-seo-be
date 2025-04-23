@@ -178,11 +178,8 @@ export const createDeposit = async (
           cancelUrl: `${process.env.FRONT_END_URL}/en/deposit/failed`,
           returnUrl: `${process.env.FRONT_END_URL}/en/deposit/${orderCodeUnique}`,
         };
-        console.log("orderCode before : ", orderCodeUnique);
-        body.signature = generateSignature(
-          orderCodeUnique.toString(),
-          PAYOS_WEBHOOK_SECRET
-        );
+        // console.log("orderCode before : ", orderCodeUnique);
+        body.signature = orderCodeUnique
         const response = await payOSPaymentMethod.createPaymentLink(body);
         res.status(statusCode.CREATED).json({
           status: true,
