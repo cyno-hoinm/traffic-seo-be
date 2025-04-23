@@ -10,7 +10,12 @@ Backend service cho hệ thống Traffic SEO, được xây dựng bằng Node.j
 - Hệ thống logging chi tiết
 - Graceful shutdown
 - Backup database tự động
+- Sendmail tự động
 - Hot-reloading trong môi trường development
+- Deployment bằng PM2
+- Tích hợp các cổng thanh toán online PayOs, Oxapay
+- Sử dụng API Bot Python để chạy traffic
+
 
 ## 📋 Yêu cầu hệ thống
 
@@ -41,15 +46,50 @@ cp .env.example .env
 
 4. Cấu hình các biến môi trường trong file .env:
 ```env
-PORT=3000
-NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=your_database
-REDIS_HOST=localhost
-REDIS_PORT=6379
+
+PORT=
+DEV_URL=
+FRONT_END_URL=
+# DATABSE
+DB_HOST=
+DB_US=
+DB_PW=
+DB_NAME=
+DB_PORT=
+
+# NODE ENV
+NODE_ENV=
+# CORS
+CORS_ORIGINS=
+
+# JWT
+JWT_SECRET=
+JWT_EXPIRES_IN=
+
+# OXAPAY
+OXAPAY_URL=
+OXAPAY_MERCHANT_KEY=
+OXAPAY_LIFETTIME=
+OXAPAY_FEEPAID_BY_PAYER=
+OXAPAY_UNDER_PAID_COVER=
+OXAPAY_PAYOUT_KEY=
+OXAPAY_PAYOUT_ADDRESS=
+OXAPAY_SANDBOX=
+# REDIS
+REDIS_HOST=
+PORT_REDIS=
+REDIS_US=
+REDIS_PW=
+
+# PAYOS
+PAY_OS_CLIENT=
+PAY_OS_API_KEY=
+PAY_OS_CHECKSUM=
+
+# Python
+JWT_API_PYTHON=
+URL_API_PYTHON=
+
 ```
 
 ## 🏃‍♂️ Chạy dự án
@@ -64,10 +104,10 @@ yarn dev
 ### Production mode
 ```bash
 npm run build
-npm start
+npm run deploy
 # hoặc
 yarn build
-yarn start
+yarn deploy
 ```
 
 ## 📁 Cấu trúc thư mục
@@ -75,18 +115,27 @@ yarn start
 ```
 src/
 ├── config/         # Cấu hình ứng dụng
+├── constants/      # Chứa các biến không đổi của hệ thống
+├── controllers/    # Các modules gọi repository
 ├── database/       # Kết nối và models database
+├── enums/          # Chứa các kiểu dữ liệu enums
+├── interfaces/     # TypeScript type definitions
 ├── middleware/     # Express middleware
+├── models/         # Database model
+├── repository/     # Business logic
 ├── routes/         # API routes
-├── services/       # Business logic
-├── types/          # TypeScript type definitions
+├── services/       # Background service và API bên thứ 3
+├── types/          # Response Type
 ├── utils/          # Utility functions
+├── views/          # Template cho việc send email
 └── app.ts          # Entry point
+└── swagger.ts      # Cấu hình API docs
 ```
 
 ## 🔍 API Documentation
 
-API documentation có thể được tìm thấy tại `/api-docs` khi chạy server.
+API documentation có thể được tìm thấy tại `/api/admin` cho role admin khi chạy server.
+API documentation có thể được tìm thấy tại `/api/client` cho role customer khi chạy server.
 
 ## 🛠 Công nghệ sử dụng
 
@@ -97,6 +146,8 @@ API documentation có thể được tìm thấy tại `/api-docs` khi chạy se
 - Redis
 - Cluster
 - Winston (logging)
+- ORM - Sequelize
+- Swagger
 
 ## 🔒 Bảo mật
 
@@ -104,6 +155,10 @@ API documentation có thể được tìm thấy tại `/api-docs` khi chạy se
 - Logging chi tiết
 - Backup database tự động
 - Xử lý lỗi tập trung
+- Rate limited
+- Metrics
+- Authentication bằng JWT
+- Authorzation bằng phân quyền theo role
 
 ## 📝 License
 
