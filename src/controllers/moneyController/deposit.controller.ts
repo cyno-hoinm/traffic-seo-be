@@ -133,7 +133,8 @@ export const createDeposit = async (
       return;
     }
     switch (paymentMethodId) {
-      case 1: { // USDT
+      case 1: {
+        // USDT
         const data: CreateInvoiceInput = {
           amount: amount,
           currency: oxapayConfig.currency,
@@ -160,7 +161,8 @@ export const createDeposit = async (
         });
         return;
       }
-      case 3: { // PAYOS
+      case 3: {
+        // PAYOS
         const orderCodeUnique = uuidToNumber(orderId);
         const body: any = {
           orderCode: orderCodeUnique, // Use deposit ID as orderCode
@@ -176,8 +178,11 @@ export const createDeposit = async (
           cancelUrl: `${process.env.FRONT_END_URL}/en/deposit/failed`,
           returnUrl: `${process.env.FRONT_END_URL}/en/deposit/${orderCodeUnique}`,
         };
-        console.log("orderCode before : ",orderCodeUnique);
-        body.signature = generateSignature(orderCodeUnique, PAYOS_WEBHOOK_SECRET);
+        console.log("orderCode before : ", orderCodeUnique);
+        body.signature = generateSignature(
+          orderCodeUnique.toString(),
+          PAYOS_WEBHOOK_SECRET
+        );
         const response = await payOSPaymentMethod.createPaymentLink(body);
         res.status(statusCode.CREATED).json({
           status: true,

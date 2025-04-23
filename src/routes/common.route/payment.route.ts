@@ -3,6 +3,7 @@ import { createDepositRepo } from "../../repositories/moneyRepo/deposit.reposito
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import crypto from "crypto";
 import { generateSignature } from "../../utils/generate";
+import { PayOsType } from "../../types/PayOs.type";
 
 const router = express.Router();
 
@@ -20,17 +21,18 @@ router.post(
       });
       // const signature = req.headers['x-payos-signature'] as string | undefined;
       const { code, success, data, desc, signature } = req.body;
-
+      const returnData: PayOsType = data;
       // Check if signature is provided
       if (!signature) {
         console.error("Missing webhook signature");
         res.status(401).json({ status: false, message: "Missing signature" });
         return;
       }
-      console.log("ordercode after :", data.orderCode);
+      console.log("ordercode after :", returnData.orderCode);
       // Verify webhook signature
+      const inputSignatureConvert = returnData.orderCode.toString();
       const computedSignature = generateSignature(
-        data.orderCode,
+        inputSignatureConvert,
         PAYOS_WEBHOOK_SECRET
       );
       console.log(computedSignature);
