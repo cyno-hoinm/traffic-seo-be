@@ -167,7 +167,7 @@ export const createDeposit = async (
         const body: any = {
           orderCode: orderCodeUnique, // Use deposit ID as orderCode
           amount: Math.floor(amount),
-          description: `voucher${voucherId}-userId${userId}-createdBy${createdBy}`,
+          description: `voucher${voucherId}userId${userId}createdBy${createdBy}`,
           items: [
             {
               name: "Charge money",
