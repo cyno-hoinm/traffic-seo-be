@@ -39,7 +39,7 @@ export const getCampaignList = async (
       countryId,
       campaignTypeId,
       device,
-      timeCode,
+      title,
       startDate,
       endDate,
       status,
@@ -53,7 +53,7 @@ export const getCampaignList = async (
       countryId?: number;
       campaignTypeId?: number;
       device?: string;
-      timeCode?: string;
+      title?: string;
       startDate?: Date;
       endDate?: Date;
       status?: CampaignStatus;
@@ -72,7 +72,7 @@ export const getCampaignList = async (
       filters.campaignTypeId = Number(campaignTypeId);
     }
     if (device) filters.device = device as string;
-    if (timeCode) filters.timeCode = timeCode as string;
+    if (title) filters.title = title as string;
     if (startDate) {
       const start = new Date(startDate as string);
       if (isNaN(start.getTime())) {
@@ -124,7 +124,7 @@ export const getCampaignList = async (
           name: campaign.name,
           campaignTypeId: campaign.campaignTypeId,
           device: campaign.device,
-          timeCode: campaign.timeCode,
+          title: campaign.title,
           startDate: campaign.startDate,
           endDate: campaign.endDate,
           totalTraffic: campaign.totalTraffic,
@@ -158,7 +158,7 @@ export const createCampaign = async (
       name,
       type,
       device,
-      timeCode,
+      title,
       startDate,
       endDate,
       totalTraffic,
@@ -177,7 +177,7 @@ export const createCampaign = async (
       !name ||
       !type ||
       !device ||
-      !timeCode ||
+      !title ||
       !startDate ||
       !endDate ||
       !totalTraffic ||
@@ -312,7 +312,7 @@ export const createCampaign = async (
             name,
             type,
             device,
-            timeCode,
+            title,
             startDate: start,
             endDate: end,
             totalTraffic,
@@ -344,6 +344,7 @@ export const createCampaign = async (
             const newKeyword = await Keyword.create(keywordData, { transaction });
             const dataPython = {
               keywordId: newKeyword.id,
+              title : campaign.title,
               keyword: newKeyword.name,
               urls: newKeyword.urls,
               distribution: newKeyword.distribution,
@@ -432,7 +433,7 @@ export const createCampaign = async (
         name: campaignWithAssociations?.name,
         campaignTypeId: campaignWithAssociations?.campaignTypeId,
         device: campaignWithAssociations?.device,
-        timeCode: campaignWithAssociations?.timeCode,
+        title: campaignWithAssociations?.title,
         startDate: campaignWithAssociations?.startDate,
         endDate: campaignWithAssociations?.endDate,
         totalTraffic: campaignWithAssociations?.totalTraffic,
@@ -483,7 +484,7 @@ export const getCampaignById = async (
         name: campaign.name,
         campaignTypeId: campaign.campaignTypeId,
         device: campaign.device,
-        timeCode: campaign.timeCode,
+        title: campaign.title,
         startDate: campaign.startDate,
         endDate: campaign.endDate,
         totalTraffic: campaign.totalTraffic,

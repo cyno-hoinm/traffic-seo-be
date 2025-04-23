@@ -13,6 +13,7 @@ export const getCampaignsReportUserRepo = async (
   {
     campaignId: string;
     campaignName: string;
+    campaignTitle: string;
     linkCount: number;
     keywordCount: number;
     activeLink: number;
@@ -21,7 +22,7 @@ export const getCampaignsReportUserRepo = async (
 > => {
   try {
     if (!sequelizeSystem) {
-      throw new Error('Sequelize instance is not defined');
+      throw new Error("Sequelize instance is not defined");
     }
 
     // Campaign filter
@@ -44,34 +45,35 @@ export const getCampaignsReportUserRepo = async (
     const queryOptions: any = {
       where: campaignWhere,
       attributes: [
-        'id',
-        'name',
+        "id",
+        "name",
+        "title",
         // Subquery for counting all links
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
           ),
-          'linkCount',
+          "linkCount",
         ],
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
           ),
-          'activeLink',
+          "activeLink",
         ],
         // Subquery for counting all keywords
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
           ),
-          'keywordCount',
+          "keywordCount",
         ],
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
           ),
-          'activeKeyword',
+          "activeKeyword",
         ],
       ],
       raw: true,
@@ -82,6 +84,7 @@ export const getCampaignsReportUserRepo = async (
     return result.map((item: any) => ({
       campaignId: item.id,
       campaignName: item.name,
+      campaignTitle: item.title,
       linkCount: parseInt(item.linkCount) || 0,
       keywordCount: parseInt(item.keywordCount) || 0,
       activeLink: parseInt(item.activeLink) || 0,
@@ -95,6 +98,7 @@ export const getCampaignsReportUserRepo = async (
 export interface CampaignReport {
   campaignId: number;
   campaignName: string;
+  campaignTitle: string;
   campaignDomain: string;
   startDate: Date;
   endDate: Date;
@@ -104,7 +108,6 @@ export interface CampaignReport {
   keywordCount: number;
   links: LinkAttributes[];
   keywords: KeywordAttributes[];
-
 }
 
 export const getOneCampaignReportRepo = async (
@@ -114,10 +117,18 @@ export const getOneCampaignReportRepo = async (
     const campaign = await Campaign.findOne({
       where: {
         id: campaignId,
-        status : "ACTIVE",
+        status: "ACTIVE",
         isDeleted: false,
       },
-      attributes: ["id", "name","startDate","endDate","totalTraffic","domain"],
+      attributes: [
+        "id",
+        "title",
+        "name",
+        "startDate",
+        "endDate",
+        "totalTraffic",
+        "domain",
+      ],
       include: [
         {
           model: Link,
@@ -141,13 +152,14 @@ export const getOneCampaignReportRepo = async (
     return {
       campaignId: campaign.id,
       campaignName: campaign.name,
-      campaignDomain : campaign.domain || "",
+      campaignTitle: campaign.title,
+      campaignDomain: campaign.domain || "",
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
-      cost : 0,
-      targetTraffic : campaign.totalTraffic || 0,
-      linkCount : campaign.links.length,
-      keywordCount : campaign.keywords.length,
+      cost: 0,
+      targetTraffic: campaign.totalTraffic || 0,
+      linkCount: campaign.links.length,
+      keywordCount: campaign.keywords.length,
       links: campaign.links || [],
       keywords: campaign.keywords || [],
     };
@@ -157,7 +169,6 @@ export const getOneCampaignReportRepo = async (
   }
 };
 
-
 export const getCampaignsReportAllRepo = async (
   startDate?: string,
   endDate?: string
@@ -165,6 +176,7 @@ export const getCampaignsReportAllRepo = async (
   {
     campaignId: string;
     campaignName: string;
+    campaignTitle: string;
     linkCount: number;
     keywordCount: number;
     activeLink: number;
@@ -173,7 +185,7 @@ export const getCampaignsReportAllRepo = async (
 > => {
   try {
     if (!sequelizeSystem) {
-      throw new Error('Sequelize instance is not defined');
+      throw new Error("Sequelize instance is not defined");
     }
 
     // Campaign filter
@@ -195,34 +207,35 @@ export const getCampaignsReportAllRepo = async (
     const queryOptions: any = {
       where: campaignWhere,
       attributes: [
-        'id',
-        'name',
+        "id",
+        "name",
+        "title",
         // Subquery for counting all links
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
           ),
-          'linkCount',
+          "linkCount",
         ],
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
           ),
-          'activeLink',
+          "activeLink",
         ],
         // Subquery for counting all keywords
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
           ),
-          'keywordCount',
+          "keywordCount",
         ],
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
             `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
           ),
-          'activeKeyword',
+          "activeKeyword",
         ],
       ],
       raw: true,
@@ -233,6 +246,7 @@ export const getCampaignsReportAllRepo = async (
     return result.map((item: any) => ({
       campaignId: item.id,
       campaignName: item.name,
+      campaignTitle: item.title,
       linkCount: parseInt(item.linkCount) || 0,
       keywordCount: parseInt(item.keywordCount) || 0,
       activeLink: parseInt(item.activeLink) || 0,
