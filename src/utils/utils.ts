@@ -88,7 +88,7 @@ export const removeSensitivity = (payload: any): any => {
 
 export function parseChargeMoneyString(description: string) {
   // Regex to match the pattern: Charge money - voucher{voucherId} - userId{userId} - createdBy{createdBy}
-  const regex = /Charge money - voucher(\d+) - userId(\d+) - createdBy(\d+)/;
+  const regex = /voucher(\d+)-userId(\d+)-createdBy(\d+)/;
   const match = description.match(regex);
 
   if (!match) {
