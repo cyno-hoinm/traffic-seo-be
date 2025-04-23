@@ -180,7 +180,7 @@ export const createDeposit = async (
         };
         // console.log("orderCode before : ", orderCodeUnique);
         body.signature = orderCodeUnique;
-        console.log("orderCode before : ", body.signature);
+        console.log("Signarture orderCode before : ", body.signature);
 
         const response = await payOSPaymentMethod.createPaymentLink(body);
         res.status(statusCode.CREATED).json({
