@@ -23,7 +23,7 @@ export function uuidToNumber(uuid: string): number {
   return hash;
 }
 
-export const generateSignature = (data: string, secretKey: string): string => {
+export const generateSignature = (data: any, secretKey: any): string => {
   return crypto
     .createHmac("sha256", secretKey)
     .update(data) // Hash the raw string directly
