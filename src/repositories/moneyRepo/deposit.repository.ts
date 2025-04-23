@@ -9,6 +9,7 @@ import { TransactionType } from "../../enums/transactionType.enum";
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { getConfigByNameRepo } from "../commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
+import { getVoucherByIdRepo } from "./voucher.repository";
 
 export const getDepositListRepo = async (filters: {
   userId?: number;
@@ -94,7 +95,8 @@ export const createDepositRepo = async (data: {
           `Deposit with orderId ${data.orderId} already exists`
         );
       }
-
+      const voucher = await getVoucherByIdRepo(data.voucherId);
+      const voucherValue = voucher?.value ? voucher.value : 1;
       // Find wallet for the user
       const wallet = await Wallet.findOne({
         where: { userId: data.userId },
@@ -146,7 +148,7 @@ export const createDepositRepo = async (data: {
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount: amount / exchangeValue,
+            amount: (amount / exchangeValue) * voucherValue,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
             referenceId: newDeposit.orderId,

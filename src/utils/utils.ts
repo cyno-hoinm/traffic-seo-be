@@ -60,28 +60,44 @@ export const signToken = (payload: any): string => {
   return jwt.sign(payload, secret, { expiresIn: expiresIn });
 };
 
-
 // Verify and decode a JWT token
 export const verifyToken = (token: string): any => {
   return jwt.verify(token, process.env.JWT_SECRET || "DEFAULT_SECRET");
 };
 
 // Blacklist a token in Redis
-export const blacklistToken = async (token: string, ttl: number = ttlInSecondsGlobal): Promise<void> => {
-  await redisClient.set(`blackListToken:${token}`, 'true', ttl);
+export const blacklistToken = async (
+  token: string,
+  ttl: number = ttlInSecondsGlobal
+): Promise<void> => {
+  await redisClient.set(`blackListToken:${token}`, "true", ttl);
 };
 
 // Check if a token is blacklisted
 export const isTokenBlacklisted = async (token: string): Promise<boolean> => {
   const result = await redisClient.get(`blackListToken:${token}`);
-  return result === 'true';
+  return result === "true";
 };
 
-
-export const removeSensitivity  = (payload: any): any => {
+export const removeSensitivity = (payload: any): any => {
   delete payload.iat;
   delete payload.exp;
   delete payload.password;
   return payload;
 };
 
+export function parseChargeMoneyString(description: string) {
+  // Regex to match the pattern: Charge money - voucher{voucherId} - userId{userId} - createdBy{createdBy}
+  const regex = /Charge money - voucher(\d+) - userId(\d+) - createdBy(\d+)/;
+  const match = description.match(regex);
+
+  if (!match) {
+    throw new Error("Invalid description format");
+  }
+
+  return {
+    voucherId: parseInt(match[1], 10),
+    userId: parseInt(match[2], 10),
+    createdBy: parseInt(match[3], 10),
+  };
+}

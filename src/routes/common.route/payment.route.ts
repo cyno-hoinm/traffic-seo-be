@@ -1,9 +1,8 @@
 import express, { Request, Response } from "express";
+import { PayOsType } from "../../types/PayOs.type";
+import { parseChargeMoneyString } from "../../utils/utils";
 import { createDepositRepo } from "../../repositories/moneyRepo/deposit.repository";
 import { DepositStatus } from "../../enums/depositStatus.enum";
-import crypto from "crypto";
-import { generateSignature } from "../../utils/generate";
-import { PayOsType } from "../../types/PayOs.type";
 
 const router = express.Router();
 
@@ -28,8 +27,16 @@ router.post(
         res.status(401).json({ status: false, message: "Missing signature" });
         return;
       }
-
-
+      const parseData = parseChargeMoneyString(returnData.description);
+      await createDepositRepo({
+        createdBy: parseData.createdBy,
+        amount: returnData.amount,
+        orderId: returnData.orderCode.toString(),
+        paymentMethodId: 3,
+        status: DepositStatus.COMPLETED,
+        userId: parseData.userId,
+        voucherId: parseData.voucherId,
+      });
       // Respond to PayOS to acknowledge receipt
       res
         .status(200)
