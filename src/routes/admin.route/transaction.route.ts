@@ -138,6 +138,11 @@ router.post("/", authorization(["create-transaction"]), createTransaction);
  *                 enum: [PAY, REFUND]
  *                 description: Filter by transaction status
  *                 example: PAY
+ *               type:
+ *                 type: string
+ *                 enum: [PAY_SERVICE, DEPOSIT]
+ *                 description: Filter by transaction TYPE
+ *                 example: DEPOSIT
  *               start_date:
  *                 type: string
  *                 format: date-time

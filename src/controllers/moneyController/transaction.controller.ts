@@ -8,6 +8,7 @@ import {
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { TransactionAttributes } from "../../interfaces/Transaction.interface";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
+import { TransactionType } from "../../enums/transactionType.enum";
 
 // Create a new transaction
 export const createTransaction = async (
@@ -61,11 +62,13 @@ export const getListTransaction = async (
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
-    const { walletId, status, start_date, end_date, page, limit } = req.body;
+    const { walletId, status, start_date, end_date, page, limit, type } =
+      req.body;
 
     const filters: {
       walletId?: number;
       status?: TransactionStatus;
+      type?: TransactionType;
       start_date?: Date;
       end_date?: Date;
       page?: number;
@@ -119,7 +122,9 @@ export const getListTransaction = async (
       }
       filters.end_date = end;
     }
-
+    if (type) {
+      filters.type = type;
+    }
     const transactions = await getListTransactionRepo(filters);
 
     res.status(statusCode.OK).json({
@@ -129,7 +134,7 @@ export const getListTransaction = async (
         transaction: transactions.map((transaction: TransactionAttributes) => ({
           id: transaction.id,
           walletId: transaction.walletId,
-          username : transaction.wallet?.users?.username,
+          username: transaction.wallet?.users?.username,
           amount: transaction.amount,
           status: transaction.status,
           type: transaction.type,
