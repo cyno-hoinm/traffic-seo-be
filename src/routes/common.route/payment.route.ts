@@ -30,7 +30,7 @@ router.post(
       // Verify webhook signature
       const computedSignature = crypto
         .createHmac("sha256", PAYOS_WEBHOOK_SECRET)
-        .update(JSON.stringify(data))
+        .update(JSON.stringify(data.orderCode))
         .digest("hex");
       console.log(computedSignature);
       if (computedSignature !== signature) {
