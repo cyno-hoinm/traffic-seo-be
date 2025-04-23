@@ -162,8 +162,9 @@ export const createDeposit = async (
         }
       case 3: // PAYOS
         {
+          const orderCodeUnique = uuidToNumber(orderId)
           const body = {
-            orderCode: uuidToNumber(orderId), // Use deposit ID as orderCode
+            orderCode: orderCodeUnique, // Use deposit ID as orderCode
             amount: Math.floor(amount),
             description: "Charge money",
             items: [
@@ -173,12 +174,8 @@ export const createDeposit = async (
                 price: Math.floor(amount),
               },
             ],
-            cancelUrl: `${process.env.DEV_URL}/cancel?orderId=${uuidToNumber(
-              orderId
-            )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
-            returnUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
-              orderId
-            )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
+            cancelUrl: `${process.env.FRONT_END_URL}/en/deposit/failed`,
+            returnUrl: `${process.env.FRONT_END_URL}/en/deposit/${orderCodeUnique}`,
           };
           const response = await payOSPaymentMethod.createPaymentLink(body);
           res.status(statusCode.CREATED).json({
