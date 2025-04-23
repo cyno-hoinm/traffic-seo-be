@@ -7,6 +7,7 @@ import { getKeywordsByDistributionType } from "../../repositories/coreRepo/keywo
 import { getLinksReport } from "../../repositories/coreRepo/link.repository";
 import {
   CampaignReport,
+  getCampaignsReportAllRepo,
   getCampaignsReportUserRepo,
   getOneCampaignReportRepo,
 } from "../../repositories/coreRepo/report.repository";
@@ -95,6 +96,30 @@ export const getCampaignReportUser = async (
     const { userId, start_date, end_date } = req.body;
     const result = await getCampaignsReportUserRepo(
       userId,
+      start_date,
+      end_date
+    );
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Campaign report fetched successfully",
+      data: result,
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching campaign",
+      error: error.message,
+    });
+  }
+};
+export const getCampaignReportAll = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { start_date, end_date } = req.body;
+    const result = await getCampaignsReportAllRepo(
       start_date,
       end_date
     );
