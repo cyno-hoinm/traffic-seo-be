@@ -23,7 +23,9 @@ export const createTransactionRepo = async (
   _transaction?: SequelizeTransaction
 ): Promise<TransactionAttributes> => {
   try {
-    const wallet = await Wallet.findByPk(data.walletId, { transaction: _transaction });
+    const wallet = await Wallet.findByPk(data.walletId, {
+      transaction: _transaction,
+    });
     if (!wallet) {
       throw new ErrorType("NotFoundError", "Wallet not found");
     }
@@ -68,17 +70,23 @@ export const createTransactionRepo = async (
 
       if (data.type === TransactionType.PAY_SERVICE) {
         if (balance < amount) {
-          throw new ErrorType("InsufficientFundsError", "Insufficient wallet balance");
+          throw new ErrorType(
+            "InsufficientFundsError",
+            "Insufficient wallet balance"
+          );
         }
         wallet.balance = balance - amount;
       } else if (data.type === TransactionType.DEPOSIT) {
         wallet.balance = balance + amount;
       } else {
-        throw new ErrorType("InvalidTypeError", "Transaction type must be PAY_SERVICE or DEPOSIT");
+        throw new ErrorType(
+          "InvalidTypeError",
+          "Transaction type must be PAY_SERVICE or DEPOSIT"
+        );
       }
 
       await wallet.save({ transaction });
-      
+
       // Commit only if we started the transaction
       if (!_transaction) {
         await transaction.commit();
@@ -104,6 +112,7 @@ export const createTransactionRepo = async (
 export const getListTransactionRepo = async (filters: {
   walletId?: number;
   status?: TransactionStatus;
+  type?: TransactionType;
   start_date?: Date;
   end_date?: Date;
   page?: number;
@@ -117,6 +126,9 @@ export const getListTransactionRepo = async (filters: {
     }
     if (filters.status) {
       where.status = filters.status;
+    }
+    if (filters.type) {
+      where.type = filters.type;
     }
     if (filters.start_date || filters.end_date) {
       where.createdAt = {};
@@ -134,13 +146,13 @@ export const getListTransactionRepo = async (filters: {
       include: [
         {
           model: Wallet,
-          as : "wallet",
-          attributes: ['id', 'userId'], // Only fetch necessary fields
+          as: "wallet",
+          attributes: ["id", "userId"], // Only fetch necessary fields
           include: [
             {
               model: User,
-              as : "users",
-              attributes: ['username'], // Only fetch the username
+              as: "users",
+              attributes: ["username"], // Only fetch the username
             },
           ],
         },

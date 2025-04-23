@@ -28,6 +28,10 @@ router.post(
         return;
       }
       const parseData = parseChargeMoneyString(returnData.description);
+      if (parseData.createdBy == null|| parseData.userId == null || parseData.voucherId == null){
+        res.status(401).json({ status: false, message: "Invalid value" });
+        return;
+      }
       await createDepositRepo({
         createdBy: parseData.createdBy,
         amount: returnData.amount,
