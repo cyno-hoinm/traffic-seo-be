@@ -1,5 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
+
+
+export const compressAndEncode = (data: object): string => {
+  const jsonStr = JSON.stringify(data);
+  const buffer = Buffer.from(jsonStr, 'utf-8');
+  return buffer.toString('base64url'); // base64url gọn và dùng tốt cho URL
+};
+
+export const decodeAndDecompress = (encoded: string): any => {
+  const buffer = Buffer.from(encoded, 'base64url');
+  const jsonStr = buffer.toString('utf-8');
+  return JSON.parse(jsonStr);
+};
+
 export const generateVoucherCode = (): string => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
@@ -8,6 +22,8 @@ export const generateVoucherCode = (): string => {
   }
   return code;
 };
+
+
 
 export const uuIDv4 = () => {
   return uuidv4(); // Generate a UUID

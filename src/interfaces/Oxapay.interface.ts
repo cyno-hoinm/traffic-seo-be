@@ -10,7 +10,7 @@ export interface CreateInvoiceInput {
   callback_url: string;                // URL nhận callback khi trạng thái thanh toán thay đổi
   return_url?: string;                 // URL chuyển hướng sau khi thanh toán thành công
   email?: string;                     // Email người thanh toán
-  orderId?: string;                   // ID đơn hàng để đối chiếu hệ thống
+  order_id?: string;                   // ID đơn hàng để đối chiếu hệ thống
   thanks_message?: string;             // Lời cảm ơn sau khi thanh toán
   description?: string;               // Mô tả đơn hàng
   sandbox?: boolean;                  // true: dùng môi trường test, false: môi trường thật

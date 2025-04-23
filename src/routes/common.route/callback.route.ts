@@ -2,6 +2,8 @@ import express, { Request, Response } from "express";
 import { createDepositRepo } from "../../repositories/moneyRepo/deposit.repository";
 import { oxapayConfig } from "../../config/oxapay.config";
 import crypto from "crypto";
+import { DepositStatus } from "../../enums/depositStatus.enum";
+import { decodeAndDecompress } from "../../utils/generate";
 
 const router = express.Router();
 
@@ -30,6 +32,16 @@ router.post("/oxapay", async (req: any, res: Response):Promise<void> => {
 
     // xử lý logic
     console.log('Test oxapay callback!!!',data)
+    const orderInfo = decodeAndDecompress(data.order_id)
+    await createDepositRepo({
+      createdBy: orderInfo.userId,
+      userId: orderInfo.userId,
+      voucherId: orderInfo.voucherId,
+      amount:data.amount,
+      paymentMethodId: 1,
+      orderId: data.trackId,
+      status: DepositStatus.COMPLETED,
+    })
 
     res.status(200).send('ok');
   } catch (err: any) {

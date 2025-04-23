@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import statusCode from "../../constants/statusCode"; // Adjust path
 import {
   getDepositListRepo,
-  createDepositRepo,
   getDepositByIdRepo,
   getDepositByOrderIdRepo,
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
@@ -10,7 +9,7 @@ import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
-import { generateSignature, uuidToNumber, uuIDv4 } from "../../utils/generate";
+import {  compressAndEncode, generateSignature, uuidToNumber, uuIDv4 } from "../../utils/generate";
 import payOSPaymentMethod from "../../config/payOs.config";
 import { CreateInvoiceInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
@@ -133,8 +132,15 @@ export const createDeposit = async (
       return;
     }
     switch (paymentMethodId) {
-      case 1: {
-        // USDT
+      case 1: { // USDT
+        const orderInfo = {
+          userId,
+          // createdBy,
+          // paymentMethodId,
+          voucherId
+        }
+
+        const orderEncrypted = compressAndEncode(orderInfo)
         const data: CreateInvoiceInput = {
           amount: amount,
           currency: oxapayConfig.currency,
@@ -142,6 +148,7 @@ export const createDeposit = async (
           fee_paid_by_payer: parseInt(String(oxapayConfig.feePaidByPayer)),
           under_paid_cover: parseInt(String(oxapayConfig.underPaidCover)),
           callback_url: `${process.env.DEV_URL}/callback/oxapay`,
+          order_id: orderEncrypted,
           // callbackUrl: `${process.env.DEV_URL}/success?orderId=${uuidToNumber(
           //   orderId
           // )}&userId=${userId}&voucherId=${voucherId}&paymentMethodId=${paymentMethodId}&amount=${amount}&createdBy=${createdBy}`,
