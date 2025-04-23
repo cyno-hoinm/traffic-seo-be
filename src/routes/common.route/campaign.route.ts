@@ -38,7 +38,7 @@ const router = express.Router();
  *                 type: string
  *                 description: Filter by device
  *                 example: "Mobile"
- *               timeCode:
+ *               title:
  *                 type: string
  *                 description: Filter by time code
  *                 example: "UTC"
@@ -108,7 +108,7 @@ const router = express.Router();
  *                           device:
  *                             type: string
  *                             example: "Mobile"
- *                           timeCode:
+ *                           title:
  *                             type: string
  *                             example: "UTC"
  *                           startDate:
@@ -199,7 +199,7 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *               - name
  *               - type
  *               - device
- *               - timeCode
+ *               - title
  *               - startDate
  *               - end PaiDate
  *               - totalTraffic
@@ -229,7 +229,7 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                 type: string
  *                 description: Device target
  *                 example: "Mobile"
- *               timeCode:
+ *               title:
  *                 type: string
  *                 description: Time zone code
  *                 example: "UTC"
@@ -380,7 +380,7 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                     device:
  *                       type: string
  *                       example: "Mobile"
- *                     timeCode:
+ *                     title:
  *                       type: string
  *                       example: "UTC"
  *                     startDate:
@@ -564,7 +564,7 @@ router.post("/", authorization(["create-campaign"]), createCampaign);
  *                     device:
  *                       type: string
  *                       example: "Mobile"
- *                     timeCode:
+ *                     title:
  *                       type: string
  *                       example: "UTC "
  *                     startDate:
