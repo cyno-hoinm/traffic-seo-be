@@ -38,7 +38,7 @@ User.init(
     },
     roleId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 2, // Customer
     },
     isDeleted: {

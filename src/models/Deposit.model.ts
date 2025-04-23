@@ -59,7 +59,7 @@ Deposit.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(DepositStatus)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     acceptedBy: {

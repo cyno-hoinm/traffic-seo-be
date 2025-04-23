@@ -7,7 +7,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
   public campaignId!: number | null; // Nullable if not always present
   public name!: string;
-  public urls!: string[]; // Array of URLs
+  public urls!: string[]; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
   public cost!: number;
@@ -33,26 +33,25 @@ Keyword.init(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false, 
     },
     urls: {
-      type: DataTypes.ARRAY(DataTypes.STRING), // Array of strings for PostgreSQL
+      type: DataTypes.JSON, // Use JSON for MySQL instead of ARRAY
       allowNull: false,
     },
     distribution: {
-      type: DataTypes.ENUM(...Object.values(DistributionType)), // Enum type
-      allowNull: false,
+      type: DataTypes.STRING, // Enum type
+      allowNull: true,
     },
     cost: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     traffic: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0, // Default value for consistency
     },
-     isDeleted: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,

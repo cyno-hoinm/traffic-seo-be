@@ -76,6 +76,7 @@ export const authorization =
     try {
       // Fetch user details, including their role and permissions
       const permissions = await getUserPermissions(userId);
+      // console.log(permissions);
       if (!permissions) {
         res.status(statusCode.FORBIDDEN).json({
           status: false,

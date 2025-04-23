@@ -45,7 +45,7 @@ Link.init(
       allowNull: false,
     },
     distribution: {
-      type: DataTypes.ENUM(...Object.values(DistributionType)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     traffic: {
@@ -62,7 +62,7 @@ Link.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(LinkStatus)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     url: {
