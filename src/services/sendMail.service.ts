@@ -94,23 +94,23 @@ async function startEmailService() {
 
           const success = await sendEmail(to, subject, body);
           if (!success) {
-            // Re-queue the email if sending failed
-            await redisClient.lPush(
-              EMAIL_QUEUE_KEY,
-              JSON.stringify({ to, subject, body })
-            );
-            logger.warn(`Re-queued email for ${to} due to failure`);
+            logger.warn(`Failed to send email to ${to}`);
+            debugEmail(`Email sending failed for ${to}`);
+            // No re-queueing; email is discarded
+          } else {
+            logger.info(`Email sent successfully to ${to}`);
+            debugEmail(`Email sent to ${to}`);
           }
         } else {
           debugEmail("No emails in queue, waiting...");
         }
       } catch (error: any) {
-        logger.error(`Email service error: ${error.message}`);
+        logger.error(`Email processing error: ${error.message}`);
         debugEmail(`Error in email processing loop: ${error.message}`);
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5s before retrying
+        // No retry; continue to the next task
       }
     }
-  } catch (error:any) {
+  } catch (error: any) {
     logger.error(`Email Service failed to start: ${error.message}`);
     debugEmail(`Service startup failed: ${error.message}`);
     process.exit(1);

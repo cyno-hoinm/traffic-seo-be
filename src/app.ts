@@ -12,8 +12,9 @@ import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
 import { startBackupService } from "./services/backUpDatabase.service";
-import callbackRoute from "./routes/common.route/callback.route"
+import callbackRoute from "./routes/common.route/callback.route";
 import bodyParser from "body-parser";
+import { startEmailService } from "./services/sendMail.service";
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ if (cluster.isPrimary && !isDev) {
   for (let i = 0; i < appWorkers; i++) {
     cluster.fork({ WORKER_TYPE: "app" });
   }
-
+  cluster.fork({ WORKER_TYPE: "email" });
   cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
     logger.warn(
       `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
@@ -40,11 +41,14 @@ if (cluster.isPrimary && !isDev) {
   });
 } else {
   const app = express();
-  app.use('/callback', bodyParser.json({
-    verify: (req: any, res, buf) => {
-      req.rawBody = buf.toString(); // ← bắt raw body tại đây
-    }
-  }));
+  app.use(
+    "/callback",
+    bodyParser.json({
+      verify: (req: any, res, buf) => {
+        req.rawBody = buf.toString(); // ← bắt raw body tại đây
+      },
+    })
+  );
   configureMiddleware(app);
 
   app.use("/callback", callbackRoute);
@@ -66,6 +70,7 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
+  startEmailService();
   // startBackupService()
   // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {

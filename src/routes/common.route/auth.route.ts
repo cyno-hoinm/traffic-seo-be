@@ -1,8 +1,10 @@
 import express from "express";
 import {
+  changePassword,
   getMe,
   loginUser,
   refreshToken,
+  registerUser,
 } from "../../controllers/commonController/auth.controller";
 import { authenticateToken } from "../../middleware/auth";
 
@@ -84,7 +86,232 @@ const router = express.Router();
  *                   example: Database connection failed
  */
 router.post("/", loginUser);
-
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Creates a new user with the provided username, password, and email. Assigns a default roleId of 2. Returns the created user's details (excluding password).
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - email
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The user's username (minimum 3 characters).
+ *                 example: john_doe
+ *               password:
+ *                 type: string
+ *                 description: The user's password (minimum 6 characters).
+ *                 example: hashedpassword123
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address.
+ *                 example: john.doe@example.com
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     username:
+ *                       type: string
+ *                       example: john_doe
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                       example: john.doe@example.com
+ *                     roleId:
+ *                       type: integer
+ *                       example: 2
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-24T10:00:00.000Z
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-24T10:00:00.000Z
+ *       400:
+ *         description: Invalid input (e.g., missing or invalid username, password, or email)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Username is required and must be at least 3 characters
+ *                 error:
+ *                   type: string
+ *                   example: Invalid field
+ *       409:
+ *         description: User creation failed due to existing email or username
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User creation failed
+ *                 error:
+ *                   type: string
+ *                   example: Email already exists
+ *       500:
+ *         description: Server error during user registration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error registering user
+ *                 error:
+ *                   type: string
+ *                   example: Database connection failed
+ */
+router.post("/register", registerUser);
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change user password
+ *     description: Allows an authenticated user to change their password by providing the current password and a new password. The new password is hashed before updating.
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: The user's current password for verification.
+ *                 example: oldpassword123
+ *               newPassword:
+ *                 type: string
+ *                 description: The new password (minimum 6 characters).
+ *                 example: newpassword456
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Password changed successfully
+ *       400:
+ *         description: Invalid input (e.g., missing or invalid passwords)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: New password is required and must be at least 6 characters
+ *                 error:
+ *                   type: string
+ *                   example: Invalid field
+ *       401:
+ *         description: Incorrect current password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Incorrect current password
+ *                 error:
+ *                   type: string
+ *                   example: Authentication failed
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User not found
+ *                 error:
+ *                   type: string
+ *                   example: Resource not found
+ *       500:
+ *         description: Server error during password update
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error changing password
+ *                 error:
+ *                   type: string
+ *                   example: Database connection failed
+ */
+router.post("/change-password", authenticateToken, changePassword);
 /**
  * @swagger
  * /auth/getMe:
@@ -185,7 +412,6 @@ router.post("/", loginUser);
  *       bearerFormat: JWT
  */
 router.get("/getMe", authenticateToken, getMe);
-
 /**
  * @swagger
  * /auth/refresh:
@@ -266,4 +492,5 @@ router.get("/getMe", authenticateToken, getMe);
  *         bearerFormat: JWT
  */
 router.get("/refresh", authenticateToken, refreshToken);
+
 export default router;
