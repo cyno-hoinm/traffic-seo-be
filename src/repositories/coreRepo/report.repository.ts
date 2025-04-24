@@ -5,6 +5,7 @@ import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { baseApiPython } from "../../config/botAPI.config";
+import { calculateCampaignMetrics } from "../../utils/utils";
 
 export const getCampaignsReportUserRepo = async (
   userId: string,
@@ -52,27 +53,28 @@ export const getCampaignsReportUserRepo = async (
         // Subquery for counting all links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id)`
           ),
           "linkCount",
         ],
+        // Subquery for counting active (non-deleted) links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.isDeleted = FALSE)`
           ),
           "activeLink",
         ],
         // Subquery for counting all keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id)`
           ),
           "keywordCount",
         ],
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.isDeleted = FALSE)`
           ),
           "activeKeyword",
         ],
@@ -103,9 +105,9 @@ export interface CampaignReport {
   campaignDomain: string;
   startDate: Date;
   endDate: Date;
-  targetTraffic: number;
+  totalTraffic: number;
   linkCount: number;
-  cost: number;
+  totalCost: number;
   keywordCount: number;
   links: LinkAttributes[];
   keywords: KeywordAttributes[];
@@ -127,7 +129,6 @@ export const getOneCampaignReportRepo = async (
         "name",
         "startDate",
         "endDate",
-        "totalTraffic",
         "domain",
       ],
       include: [
@@ -150,7 +151,7 @@ export const getOneCampaignReportRepo = async (
       return null; // Campaign not found or is deleted
     }
     const keywordsCampaign = campaign.keywords || [];
-
+    const metrics = calculateCampaignMetrics(campaign.links,campaign.keywords)
     // Format dates to YYYY-MM-DDTHH:mm:ssZ
     const formatDate = (date: Date | string | null): string => {
       if (!date) return "";
@@ -184,8 +185,8 @@ export const getOneCampaignReportRepo = async (
       campaignDomain: campaign.domain || "",
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
-      cost: 0,
-      targetTraffic: campaign.totalTraffic || 0,
+      totalCost: metrics.totalCost || 0,
+      totalTraffic: metrics.totalTraffic || 0,
       linkCount: campaign.links.length,
       keywordCount: campaign.keywords.length,
       links: campaign.links || [],

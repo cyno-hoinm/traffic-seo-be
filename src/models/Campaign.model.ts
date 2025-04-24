@@ -81,11 +81,6 @@ Campaign.init(
       type: DataTypes.DATE,
       allowNull: false,
     },
-    totalTraffic: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
     domain: {
       type: DataTypes.STRING,
       allowNull: false,

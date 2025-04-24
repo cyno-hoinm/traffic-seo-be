@@ -19,13 +19,23 @@ import { baseApiPython } from "../../config/botAPI.config";
 import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
 import { ErrorType } from "../../types/Error.type";
-import { compareWalletAmount, getWalletByUserIdRepo, updateWalletBalanceByUserId, updateWalletRepo } from "../../repositories/moneyRepo/wallet.repository";
-import { getWalletById, updateWallet } from "../moneyController/wallet.controller";
+import {
+  compareWalletAmount,
+  getWalletByUserIdRepo,
+  updateWalletBalanceByUserId,
+  updateWalletRepo,
+} from "../../repositories/moneyRepo/wallet.repository";
+import {
+  getWalletById,
+  updateWallet,
+} from "../moneyController/wallet.controller";
 import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
+import { calculateCampaignMetrics } from "../../utils/utils";
 
 // Get campaign list with filters
+
 export const getCampaignList = async (
   req: Request,
   res: Response<
@@ -110,31 +120,43 @@ export const getCampaignList = async (
       });
       return;
     }
+    if (key) {
+      filters.key = key;
+    }
 
     const campaigns = await getCampaignListRepo(filters);
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaigns retrieved successfully",
       data: {
-        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => ({
-          id: campaign.id,
-          userId: campaign.userId,
-          username : campaign.users?.username,
-          countryId: campaign.countryId,
-          name: campaign.name,
-          campaignTypeId: campaign.campaignTypeId,
-          device: campaign.device,
-          title: campaign.title,
-          startDate: campaign.startDate,
-          endDate: campaign.endDate,
-          totalTraffic: campaign.totalTraffic,
-          cost: campaign.cost,
-          domain: campaign.domain,
-          search: campaign.search,
-          status: campaign.status,
-          createdAt: campaign.createdAt,
-          updatedAt: campaign.updatedAt,
-        })),
+        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => {
+          // Calculate metrics for each campaign
+          const { totalTraffic, totalCost } = calculateCampaignMetrics(
+            campaign.links,
+            campaign.keywords
+          );
+
+          return {
+            id: campaign.id,
+            userId: campaign.userId,
+            username: campaign.users?.username,
+            countryId: campaign.countryId,
+            name: campaign.name,
+            campaignTypeId: campaign.campaignTypeId,
+            device: campaign.device,
+            title: campaign.title,
+            startDate: campaign.startDate,
+            endDate: campaign.endDate,
+            totalTraffic, // Calculated from links and keywords
+            totalCost: totalCost, // Calculated from links and keywords
+            domain: campaign.domain,
+            search: campaign.search,
+            status: campaign.status,
+            createdAt: campaign.createdAt,
+            updatedAt: campaign.updatedAt,
+          };
+        }),
         total: campaigns.total,
       },
     });
@@ -161,7 +183,6 @@ export const createCampaign = async (
       title,
       startDate,
       endDate,
-      totalTraffic,
       domain,
       search,
       status,
@@ -180,7 +201,6 @@ export const createCampaign = async (
       !title ||
       !startDate ||
       !endDate ||
-      !totalTraffic ||
       !domain ||
       !search ||
       !campaignTypeId ||
@@ -214,29 +234,46 @@ export const createCampaign = async (
       return;
     }
     let keywordTrafficCost = 1;
-    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.KEYWORD_TRAFFIC_COST);
+    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
+      ConfigApp.KEYWORD_TRAFFIC_COST
+    );
     if (KEYWORD_TRAFFIC_COST) {
       keywordTrafficCost = parseFloat(KEYWORD_TRAFFIC_COST.value);
     } else {
-      throw new ErrorType("ConfigError", "Configuration for KEYWORD_TRAFFIC_COST not found");
+      throw new ErrorType(
+        "ConfigError",
+        "Configuration for KEYWORD_TRAFFIC_COST not found"
+      );
     }
     let linkTrafficCost = 1;
-    const LINK_TRAFFIC_COST = await getConfigByNameRepo(ConfigApp.LINK_TRAFFIC_COST);
+    const LINK_TRAFFIC_COST = await getConfigByNameRepo(
+      ConfigApp.LINK_TRAFFIC_COST
+    );
     if (LINK_TRAFFIC_COST) {
       linkTrafficCost = parseFloat(LINK_TRAFFIC_COST.value);
     } else {
-      throw new ErrorType("ConfigError", "Configuration for LINK_TRAFFIC_COST not found");
+      throw new ErrorType(
+        "ConfigError",
+        "Configuration for LINK_TRAFFIC_COST not found"
+      );
     }
-    const totalKeywordTraffic = keywords ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
-    const totalLinkTraffic = links ? links.reduce((sum: number, item: Keyword) => sum + item.traffic, 0) : 0;
-    const totalCost = totalKeywordTraffic*keywordTrafficCost + totalLinkTraffic*linkTrafficCost;
-    const isValidWallet = await compareWalletAmount(userId,totalCost)
+    const totalKeywordTraffic = keywords
+      ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0)
+      : 0;
+    const totalLinkTraffic = links
+      ? links.reduce((sum: number, item: Keyword) => sum + item.traffic, 0)
+      : 0;
+    const totalCost =
+      totalKeywordTraffic * keywordTrafficCost +
+      totalLinkTraffic * linkTrafficCost;
+    const totalTraffic = totalKeywordTraffic + totalLinkTraffic;
+    const isValidWallet = await compareWalletAmount(userId, totalCost);
     if (!isValidWallet) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Insufficient balance",
-        error: "Invalid wallet"
-      })
+        error: "Invalid wallet",
+      });
       return;
     }
     // Validate keywords if provided
@@ -315,7 +352,6 @@ export const createCampaign = async (
             title,
             startDate: start,
             endDate: end,
-            totalTraffic,
             domain,
             search,
             campaignTypeId,
@@ -330,7 +366,7 @@ export const createCampaign = async (
         // Insert keywords if provided
         if (keywords && keywords.length > 0) {
           for (const keyword of keywords) {
-            const cost = keyword.traffic * 1
+            const cost = keyword.traffic * 1;
             const keywordData: KeywordAttributes = {
               campaignId: campaign.id,
               name: keyword.name,
@@ -341,10 +377,12 @@ export const createCampaign = async (
               isDeleted: false,
             };
             // Call Python API for each keyword
-            const newKeyword = await Keyword.create(keywordData, { transaction });
+            const newKeyword = await Keyword.create(keywordData, {
+              transaction,
+            });
             const dataPython = {
               keywordId: newKeyword.id,
-              title : campaign.title,
+              title: campaign.title,
               keyword: newKeyword.name,
               urls: newKeyword.urls,
               distribution: newKeyword.distribution,
@@ -354,11 +392,10 @@ export const createCampaign = async (
               timeStart: campaign.startDate,
               timeEnd: campaign.endDate,
               searchTool: campaign.search,
-            }
+            };
             const result = await baseApiPython("keyword/set", dataPython);
             // console.log(result);
             // Create keyword in database
-
           }
         }
 
@@ -381,16 +418,15 @@ export const createCampaign = async (
         }
 
         // await updateWalletBalanceByUserId(userId,{balance: totalCost})
-        const wallet = await getWalletByUserIdRepo(userId)
+        const wallet = await getWalletByUserIdRepo(userId);
         if (wallet) {
           await createTransactionRepo({
             walletId: wallet.id || 0,
             amount: totalCost,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.PAY_SERVICE,
-          })
-        }
-        else {
+          });
+        } else {
           throw new Error("Wallet not found!");
         }
 
@@ -436,8 +472,8 @@ export const createCampaign = async (
         title: campaignWithAssociations?.title,
         startDate: campaignWithAssociations?.startDate,
         endDate: campaignWithAssociations?.endDate,
-        totalTraffic: campaignWithAssociations?.totalTraffic,
-        // cost: campaignWithAssociations?.cost,
+        totalTraffic: totalTraffic,
+        cost: totalCost,
         domain: campaignWithAssociations?.domain,
         search: campaignWithAssociations?.search,
         status: campaignWithAssociations?.status,
@@ -473,6 +509,8 @@ export const getCampaignById = async (
       });
       return;
     }
+    // Calculate total traffic and cost from links and keywords
+    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
 
     res.status(statusCode.OK).json({
       status: true,
@@ -487,8 +525,8 @@ export const getCampaignById = async (
         title: campaign.title,
         startDate: campaign.startDate,
         endDate: campaign.endDate,
-        totalTraffic: campaign.totalTraffic,
-        // cost: campaign.cost,
+        totalTraffic: metrics.totalTraffic,
+        totalCost: metrics.totalCost,
         domain: campaign.domain,
         search: campaign.search,
         status: campaign.status,
