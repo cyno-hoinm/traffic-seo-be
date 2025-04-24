@@ -71,8 +71,8 @@ if (cluster.isPrimary && !isDev) {
   };
 
   startServer();
-  startEmailService();
-  startBackupService()
+  // startEmailService();
+  // startBackupService()
   // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);
