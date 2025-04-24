@@ -28,6 +28,7 @@ import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { calculateCampaignMetrics } from "../../utils/utils";
+import { filter } from "compression";
 
 // Get campaign list with filters
 
@@ -65,12 +66,13 @@ export const getCampaignList = async (
       page?: number;
       limit?: number;
     } = {};
-    filters.page =
-      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit =
-      typeof limit === "string" && !isNaN(parseInt(limit))
-        ? parseInt(limit)
-        : 0;
+    if (page) {
+      filters.page = page;
+    }
+    if (limit) {
+      filters.limit = limit;
+    }
+
     if (userId) filters.userId = Number(userId);
     if (countryId) filters.countryId = Number(countryId);
     if (campaignTypeId) {

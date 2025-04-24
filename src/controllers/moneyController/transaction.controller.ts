@@ -74,12 +74,12 @@ export const getListTransaction = async (
       page?: number;
       limit?: number;
     } = {};
-    filters.page =
-      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit =
-      typeof limit === "string" && !isNaN(parseInt(limit))
-        ? parseInt(limit)
-        : 0;
+    if (page) {
+      filters.page = page;
+    }
+    if (limit) {
+      filters.limit = limit;
+    }
     if (walletId) filters.walletId = Number(walletId);
     if (status) {
       if (

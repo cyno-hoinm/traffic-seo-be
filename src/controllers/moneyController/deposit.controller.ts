@@ -9,7 +9,7 @@ import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
-import {  compressAndEncode, uuidToNumber, uuIDv4 } from "../../utils/generate";
+import { compressAndEncode, uuidToNumber, uuIDv4 } from "../../utils/generate";
 import payOSPaymentMethod from "../../config/payOs.config";
 import { CreateInvoiceInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
@@ -31,12 +31,12 @@ export const getDepositList = async (
       page?: number;
       limit?: number;
     } = {};
-    filters.page =
-      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit =
-      typeof limit === "string" && !isNaN(parseInt(limit))
-        ? parseInt(limit)
-        : 0;
+    if (page) {
+      filters.page = page;
+    }
+    if (limit) {
+      filters.limit = limit;
+    }
     if (userId) filters.userId = Number(userId);
     if (
       status &&
@@ -131,15 +131,16 @@ export const createDeposit = async (
       return;
     }
     switch (paymentMethodId) {
-      case 1: { // USDT
+      case 1: {
+        // USDT
         const orderInfo = {
           userId,
           // createdBy,
           // paymentMethodId,
-          voucherId
-        }
+          voucherId,
+        };
 
-        const orderEncrypted = compressAndEncode(orderInfo)
+        const orderEncrypted = compressAndEncode(orderInfo);
         const data: CreateInvoiceInput = {
           amount: amount,
           currency: oxapayConfig.currency,

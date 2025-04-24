@@ -28,12 +28,12 @@ export const getLinkList = async (
       page?: number;
       limit?: number;
     } = {};
-    filters.page =
-      typeof page === "string" && !isNaN(parseInt(page)) ? parseInt(page) : 0;
-    filters.limit =
-      typeof limit === "string" && !isNaN(parseInt(limit))
-        ? parseInt(limit)
-        : 0;
+    if (page) {
+      filters.page = page;
+    }
+    if (limit) {
+      filters.limit = limit;
+    }
     if (campaignId) filters.campaignId = Number(campaignId);
     if (status && Object.values(LinkStatus).includes(status as LinkStatus)) {
       filters.status = status as LinkStatus;
@@ -147,7 +147,7 @@ export const createLink = async (
       });
       return;
     }
-    const cost = traffic * 1
+    const cost = traffic * 1;
     const newLink = await createLinkRepo({
       campaignId,
       link,
@@ -243,7 +243,11 @@ export const updateLink = async (
     const { id } = req.params;
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
-      throw new ErrorType("ValidationError", "Invalid link ID", statusCode.BAD_REQUEST);
+      throw new ErrorType(
+        "ValidationError",
+        "Invalid link ID",
+        statusCode.BAD_REQUEST
+      );
     }
 
     const data = req.body as Partial<{

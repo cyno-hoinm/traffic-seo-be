@@ -21,7 +21,6 @@ export const getCampaignListRepo = async (filters: {
 }): Promise<{ campaigns: CampaignAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
-
     // Add search by key (name, domain, search)
     if (filters.key) {
       where[Op.or] = [
