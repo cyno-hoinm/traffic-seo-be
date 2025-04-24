@@ -4,6 +4,7 @@ import { Campaign, Keyword, Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
+import { baseApiPython } from "../../config/botAPI.config";
 
 export const getCampaignsReportUserRepo = async (
   userId: string,
@@ -148,6 +149,33 @@ export const getOneCampaignReportRepo = async (
     if (!campaign) {
       return null; // Campaign not found or is deleted
     }
+    const keywordsCampaign = campaign.keywords || [];
+
+    // Format dates to YYYY-MM-DDTHH:mm:ssZ
+    const formatDate = (date: Date | string | null): string => {
+      if (!date) return "";
+      const d = new Date(date);
+      return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T00:00:00Z
+    };
+
+    // Post data to Python API for each keyword and collect trafficCompleted
+    const updatedKeywords = await Promise.all(
+      keywordsCampaign.map(async (keyword: any) => {
+        const dataPython = {
+          keywordId: keyword.id,
+          time_start: formatDate(campaign.startDate),
+          time_end: formatDate(campaign.endDate),
+        };
+        const result = await baseApiPython(
+          "keyword/traffic-count-duration",
+          dataPython
+        );
+        return {
+          ...keyword.dataValues, // Convert Sequelize instance to plain object
+          trafficCompleted: result.traffic_count, // Corrected typo
+        };
+      })
+    );
 
     return {
       campaignId: campaign.id,
@@ -161,7 +189,7 @@ export const getOneCampaignReportRepo = async (
       linkCount: campaign.links.length,
       keywordCount: campaign.keywords.length,
       links: campaign.links || [],
-      keywords: campaign.keywords || [],
+      keywords: updatedKeywords, // Use updated keywords with trafficCompleted
     };
   } catch (error) {
     console.error("Error fetching campaign details:", error);
@@ -213,27 +241,28 @@ export const getCampaignsReportAllRepo = async (
         // Subquery for counting all links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id")`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id)`
           ),
           "linkCount",
         ],
+        // Subquery for counting active (non-deleted) links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l."campaignId" = "Campaign"."id" AND l."isDeleted" = false)`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.isDeleted = FALSE)`
           ),
           "activeLink",
         ],
         // Subquery for counting all keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id")`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id)`
           ),
           "keywordCount",
         ],
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k."campaignId" = "Campaign"."id" AND k."isDeleted" = false)`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.isDeleted = FALSE)`
           ),
           "activeKeyword",
         ],
