@@ -1,6 +1,6 @@
 import express from "express";
-import { getKeywordByCampaignId } from "../../controllers/coreController/bot.controller";
-import { authorization } from "../../middleware/auth";
+import { getKeywordByCampaignId } from "../../../controllers/coreController/bot.controller";
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 /**

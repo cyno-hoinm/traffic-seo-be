@@ -1,13 +1,13 @@
 import express from "express";
 import {
-  createRole,
-  getRoleById,
-  getAllRoles,
-  updateRole,
-  deleteRole,
-  searchRoleList,
-} from "../../controllers/roleController/role.controller"; // Adjust path to your Role controller
-import { authorization } from "../../middleware/auth";
+  createPermission,
+  getPermissionById,
+  getAllPermissions,
+  updatePermission,
+  deletePermission,
+  searchPermissionList,
+} from "../../../controllers/roleController/permission.controller"; // Adjust path to your Permission controller
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 
@@ -15,20 +15,17 @@ const router = express.Router();
  * @swagger
  * components:
  *   schemas:
- *     Role:
+ *     Permission:
  *       type: object
  *       required:
  *         - name
  *       properties:
  *         id:
  *           type: integer
- *           description: The auto-generated ID of the role
+ *           description: The auto-generated ID of the permission
  *         name:
  *           type: string
- *           description: The name of the role
- *         isDelete:
- *           type: boolean
- *           description: Whether the role is soft-deleted
+ *           description: The name of the permission
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -39,18 +36,17 @@ const router = express.Router();
  *           description: Last update timestamp (UTC+7)
  *       example:
  *         id: 1
- *         name: "admin"
- *         isDelete: false
+ *         name: "read_users"
  *         createdAt: "2025-04-10T14:00:00.000 "
  *         updatedAt: "2025-04-10T14:00:00.000 "
  */
 
 /**
  * @swagger
- * /roles:
+ * /permissions:
  *   post:
- *     summary: Create a new role
- *     tags: [Roles]
+ *     summary: Create a new permission
+ *     tags: [Permissions]
  *     requestBody:
  *       required: true
  *       content:
@@ -59,15 +55,20 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - name
+ *               - code
  *             properties:
  *               name:
  *                 type: string
- *                 description: The name of the role
+ *                 description: The name of the permission
+ *               code:
+ *                 type: string
+ *                 description: The code of the permission
  *             example:
- *               name: "admin"
+ *               name: "Tạo quyền"
+ *               code: "create-permission"
  *     responses:
  *       201:
- *         description: Role created successfully
+ *         description: Permission created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -78,7 +79,7 @@ const router = express.Router();
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/Role'
+ *                   $ref: '#/components/schemas/Permission'
  *       400:
  *         description: Validation failed or duplicate name
  *         content:
@@ -95,24 +96,24 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/", authorization(["create-role"]), createRole);
+router.post("/", authorization(["create-permission"]), createPermission);
 
 /**
  * @swagger
- * /roles/{id}:
+ * /permissions/{id}:
  *   get:
- *     summary: Get a role by ID
- *     tags: [Roles]
+ *     summary: Get a permission by ID
+ *     tags: [Permissions]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: integer
  *         required: true
- *         description: The role ID
+ *         description: The permission ID
  *     responses:
  *       200:
- *         description: Role retrieved successfully
+ *         description: Permission retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -123,25 +124,25 @@ router.post("/", authorization(["create-role"]), createRole);
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/Role'
+ *                   $ref: '#/components/schemas/Permission'
  *       400:
  *         description: Invalid ID
  *       404:
- *         description: Role not found
+ *         description: Permission not found
  *       500:
  *         description: Internal server error
  */
-router.get("/:id", authorization(["read-role"]), getRoleById);
+router.get("/:id", authorization(["read-permission"]), getPermissionById);
 
 /**
  * @swagger
- * /roles:
+ * /permissions:
  *   get:
- *     summary: Get all roles
- *     tags: [Roles]
+ *     summary: Get all permissions
+ *     tags: [Permissions]
  *     responses:
  *       200:
- *         description: Roles retrieved successfully
+ *         description: Permissions retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -154,25 +155,25 @@ router.get("/:id", authorization(["read-role"]), getRoleById);
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Role'
+ *                     $ref: '#/components/schemas/Permission'
  *       500:
  *         description: Internal server error
  */
-router.get("/", authorization(["read-roles"]), getAllRoles);
+router.get("/", authorization(["read-permissions"]), getAllPermissions);
 
 /**
  * @swagger
- * /roles/{id}:
+ * /permissions/{id}:
  *   put:
- *     summary: Update a role by ID
- *     tags: [Roles]
+ *     summary: Update a permission by ID
+ *     tags: [Permissions]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: integer
  *         required: true
- *         description: The role ID
+ *         description: The permission ID
  *     requestBody:
  *       required: true
  *       content:
@@ -184,12 +185,12 @@ router.get("/", authorization(["read-roles"]), getAllRoles);
  *             properties:
  *               name:
  *                 type: string
- *                 description: The new name of the role
+ *                 description: The new name of the permission
  *             example:
- *               name: "updated_admin"
+ *               name: "update_users"
  *     responses:
  *       200:
- *         description: Role updated successfully
+ *         description: Permission updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -200,32 +201,32 @@ router.get("/", authorization(["read-roles"]), getAllRoles);
  *                 message:
  *                   type: string
  *                 data:
- *                   $ref: '#/components/schemas/Role'
+ *                   $ref: '#/components/schemas/Permission'
  *       400:
  *         description: Validation failed or duplicate name
  *       404:
- *         description: Role not found
+ *         description: Permission not found
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", authorization(["update-role"]), updateRole);
+router.put("/:id", authorization(["update-permission"]), updatePermission);
 
 /**
  * @swagger
- * /roles/{id}:
+ * /permissions/{id}:
  *   delete:
- *     summary: Delete a role by ID
- *     tags: [Roles]
+ *     summary: Delete a permission by ID
+ *     tags: [Permissions]
  *     parameters:
  *       - in: path
  *         name: id
  *         schema:
  *           type: integer
  *         required: true
- *         description: The role ID
+ *         description: The permission ID
  *     responses:
  *       200:
- *         description: Role deleted successfully
+ *         description: Permission deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -238,20 +239,20 @@ router.put("/:id", authorization(["update-role"]), updateRole);
  *       400:
  *         description: Invalid ID
  *       404:
- *         description: Role not found
+ *         description: Permission not found
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", authorization(["delete-role"]), deleteRole);
+router.delete("/:id", authorization(["delete-permission"]), deletePermission);
 
 /**
  * @swagger
- * /roles/search:
+ * /permissions/search:
  *   post:
- *     summary: Search and retrieve a paginated list of roles
- *     description: Retrieves a list of roles based on a search key with pagination support. Returns the roles, total count, and pagination details.
+ *     summary: Search and retrieve a paginated list of permissions
+ *     description: Retrieves a list of permissions based on a search key with pagination support. Returns the permissions, total count, and pagination details.
  *     tags:
- *       - Roles
+ *       - Permissions
  *     requestBody:
  *       required: true
  *       content:
@@ -264,19 +265,19 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *             properties:
  *               key:
  *                 type: string
- *                 description: Optional search key to filter roles
- *                 example: admin
+ *                 description: Optional search key to filter permissions
+ *                 example: read
  *               page:
  *                 type: string
  *                 description: Page number for pagination (non-negative integer)
  *                 example: "1"
  *               limit:
  *                 type: string
- *                 description: Number of roles per page (non-negative integer)
+ *                 description: Number of permissions per page (non-negative integer)
  *                 example: "10"
  *     responses:
  *       200:
- *         description: Roles retrieved successfully
+ *         description: Permissions retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -287,8 +288,11 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Roles retrieved successfully
- *                 pageLimit:
+ *                   example: permissions retrieved successfully
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 limit:
  *                   type: integer
  *                   example: 10
  *                 totalPages:
@@ -304,7 +308,7 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                       type: array
  *                       items:
  *                         type: object
- *                         description: Role object (structure depends on the repository)
+ *                         description: Permission object (structure depends on the repository)
  *       400:
  *         description: Invalid input
  *         content:
@@ -338,5 +342,5 @@ router.delete("/:id", authorization(["delete-role"]), deleteRole);
  *                   type: string
  *                   example: An unexpected error occurred
  */
-router.post("/search", authorization(["read-roles"]), searchRoleList);
+router.post("/search", authorization(["read-permissions"]),searchPermissionList)
 export default router;

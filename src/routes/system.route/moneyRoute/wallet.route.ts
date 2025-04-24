@@ -4,8 +4,8 @@ import {
   getWalletById,
   updateWallet,
   deleteWallet,
-} from "../../controllers/moneyController/wallet.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/moneyController/wallet.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

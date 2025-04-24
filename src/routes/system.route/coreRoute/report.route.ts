@@ -6,8 +6,8 @@ import {
   getCampaignReportAll,
   getCampaignReportUser,
   getOneCampaignReport,
-} from "../../controllers/coreController/report.controller";
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/coreController/report.controller";
+import { authorization } from "../../../middleware/auth";
 const router = express.Router();
 /**
  * @swagger

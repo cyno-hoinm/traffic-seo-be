@@ -5,8 +5,8 @@ import {
   getCountryById,
   updateCountry,
   deleteCountry,
-} from "../../controllers/coreController/country.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/coreController/country.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

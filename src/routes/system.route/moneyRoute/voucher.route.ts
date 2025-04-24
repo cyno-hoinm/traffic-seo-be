@@ -6,8 +6,8 @@ import {
   updateVoucher,
   deleteVoucher,
   getVoucherByCode,
-} from "../../controllers/moneyController/voucher.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/moneyController/voucher.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

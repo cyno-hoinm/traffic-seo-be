@@ -4,8 +4,8 @@ import {
   createDeposit,
   getDepositById,
   getDepositByOrderId,
-} from "../../controllers/moneyController/deposit.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/moneyController/deposit.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

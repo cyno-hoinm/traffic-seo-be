@@ -7,8 +7,8 @@ import {
   searchUserList,
   updateUser,
   updateUserOneField,
-} from "../../controllers/commonController/user.controller";
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/commonController/user.controller";
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

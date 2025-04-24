@@ -3,8 +3,8 @@ import {
   createTransaction,
   getListTransaction,
   getOneTransaction,
-} from "../../controllers/moneyController/transaction.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/moneyController/transaction.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

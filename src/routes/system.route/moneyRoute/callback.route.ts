@@ -1,6 +1,6 @@
 import express from "express";
 
-import { handleOxaPayWebhook } from "../../controllers/moneyController/oxapay.controller";
+import { handleOxaPayWebhook } from "../../../controllers/moneyController/oxapay.controller";
 
 const router = express.Router();
 

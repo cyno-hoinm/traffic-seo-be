@@ -1,5 +1,5 @@
 import express from "express";
-import { createInvoice, withDraw, checkMyIP, getCurrencies } from "../../controllers/moneyController/oxapay.controller";
+import { createInvoice, withDraw, checkMyIP, getCurrencies } from "../../../controllers/moneyController/oxapay.controller";
 
 const router = express.Router();
 

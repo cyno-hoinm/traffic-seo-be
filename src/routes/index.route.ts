@@ -1,7 +1,7 @@
 import express from "express";
 import { setupSwaggerDocs } from "../swagger";
 import { routeConfig } from "./route.config";
-import paymentRoute from "./common.route/payment.route";
+import paymentRoute from "./system.route/moneyRoute/payment.route";
 
 export const configureRoutes = (app: express.Application) => {
   routeConfig.forEach(({ docsPath, apiPath, spec, route }) => {

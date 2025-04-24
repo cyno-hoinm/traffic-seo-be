@@ -3,8 +3,8 @@ import {
   getCampaignList,
   createCampaign,
   getCampaignById,
-} from "../../controllers/coreController/campaign.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/coreController/campaign.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

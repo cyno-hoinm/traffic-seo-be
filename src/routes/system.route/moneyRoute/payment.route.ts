@@ -1,5 +1,5 @@
 import express from "express";
-import { handlePayOsWebhook } from "../../controllers/moneyController/payOs.controller";
+import { handlePayOsWebhook } from "../../../controllers/moneyController/payOs.controller";
 
 const router = express.Router();
 

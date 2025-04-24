@@ -4,8 +4,8 @@ import {
   createLink,
   getLinkById,
   updateLink,
-} from "../../controllers/coreController/link.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/coreController/link.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

@@ -5,8 +5,8 @@ import {
   getAllRolePermissions,
   updateRolePermission,
   deleteRolePermission,
-} from "../../controllers/roleController/role-permission.controller";
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/roleController/role-permission.controller";
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

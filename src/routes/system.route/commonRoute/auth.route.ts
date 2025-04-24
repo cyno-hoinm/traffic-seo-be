@@ -5,8 +5,8 @@ import {
   loginUser,
   refreshToken,
   registerUser,
-} from "../../controllers/commonController/auth.controller";
-import { authenticateToken } from "../../middleware/auth";
+} from "../../../controllers/commonController/auth.controller";
+import { authenticateToken } from "../../../middleware/auth";
 
 const router = express.Router();
 

@@ -13,7 +13,7 @@ import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
 import { startBackupService } from "./services/backUpDatabase.service";
 import { startEmailService } from "./services/sendMail.service";
-import callbackRoute from "./routes/common.route/callback.route";
+import callbackRoute from "./routes/system.route/moneyRoute/callback.route";
 import bodyParser from "body-parser";
 
 dotenv.config();

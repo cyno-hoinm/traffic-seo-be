@@ -4,8 +4,8 @@ import {
   createKeyword,
   getKeywordById,
   updateKeyword,
-} from "../../controllers/coreController/keyword.controller"; // Adjust path
-import { authorization } from "../../middleware/auth";
+} from "../../../controllers/coreController/keyword.controller"; // Adjust path
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { authorization } from "../../middleware/auth";
+import { authorization } from "../../../middleware/auth";
 import {
   createConfig,
   deleteConfig,
@@ -7,7 +7,7 @@ import {
   getConfigById,
   getConfigByName,
   updateConfig,
-} from "../../controllers/commonController/config.controller";
+} from "../../../controllers/commonController/config.controller";
 
 const router = express.Router();
 
