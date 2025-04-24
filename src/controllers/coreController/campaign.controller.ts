@@ -10,7 +10,7 @@ import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import { DistributionType } from "../../enums/distribution.enum";
 import { LinkStatus } from "../../enums/linkStatus.enum";
-import { sequelizeSystem } from "../../database/postgreDB/config.database";
+import { sequelizeSystem } from "../../database/mySQL/config.database";
 import { Sequelize, Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";

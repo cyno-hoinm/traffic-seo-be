@@ -9,7 +9,7 @@ import {
   dbPort,
   dbUser,
   MAX_BACKUPS,
-} from "../database/postgreDB/config.database";
+} from "../database/mySQL/config.database";
 
 config();
 

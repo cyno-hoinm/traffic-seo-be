@@ -1,6 +1,6 @@
 import { Server } from "http";
 import { logger } from "../config/logger.config";
-import { disconnectDB } from "../database/postgreDB/connect";
+import { disconnectDB } from "../database/mySQL/connect";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
