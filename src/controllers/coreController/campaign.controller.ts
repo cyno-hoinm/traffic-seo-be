@@ -178,7 +178,6 @@ export const createCampaign = async (
       userId,
       countryId,
       name,
-      type,
       device,
       title,
       startDate,
@@ -196,7 +195,6 @@ export const createCampaign = async (
       !userId ||
       !countryId ||
       !name ||
-      !type ||
       !device ||
       !title ||
       !startDate ||
@@ -347,7 +345,6 @@ export const createCampaign = async (
             userId,
             countryId,
             name,
-            type,
             device,
             title,
             startDate: start,

@@ -217,10 +217,6 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                 type: string
  *                 description: Name of the campaign
  *                 example: "Summer Sale"
- *               type:
- *                 type: string
- *                 description: Type of the campaign
- *                 example: "PPC"
  *               device:
  *                 type: string
  *                 description: Device target
@@ -546,9 +542,6 @@ router.post("/", authorization(["create-campaign"]), createCampaign);
  *                     name:
  *                       type: string
  *                       example: "Summer Sale"
- *                     type:
- *                       type: string
- *                       example: "PPC"
  *                     device:
  *                       type: string
  *                       example: "Mobile"

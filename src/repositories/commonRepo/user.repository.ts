@@ -24,7 +24,7 @@ export const findUserByIdRepo = async (
 ): Promise<UserAttributes | null> => {
   try {
     const user = await User.findByPk(id, {
-      attributes: { exclude: ["roleId", "password"] },
+      attributes: { exclude: ["roleId"] },
       include: [
         {
           model: Role,

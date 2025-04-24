@@ -1,12 +1,17 @@
 import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import {
+  createUserRepo,
   findUserByEmailRepo,
+  findUserByIdRepo,
+  findUserByUsernameRepo,
   getUserPermissions,
+  updateUserOneFieldRepo,
 } from "../../repositories/commonRepo/user.repository";
 import {
   blacklistToken,
   comparePassword,
+  hashedPasswordString,
   isTokenBlacklisted,
   removeSensitivity,
   signToken,
@@ -16,6 +21,7 @@ import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { ttlInSecondsGlobal } from "../../constants/redis.constant";
 import { getWalletByUserIdRepo } from "../../repositories/moneyRepo/wallet.repository";
 import { UserAttributes } from "../../interfaces/User.interface";
+import { queueEmail } from "../../services/sendMail.service";
 
 export const loginUser = async (
   req: Request,
@@ -194,6 +200,204 @@ export const refreshToken = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const registerUser = async (
+  req: Request,
+  res: Response<ResponseType<UserAttributes>>
+): Promise<void> => {
+  try {
+    const { username, password, email } = req.body;
+
+    // Validate input
+    if (
+      !username ||
+      typeof username !== "string" ||
+      username.trim().length < 3
+    ) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Username is required and must be at least 3 characters",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (!password || typeof password !== "string" || password.length < 6) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Password is required and must be at least 6 characters",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (!email || typeof email !== "string") {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Valid email is required",
+        error: "Invalid field",
+      });
+      return;
+    }
+    // Check if user already exists
+    const existingUserByEmail = await findUserByEmailRepo(email);
+    if (existingUserByEmail) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "User creation failed",
+        error: "Email already exists",
+      });
+      return;
+    }
+
+    const existingUserByUsername = await findUserByUsernameRepo(username);
+    if (existingUserByUsername) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "User creation failed",
+        error: "Username already exists",
+      });
+      return;
+    }
+    // Hash password
+    const hashedPassword = await hashedPasswordString(password, 10);
+
+    // Prepare user data with default roleId
+    const userData: UserAttributes = {
+      username,
+      password: hashedPassword,
+      email,
+      roleId: 2,
+      isDeleted: false,
+    };
+
+    // Create user using repository
+    const user = await createUserRepo(userData);
+    if (user) {
+      await queueEmail(user.email, "Welcome to Cyno Traffic System", "<p>Tôi yêu em</p>");
+    }
+    // Return success response (exclude password)
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "User registered successfully",
+      data: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        roleId: user.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error registering user",
+      error: error.message,
+    });
+    return;
+  }
+};
+
+export const changePassword = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<null>>
+): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.data?.id;
+
+    // Validate authentication
+    if (!userId) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Authentication required",
+        error: "Unauthorized",
+      });
+      return;
+    }
+
+    // Validate input
+    if (
+      !currentPassword ||
+      typeof currentPassword !== "string" ||
+      currentPassword.length < 6
+    ) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message:
+          "Current password is required and must be at least 6 characters",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (
+      !newPassword ||
+      typeof newPassword !== "string" ||
+      newPassword.length < 6
+    ) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "New password is required and must be at least 6 characters",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    // Fetch user to verify current password
+    const user = await findUserByIdRepo(userId);
+    if (!user) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+    // Verify current password
+    const isPasswordValid = await comparePassword(
+      currentPassword,
+      user.password ? user.password.toString() : ""
+    );
+    if (!isPasswordValid) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Incorrect current password",
+        error: "Authentication failed",
+      });
+      return;
+    }
+
+    // Hash new password
+    const hashedNewPassword = await hashedPasswordString(newPassword, 10);
+
+    // Update password using repository
+    await updateUserOneFieldRepo(userId, "password", hashedNewPassword);
+
+    // Return success response
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Password changed successfully",
+    });
+  } catch (error: any) {
+    if (error.name === "ValidationError") {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: error.message,
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error changing password",
       error: error.message,
     });
   }

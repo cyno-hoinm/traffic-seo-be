@@ -90,7 +90,6 @@ export const createCampaignRepo = async (
     userId: number;
     countryId: number;
     name: string;
-    type: string;
     device: string;
     title: string;
     startDate: Date;
