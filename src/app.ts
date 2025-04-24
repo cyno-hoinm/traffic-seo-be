@@ -33,6 +33,7 @@ if (cluster.isPrimary && !isDev) {
     cluster.fork({ WORKER_TYPE: "app" });
   }
   cluster.fork({ WORKER_TYPE: "email" });
+  // cluster.fork({ WORKER_TYPE: "backup" });
   cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
     logger.warn(
       `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
