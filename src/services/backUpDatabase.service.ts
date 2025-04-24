@@ -26,7 +26,6 @@ async function createBackup() {
     await sequelizeSystem.query(`CREATE DATABASE \`${backupDbName}\``);
     logger.info(`Backup database is starting`);
 
-
     // Connect to the source database
     const sourceSequelize = new Sequelize(dbName, dbUser, dbPassword, {
       host: dbHost,
@@ -324,9 +323,9 @@ async function createBackup() {
           // );
         } catch (error: any) {
           // logger.error("Cannot backup database")
-          // console.warn(
-          //   `Failed to create index "${keyName}" for "${tableName}": ${error.message}`
-          // );
+          console.warn(
+            `Failed to create index "${keyName}" for "${tableName}": ${error.message}`
+          );
           // Continue to avoid stopping the backup process
         }
       }
@@ -394,7 +393,7 @@ async function createBackup() {
     await sourceSequelize.close();
     await backupSequelize.query("COMMIT");
     await backupSequelize.close();
-    logger.info("Backup database is done")
+    logger.info("Backup database is done");
     // Manage backups to keep only the latest MAX_BACKUPS
     await manageBackups();
   } catch (error) {
@@ -408,36 +407,31 @@ async function createBackup() {
 
 // Manage backup databases to keep only the latest MAX_BACKUPS
 async function manageBackups(): Promise<void> {
-  try {
-    // Query all databases matching the backup pattern
-    const result = await sequelizeSystem.query(
-      `SHOW DATABASES LIKE 'backup_${dbName}%'`,
-      {
-        type: QueryTypes.SELECT,
-      }
-    );
-
-    // Sort backup databases by timestamp (newest first)
-    const backupDbs = result
-      .map((row: any) => Object.values(row)[0] as string)
-      .sort((a, b) => {
-        const timeA = a.match(/backup_.*_([\d-T]+)_/)?.[1];
-        const timeB = b.match(/backup_.*_([\d-T]+)_/)?.[1];
-        if (!timeA || !timeB) return 0;
-        return new Date(timeB).getTime() - new Date(timeA).getTime();
-      });
-
-    // Drop older databases if exceeding MAX_BACKUPS
-    if (backupDbs.length > MAX_BACKUPS) {
-      const dbsToDelete = backupDbs.slice(MAX_BACKUPS);
-      for (const db of dbsToDelete) {
-        await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${db}\``);
-        // console.log(`Deleted old backup database: ${db}`);
-      }
+  // Query all databases matching the backup pattern
+  const result = await sequelizeSystem.query(
+    `SHOW DATABASES LIKE 'backup_${dbName}%'`,
+    {
+      type: QueryTypes.SELECT,
     }
-  } catch (error) {
-    // console.error("Error managing backups:", error);
-    throw error;
+  );
+
+  // Sort backup databases by timestamp (newest first)
+  const backupDbs = result
+    .map((row: any) => Object.values(row)[0] as string)
+    .sort((a, b) => {
+      const timeA = a.match(/backup_.*_([\d-T]+)_/)?.[1];
+      const timeB = b.match(/backup_.*_([\d-T]+)_/)?.[1];
+      if (!timeA || !timeB) return 0;
+      return new Date(timeB).getTime() - new Date(timeA).getTime();
+    });
+
+  // Drop older databases if exceeding MAX_BACKUPS
+  if (backupDbs.length > MAX_BACKUPS) {
+    const dbsToDelete = backupDbs.slice(MAX_BACKUPS);
+    for (const db of dbsToDelete) {
+      await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${db}\``);
+      // console.log(`Deleted old backup database: ${db}`);
+    }
   }
 }
 // Initialize and start backup service
@@ -455,8 +449,8 @@ export async function startBackupService() {
 
     // Run initial backup
     // await createBackup();
-  } catch (error) {
-    // console.error("Failed to start backup service:", error);
+  } catch (error: any) {
+    logger.error("Failed to start backup service:", error.message);
     process.exit(1);
   } finally {
     // Close admin connection

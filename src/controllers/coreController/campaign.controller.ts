@@ -11,7 +11,7 @@ import { CampaignStatus } from "../../enums/campaign.enum";
 import { DistributionType } from "../../enums/distribution.enum";
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { sequelizeSystem } from "../../database/mySQL/config.database";
-import { Sequelize, Transaction } from "sequelize";
+import { Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
@@ -22,13 +22,8 @@ import { ErrorType } from "../../types/Error.type";
 import {
   compareWalletAmount,
   getWalletByUserIdRepo,
-  updateWalletBalanceByUserId,
-  updateWalletRepo,
 } from "../../repositories/moneyRepo/wallet.repository";
-import {
-  getWalletById,
-  updateWallet,
-} from "../moneyController/wallet.controller";
+
 import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
@@ -390,7 +385,7 @@ export const createCampaign = async (
               timeEnd: campaign.endDate,
               searchTool: campaign.search,
             };
-            const result = await baseApiPython("keyword/set", dataPython);
+            await baseApiPython("keyword/set", dataPython);
             // console.log(result);
             // Create keyword in database
           }

@@ -9,12 +9,11 @@ import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
-import {  compressAndEncode, generateSignature, uuidToNumber, uuIDv4 } from "../../utils/generate";
+import {  compressAndEncode, uuidToNumber, uuIDv4 } from "../../utils/generate";
 import payOSPaymentMethod from "../../config/payOs.config";
 import { CreateInvoiceInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
-import { PAYOS_WEBHOOK_SECRET } from "../../routes/common.route/payment.route";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (

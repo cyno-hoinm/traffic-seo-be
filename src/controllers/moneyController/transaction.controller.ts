@@ -159,9 +159,9 @@ export const getOneTransaction = async (
   res: Response<ResponseType<TransactionAttributes>>
 ): Promise<void> => {
   try {
-    const { transactionId, type } = req.body;
+    const { transactionId } = req.body;
 
-    const transaction = await getTransactionByIdRepo(transactionId, type);
+    const transaction = await getTransactionByIdRepo(transactionId);
     res.status(statusCode.OK).json({
       status: true,
       message: "Transactions retrieved successfully",

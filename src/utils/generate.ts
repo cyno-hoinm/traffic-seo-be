@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
-
+import { Buffer } from "buffer";
 export const compressAndEncode = (data: object): string => {
   const jsonStr = JSON.stringify(data);
   const buffer = Buffer.from(jsonStr, "utf-8");

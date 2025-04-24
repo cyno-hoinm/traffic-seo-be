@@ -1,6 +1,6 @@
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { Op } from "sequelize";
-import { Campaign, Link, sequelizeSystem } from "../../models/index.model";
+import { Link, sequelizeSystem } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
 import statusCode from "../../constants/statusCode";
@@ -71,7 +71,9 @@ export const createLinkRepo = async (data: {
   }
 };
 
-export const getLinkByIdRepo = async (id: number): Promise<LinkAttributes | null> => {
+export const getLinkByIdRepo = async (
+  id: number
+): Promise<LinkAttributes | null> => {
   try {
     const link = await Link.findByPk(id);
     return link;
@@ -144,7 +146,11 @@ export const updateLinkRepo = async (
   try {
     const link = await Link.findByPk(id);
     if (!link) {
-      throw new ErrorType("NotFoundError", `Link with id ${id} not found`, statusCode.NOT_FOUND);
+      throw new ErrorType(
+        "NotFoundError",
+        `Link with id ${id} not found`,
+        statusCode.NOT_FOUND
+      );
     }
 
     // Create a new object with only defined values
@@ -158,6 +164,10 @@ export const updateLinkRepo = async (
     await link.update(updateData);
     return link;
   } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code || statusCode.INTERNAL_SERVER_ERROR);
+    throw new ErrorType(
+      error.name,
+      error.message,
+      error.code || statusCode.INTERNAL_SERVER_ERROR
+    );
   }
 };

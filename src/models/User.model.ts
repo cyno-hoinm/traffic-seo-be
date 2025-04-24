@@ -78,15 +78,10 @@ User.init(
       afterCreate: async (user) => {
         if (user.roleId === 2) {
           // Check if roleId is 2 (Customer)
-          try {
-            await Wallet.create({
-              userId: user.id, // Link wallet to the newly created user
-              balance: 0, // Default balance
-            });
-          } catch (error) {
-
-            throw error; // Rethrow to rollback transaction if used
-          }
+          await Wallet.create({
+            userId: user.id, // Link wallet to the newly created user
+            balance: 0, // Default balance
+          });
         }
       },
     },
