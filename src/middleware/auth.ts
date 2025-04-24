@@ -57,6 +57,13 @@ export const authenticateToken = async (
       res.status(statusCode.UNAUTHORIZED).json(response);
       return;
     }
+
+    const response: ResponseType<null> = {
+      status: false,
+      message: errorMessage,
+    };
+    res.status(statusCode.UNAUTHORIZED).json(response);
+    return;
   }
 };
 
