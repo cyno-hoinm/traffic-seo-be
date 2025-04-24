@@ -2,17 +2,11 @@ import { Sequelize, QueryTypes } from "sequelize";
 import cron from "node-cron";
 import { config } from "dotenv";
 import { sequelizeSystem } from "../models/index.model";
-import {
-  dbHost,
-  dbName,
-  dbPassword,
-  dbPort,
-  dbUser,
-  MAX_BACKUPS,
-} from "../database/mySQL/config.database";
+
 import { logger } from "../config/logger.config";
 import { connectDB } from "../database/mySQL/connect";
 import { generateBackupDbName } from "../utils/generate";
+import { dbHost, dbName, dbPassword, dbPort, dbUser, MAX_BACKUPS } from "../config/database.config";
 
 config();
 
