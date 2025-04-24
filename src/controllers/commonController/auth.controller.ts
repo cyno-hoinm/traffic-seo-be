@@ -278,7 +278,7 @@ export const registerUser = async (
     // Create user using repository
     const user = await createUserRepo(userData);
     if (user) {
-      await queueEmail(user.email, "Welcome to Cyno Traffic System", "<p>Tôi yêu em</p>");
+      await queueEmail(user.email, "Welcome to Cyno Traffic System", "<p>Minh Hội provip123</p>");
     }
     // Return success response (exclude password)
     res.status(statusCode.OK).json({
