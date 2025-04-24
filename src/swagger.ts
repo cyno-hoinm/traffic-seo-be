@@ -8,9 +8,9 @@ const SwaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Traffic SEO CYNO - Admin API",
+      title: "Traffic SEO CYNO - API",
       version: "1.0.0",
-      description: "Backend API for Traffic SEO System - Admin Endpoints",
+      description: "Backend API for Traffic SEO System - Endpoints",
     },
     servers: [
       {
@@ -33,7 +33,14 @@ const SwaggerOptions = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./src/routes/admin.route/*.ts", "./src/routes/common.route/*.ts"], // Ensure this path matches your admin route files
+  apis: [
+    "./src/routes/system.route/*.ts",
+    "./src/routes/system.route/botRoute/*.ts",
+    "./src/routes/system.route/commonRoute/*.ts",
+    "./src/routes/system.route/coreRoute/*.ts",
+    "./src/routes/system.route/moneyRoute/*.ts",
+    "./src/routes/system.route/roleRoute/*.ts"
+  ], // Ensure this path matches your admin route files
 };
 
 // const clientSwaggerOptions = {
