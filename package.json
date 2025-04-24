@@ -45,6 +45,7 @@
     "@types/node": "^22.14.0",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.11.14",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
@@ -66,7 +67,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "lint-staged": "lint-staged",
-    "migration": "npx sequelize-cli db:migrate"
+    "database:import": "node migrations/migrate.js"
   },
   "keywords": [],
   "author": "",
