@@ -33,7 +33,7 @@ if (cluster.isPrimary && !isDev) {
     cluster.fork({ WORKER_TYPE: "app" });
   }
   cluster.fork({ WORKER_TYPE: "email" });
-  // cluster.fork({ WORKER_TYPE: "backup" });
+  cluster.fork({ WORKER_TYPE: "backup" });
   cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
     logger.warn(
       `Worker ${worker.process.pid} died with code ${code} and signal ${signal}`
@@ -72,7 +72,7 @@ if (cluster.isPrimary && !isDev) {
 
   startServer();
   startEmailService();
-  // startBackupService()
+  startBackupService()
   // // Graceful shutdown with Sequelize
   process.on("SIGTERM", async () => {
     logger.info(`Worker ${process.pid} received SIGTERM`);

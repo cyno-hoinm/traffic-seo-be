@@ -11,30 +11,16 @@ import {
   MAX_BACKUPS,
 } from "../database/mySQL/config.database";
 import { logger } from "../config/logger.config";
+import { connectDB } from "../database/mySQL/connect";
+import { generateBackupDbName } from "../utils/generate";
 
 config();
 
 // Generate a unique backup database name with timestamp
-function generateBackupDbName() {
-  const now = new Date();
-  // Adjust to Vietnam time (UTC+7): Add 7 hours (7 * 60 * 60 * 1000 milliseconds)
-  const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-  
-  // Format to YYYYMMDD_HHMMSS (similar to ISO but without T and milliseconds)
-  const year = vietnamTime.getUTCFullYear();
-  const month = String(vietnamTime.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(vietnamTime.getUTCDate()).padStart(2, "0");
-  const hours = String(vietnamTime.getUTCHours()).padStart(2, "0");
-  const minutes = String(vietnamTime.getUTCMinutes()).padStart(2, "0");
-  const seconds = String(vietnamTime.getUTCSeconds()).padStart(2, "0");
-  
-  const timestamp = `${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
-  return `backup_${dbName}_${timestamp}`.slice(0, 63);
-}
 
 // Create a new backup database and copy schema/data using Sequelize
 async function createBackup() {
-  const backupDbName = generateBackupDbName();
+  const backupDbName = generateBackupDbName(dbName);
   try {
     // Create new database
     await sequelizeSystem.query(`CREATE DATABASE \`${backupDbName}\``);
@@ -454,22 +440,10 @@ async function manageBackups(): Promise<void> {
     throw error;
   }
 }
-
-// Test database connection
-async function testConnection() {
-  try {
-    await sequelizeSystem.authenticate();
-    // console.log("Database connections established successfully.");
-  } catch (error) {
-    // console.error("Unable to connect to databases:", error);
-    throw error;
-  }
-}
-
 // Initialize and start backup service
 export async function startBackupService() {
   try {
-    await testConnection();
+    await connectDB();
     logger.info(`Backup database service worker ${process.pid} started`);
     // Schedule backup every 2 hours
     cron.schedule("0 */2 * * *", async () => {
@@ -480,7 +454,7 @@ export async function startBackupService() {
     // console.log("Backup service started. Backups will run every 2 hours.");
 
     // Run initial backup
-    await createBackup();
+    // await createBackup();
   } catch (error) {
     // console.error("Failed to start backup service:", error);
     process.exit(1);
