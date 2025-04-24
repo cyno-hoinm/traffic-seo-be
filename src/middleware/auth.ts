@@ -42,16 +42,21 @@ export const authenticateToken = async (
     let errorMessage = "Unauthorized: Invalid token";
     if (error instanceof jwt.TokenExpiredError) {
       errorMessage = "Unauthorized: Token expired";
+      const response: ResponseType<null> = {
+        status: false,
+        message: errorMessage,
+      };
+      res.status(statusCode.EXPIRED_TOKEN).json(response);
+      return;
     } else if (error instanceof jwt.JsonWebTokenError) {
       errorMessage = "Unauthorized: Invalid token";
+      const response: ResponseType<null> = {
+        status: false,
+        message: errorMessage,
+      };
+      res.status(statusCode.UNAUTHORIZED).json(response);
+      return;
     }
-
-    const response: ResponseType<null> = {
-      status: false,
-      message: errorMessage,
-    };
-    res.status(statusCode.UNAUTHORIZED).json(response);
-    return;
   }
 };
 
