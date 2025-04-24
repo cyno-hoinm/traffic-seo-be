@@ -95,7 +95,7 @@ Campaign.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(CampaignStatus)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     isDeleted: {

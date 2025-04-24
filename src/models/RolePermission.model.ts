@@ -23,11 +23,11 @@ RolePermission.init(
     },
     roleId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     permissionId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
      isDeleted: {
       type: DataTypes.BOOLEAN,

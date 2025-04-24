@@ -7,10 +7,10 @@ export const connectDB = async (): Promise<void> => {
   try {
     await sequelizeSystem.authenticate();
     // await initializePermissions(); // Initialize permissions if needed
-    // await sequelizeSystem.sync({alter: true });
-    logger.info("Connected to PostgreSQL");
+    // await sequelizeSystem.sync({ force: false, alter: true });
+    logger.info("Connected to MySQL");
   } catch (error) {
-    logger.error("Failed to connect to PostgreSQL:", error);
+    logger.error("Failed to connect to MySQL:", error);
     throw error;
   }
 };

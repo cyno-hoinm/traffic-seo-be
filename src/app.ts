@@ -4,7 +4,7 @@ import cluster from "cluster";
 import os from "os";
 import debug from "debug";
 import { logger } from "./config/logger.config";
-import { connectDB } from "./database/postgreDB/connect"; // Export sequelizeSystem
+import { connectDB } from "./database/mySQL/connect"; // Export sequelizeSystem
 import { gracefulShutdown } from "./utils/utils";
 import { configureRoutes } from "./routes/index.route";
 import { configureMiddleware } from "./middleware";

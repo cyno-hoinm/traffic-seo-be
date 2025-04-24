@@ -39,11 +39,11 @@ Transaction.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(TransactionStatus)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM(...Object.values(TransactionType)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     referenceId : {

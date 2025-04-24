@@ -18,7 +18,8 @@ export const MAX_BACKUPS = 5;
 export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
-  dialect: "postgres",
+  logging : false,
+  dialect: "mysql",
   timezone: "+07:00",
   pool: {
     max: maxPoolSize,

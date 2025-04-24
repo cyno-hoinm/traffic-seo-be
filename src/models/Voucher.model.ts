@@ -29,7 +29,7 @@ Voucher.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM(...Object.values(VoucherStatus)),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     isDeleted: {
