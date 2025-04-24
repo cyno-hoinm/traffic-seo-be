@@ -3,7 +3,7 @@ import { DistributionType } from "../../enums/distribution.enum";
 import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
-
+import statusCode from "../../constants/statusCode";
 
 export const getKeywordListRepo = async (filters: {
   campaignId?: number;
@@ -50,7 +50,7 @@ export const getKeywordListRepo = async (filters: {
   }
 };
 
-export const  createKeywordRepo = async (data: {
+export const createKeywordRepo = async (data: {
   campaignId: number;
   name: string;
   urls: string[];
@@ -189,7 +189,7 @@ export const updateKeywordRepo = async (
       throw new ErrorType(
         "NotFoundError",
         `Keyword with id ${id} not found`,
-        404
+        statusCode.NOT_FOUND
       );
     }
 
@@ -204,6 +204,10 @@ export const updateKeywordRepo = async (
     await keyword.update(updateData);
     return keyword;
   } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code || 500);
+    throw new ErrorType(
+      error.name,
+      error.message,
+      error.code || statusCode.INTERNAL_SERVER_ERROR
+    );
   }
 };

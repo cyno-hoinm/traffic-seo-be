@@ -1,6 +1,6 @@
 import { logger } from "../../config/logger.config";
 import { sequelizeSystem } from "../../models/index.model";
-import { initializePermissions } from "./initPermission";
+// import { initializePermissions } from "./initPermission";
 
 // Export connect and disconnect functions
 export const connectDB = async (): Promise<void> => {

@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { TransactionAttributes } from "../interfaces/Transaction.interface";
-import { Deposit, sequelizeSystem, Wallet } from "./index.model";
+import { sequelizeSystem, Wallet } from "./index.model";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
 import { TransactionType } from "../enums/transactionType.enum";
 
@@ -12,7 +12,7 @@ class Transaction
   public walletId!: number;
   public amount!: number;
   public status!: TransactionStatus;
-  public type!: TransactionType
+  public type!: TransactionType;
   public isDeleted!: boolean;
   public referenceId!: string | null;
   public readonly createdAt!: Date;
@@ -46,11 +46,11 @@ Transaction.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    referenceId : {
+    referenceId: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-     isDeleted: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,

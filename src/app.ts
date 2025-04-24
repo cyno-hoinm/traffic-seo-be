@@ -11,10 +11,10 @@ import { configureMiddleware } from "./middleware";
 import { Server } from "http";
 import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
-import { startBackupService } from "./services/backUpDatabase.service";
+// import { startBackupService } from "./services/backUpDatabase.service";
 import callbackRoute from "./routes/common.route/callback.route";
 import bodyParser from "body-parser";
-import { startEmailService } from "./services/sendMail.service";
+// import { startEmailService } from "./services/sendMail.service";
 
 dotenv.config();
 

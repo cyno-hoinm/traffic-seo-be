@@ -1,33 +1,45 @@
 import { Request, Response } from "express";
 import statusCode from "../../constants/statusCode";
-import { CreateInvoiceInput, CreatePayoutInput } from "../../interfaces/Oxapay.interface";
+import {
+  CreateInvoiceInput,
+  CreatePayoutInput,
+} from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
-import { generateInvoice, generatePayout, getCurrenciesService, getMyIP } from "../../services/oxapay.service";
+import {
+  generateInvoice,
+  generatePayout,
+  getCurrenciesService,
+  getMyIP,
+} from "../../services/oxapay.service";
+import { decodeAndDecompress } from "../../utils/generate";
+import { createDepositRepo } from "../../repositories/moneyRepo/deposit.repository";
+import crypto from "crypto";
+import { DepositStatus } from "../../enums/depositStatus.enum";
 
 export const createInvoice = async (
   req: Request,
-  res: Response): Promise<void> => {
+  res: Response
+): Promise<void> => {
   try {
-    const { amount, currency } = req.body
+    const { amount, currency } = req.body;
 
     const data: CreateInvoiceInput = {
       amount: amount,
       currency: currency,
       lifeTime: parseInt(String(oxapayConfig.lifeTime)),
       fee_paid_by_payer: parseInt(String(oxapayConfig.feePaidByPayer)),
-      under_paid_cover:  parseInt(String(oxapayConfig.underPaidCover)),
+      under_paid_cover: parseInt(String(oxapayConfig.underPaidCover)),
       thanks_message: "Auto Ranker!",
       callback_url: "",
-      return_url: "/"
-    }
+      return_url: "/",
+    };
 
-    const result = await generateInvoice(data)
+    const result = await generateInvoice(data);
     res.status(statusCode.OK).json({
       message: "",
       status: true,
-      data: result
-    })
-
+      data: result,
+    });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
@@ -35,22 +47,20 @@ export const createInvoice = async (
       error: error.message,
     });
   }
-}
+};
 
 export const getCurrencies = async (
   req: Request,
-  res: Response): Promise<void> => {
+  res: Response
+): Promise<void> => {
   try {
-
-
-    const result = await getCurrenciesService()
+    const result = await getCurrenciesService();
 
     res.status(statusCode.OK).json({
       message: "List currencies!",
       status: true,
-      data: result.list
-    })
-
+      data: result.list,
+    });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
@@ -58,29 +68,26 @@ export const getCurrencies = async (
       error: error.message,
     });
   }
-}
+};
 
-export const withDraw = async (
-  req: Request,
-  res: Response): Promise<void> => {
+export const withDraw = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { amount, currency, description } = req.body
+    const { amount, currency, description } = req.body;
     const data: CreatePayoutInput = {
       key: oxapayConfig.payoutKey,
       callbackUrl: "",
       address: oxapayConfig.payoutAddress,
       currency: currency,
       amount: amount,
-      description: description || ""
-    }
+      description: description || "",
+    };
 
-    const result = await generatePayout(data)
+    const result = await generatePayout(data);
     res.status(statusCode.OK).json({
       message: "",
       status: true,
-      data: result
-    })
-
+      data: result,
+    });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
@@ -88,21 +95,16 @@ export const withDraw = async (
       error: error.message,
     });
   }
-}
+};
 
-export const checkMyIP = async (
-  req: Request,
-  res: Response): Promise<void> => {
+export const checkMyIP = async (req: Request, res: Response): Promise<void> => {
   try {
-
-
-    const result = await getMyIP()
+    const result = await getMyIP();
     res.status(statusCode.OK).json({
       message: "",
       status: true,
-      data: result
-    })
-
+      data: result,
+    });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
@@ -110,19 +112,56 @@ export const checkMyIP = async (
       error: error.message,
     });
   }
-}
+};
 
-export const callback = async (
+export async function handleOxaPayWebhook(
   req: Request,
-  res: Response): Promise<void> => {
+  res: Response
+): Promise<void> {
   try {
+    const rawBody = (req as any).rawBody;
+    console.log("RawBody: ", rawBody);
+    const hmacHeader = req.headers["hmac"] as string;
 
+    if (!rawBody || !hmacHeader) {
+      res.status(statusCode.BAD_REQUEST).send("Missing body or HMAC");
+      return;
+    }
 
-  } catch (error: any) {
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      status: false,
-      message: "Error fetching deposits",
-      error: error.message,
+    const data = req.body;
+    const secret =
+      data.type === "payout" ? oxapayConfig.payoutKey : oxapayConfig.merchant;
+    const calculatedHmac = crypto
+      .createHmac("sha512", secret)
+      .update(rawBody)
+      .digest("hex");
+
+    if (calculatedHmac !== hmacHeader) {
+      console.warn("❌ Invalid HMAC signature from OxaPay");
+      res.status(statusCode.BAD_REQUEST).send("Invalid HMAC");
+      return;
+    }
+
+    console.log("✅ Valid OxaPay callback:", data);
+
+    // Process logic
+    console.log("Test oxapay callback!!!", data);
+    const orderInfo = decodeAndDecompress(data.order_id);
+    await createDepositRepo({
+      createdBy: orderInfo.userId,
+      userId: orderInfo.userId,
+      voucherId: orderInfo.voucherId,
+      amount: data.amount,
+      paymentMethodId: 1,
+      orderId: data.track_id,
+      status: DepositStatus.COMPLETED,
     });
+
+    res.status(statusCode.OK).send("ok");
+  } catch (err: any) {
+    console.error("❌ Callback error:", err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send("Callback processing error");
   }
 }

@@ -1,5 +1,12 @@
 import express from "express";
-import { countCampaignReport, countKeyWordDistribution, countLinksReport, getCampaignReportAll, getCampaignReportUser, getOneCampaignReport } from "../../controllers/coreController/report.controller";
+import {
+  countCampaignReport,
+//   countKeyWordDistribution,
+//   countLinksReport,
+  getCampaignReportAll,
+  getCampaignReportUser,
+  getOneCampaignReport,
+} from "../../controllers/coreController/report.controller";
 import { authorization } from "../../middleware/auth";
 const router = express.Router();
 /**
@@ -68,7 +75,11 @@ const router = express.Router();
  *                 error:
  *                   type: string
  */
-router.post("/campaign-report", authorization(["read-report-admin"]), countCampaignReport);
+router.post(
+  "/campaign-report",
+  authorization(["read-report-admin"]),
+  countCampaignReport
+);
 // /**
 //  * @swagger
 //  * /report/keyword-distribution:
@@ -274,7 +285,11 @@ router.post("/campaign-report", authorization(["read-report-admin"]), countCampa
  *                   description: Details of the error
  *                   example: "Sequelize instance is not defined"
  */
-router.post("/campaigns-report/user", authorization(["read-report"]), getCampaignReportUser);
+router.post(
+  "/campaigns-report/user",
+  authorization(["read-report"]),
+  getCampaignReportUser
+);
 /**
  * @swagger
  * /report/campaigns-report/all:
@@ -357,7 +372,11 @@ router.post("/campaigns-report/user", authorization(["read-report"]), getCampaig
  *                   description: Details of the error
  *                   example: "Sequelize instance is not defined"
  */
-router.post("/campaigns-report/all", authorization(["read-report-admin"]), getCampaignReportAll);
+router.post(
+  "/campaigns-report/all",
+  authorization(["read-report-admin"]),
+  getCampaignReportAll
+);
 /**
  * @swagger
  * /report/campaign-report/campaign:
@@ -432,5 +451,9 @@ router.post("/campaigns-report/all", authorization(["read-report-admin"]), getCa
  *                   description: Details of the error
  *                   example: "Sequelize instance is not defined"
  */
-router.post("/campaign-report/campaign", authorization(["read-report-admin"]), getOneCampaignReport);
-export default router;  
+router.post(
+  "/campaign-report/campaign",
+  authorization(["read-report-admin"]),
+  getOneCampaignReport
+);
+export default router;

@@ -177,7 +177,6 @@ export const getListTransactionRepo = async (filters: {
 
 export const getTransactionByIdRepo = async (
   transactionId: number,
-  type?: TransactionType
 ): Promise<TransactionAttributes> => {
   try {
     const transaction = await Transaction.findByPk(transactionId, {

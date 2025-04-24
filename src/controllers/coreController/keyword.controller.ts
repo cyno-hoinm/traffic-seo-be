@@ -135,17 +135,17 @@ export const createKeyword = async (
       });
       return;
     }
-    const cost = traffic * 1 //cost per traffic
+    const cost = traffic * 1; //cost per traffic
     const keyword = await createKeywordRepo({
       campaignId,
       name,
       urls,
       traffic,
       distribution,
-      cost
+      cost,
     });
 
-    const newKeyword = await baseApiPython("keyword/set", keyword);
+    await baseApiPython("keyword/set", keyword);
 
     res.status(statusCode.CREATED).json({
       status: true,
@@ -221,7 +221,7 @@ export const updateKeyword = async (
     const { id } = req.params;
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
-      throw new ErrorType("ValidationError", "Invalid keyword ID", 400);
+      throw new ErrorType("ValidationError", "Invalid keyword ID", statusCode.BAD_REQUEST);
     }
 
     const data = req.body as Partial<{

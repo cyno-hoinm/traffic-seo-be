@@ -60,11 +60,6 @@ export const loginUser = async (
         .json({ status: false, message: "Invalid email or password" });
       return;
     }
-    // Convert Sequelize model instance to plain object
-    const userPayload = user.toJSON() as UserAttributes;
-
-    // Remove sensitive fields (e.g., password) from payload
-    const { password: _password, ...payload } = userPayload;
     const token = signToken(user.toJSON());
 
     res.status(statusCode.OK).json({

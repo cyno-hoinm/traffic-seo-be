@@ -82,8 +82,6 @@ const permissionCodes = [
 export async function initializePermissions() {
   try {
 
-    let insertedCount = 0;
-
     // Insert each permission with ON CONFLICT DO NOTHING
     for (const code of permissionCodes) {
       const name = generateVietnameseName(code);
@@ -104,10 +102,7 @@ export async function initializePermissions() {
         RETURNING id;
       `;
 
-      const [results] = await sequelizeSystem.query(query);
-      if (results.length > 0) {
-        insertedCount++;
-      }
+      await sequelizeSystem.query(query);
     }
 
     // console.log(`${insertedCount} quyền đã được khởi tạo thành công.`);

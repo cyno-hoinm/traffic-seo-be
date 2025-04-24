@@ -243,7 +243,7 @@ export const updateLink = async (
     const { id } = req.params;
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
-      throw new ErrorType("ValidationError", "Invalid link ID", 400);
+      throw new ErrorType("ValidationError", "Invalid link ID", statusCode.BAD_REQUEST);
     }
 
     const data = req.body as Partial<{

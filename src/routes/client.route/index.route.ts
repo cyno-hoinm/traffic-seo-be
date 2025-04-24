@@ -1,6 +1,6 @@
 import express from "express";
 // import userRoute from "./user.route";
-import authRoute from "../common.route/auth.route"
+// import authRoute from "../common.route/auth.route"
 import oxapayRoute from "../common.route/oxapay.route"
 // import notificationRoute from "../common.route/notification.route"
 // import campaignRoute from "../common.route/campaign.route"
