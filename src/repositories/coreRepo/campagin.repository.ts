@@ -1,6 +1,6 @@
 import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
-import { Campaign, sequelizeSystem, User } from "../../models/index.model";
+import { Campaign, Keyword, Link, sequelizeSystem, User } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 import CampaignType from "../../models/CampaignType.model";
@@ -49,6 +49,18 @@ export const getCampaignListRepo = async (filters: {
           as: "users",
           attributes: ["username"], // Only fetch the username
         },
+        {
+          model: Link,
+          as: "links",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no links
+        },
+        {
+          model: Keyword,
+          as: "keywords",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no keywords
+        },
       ],
     };
 
@@ -83,7 +95,6 @@ export const createCampaignRepo = async (
     title: string;
     startDate: Date;
     endDate: Date;
-    totalTraffic: number;
     domain: string;
     search: string;
     campaignTypeId: CampaignTypeAttributes;
@@ -111,10 +122,23 @@ export const getCampaignByIdRepo = async (
         "name",
         "startDate",
         "endDate",
-        "totalTraffic",
         "domain",
         "createdAt",
         "updatedAt",
+      ],
+      include: [
+        {
+          model: Link,
+          as: "links",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no links
+        },
+        {
+          model: Keyword,
+          as: "keywords",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no keywords
+        },
       ],
       order: [["createdAt", "DESC"]],
     });

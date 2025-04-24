@@ -15,8 +15,9 @@ export interface CampaignAttributes  {
   title: string;
   startDate: Date;
   endDate: Date;
-  totalTraffic: number;
+  totalTraffic?: number;
   cost?: number;
+  totalCost? : number;
   domain: string;
   search: string;
   linksCount?: number;

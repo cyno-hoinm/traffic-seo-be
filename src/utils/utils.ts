@@ -7,6 +7,9 @@ import dotenv from "dotenv";
 import ms from "ms";
 import { redisClient } from "../config/redis.config";
 import { ttlInSecondsGlobal } from "../constants/redis.constant";
+import { LinkAttributes } from "../interfaces/Link.interface";
+import { KeywordAttributes } from "../interfaces/Keyword.interface";
+import { CampaignMetrics } from "../interfaces/CampaignMetrics.interface";
 
 dotenv.config();
 /**
@@ -101,3 +104,37 @@ export function parseChargeMoneyString(description: string) {
     createdBy: parseInt(match[3], 10),
   };
 }
+
+export const calculateCampaignMetrics = (
+  links: LinkAttributes[] = [],
+  keywords: KeywordAttributes[] = []
+): CampaignMetrics => {
+  // Calculate total traffic
+  const totalTraffic =
+    links.reduce((sum, link) => sum + (Number(link.traffic) || 0), 0) +
+    keywords.reduce((sum, keyword) => sum + (Number(keyword.traffic) || 0), 0);
+
+  // Calculate total cost with validation
+  const totalCost =
+    links.reduce((sum, link) => {
+      const cost = Number(link.cost);
+      if (isNaN(cost)) {
+        console.warn(`Invalid cost for link ${link.id}: ${link.cost}`);
+        return sum;
+      }
+      return sum + cost;
+    }, 0) +
+    keywords.reduce((sum, keyword) => {
+      const cost = Number(keyword.cost);
+      if (isNaN(cost)) {
+        console.warn(`Invalid cost for keyword ${keyword.id}: ${keyword.cost}`);
+        return sum;
+      }
+      return sum + cost;
+    }, 0);
+
+  return {
+    totalTraffic,
+    totalCost,
+  };
+};

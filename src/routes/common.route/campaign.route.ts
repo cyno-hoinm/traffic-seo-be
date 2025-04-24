@@ -22,6 +22,10 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
+ *               key:
+ *                 type: string
+ *                 description: Filter by key
+ *                 example: ""
  *               userId:
  *                 type: integer
  *                 description: Filter by user ID
@@ -119,12 +123,6 @@ const router = express.Router();
  *                             type: string
  *                             format: date-time
  *                             example: "2025-04-20T23:59:59"
- *                           totalTraffic:
- *                             type: integer
- *                             example: 0
- *                           cost:
- *                             type: number
- *                             example: 500.00
  *                           domain:
  *                             type: string
  *                             example: "example.com"
@@ -202,8 +200,6 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *               - title
  *               - startDate
  *               - end PaiDate
- *               - totalTraffic
- *               - cost
  *               - domain
  *               - search
  *               - campaignTypeId
@@ -243,14 +239,6 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                 format: date-time
  *                 description: End date of the campaign
  *                 example: "2025-04-20T23:59:59Z"
- *               totalTraffic:
- *                 type: integer
- *                 description: Total traffic for the campaign
- *                 example: 1000
- *               cost:
- *                 type: number
- *                 description: Cost of the campaign
- *                 example: 500.00
  *               domain:
  *                 type: string
  *                 description: Target domain
