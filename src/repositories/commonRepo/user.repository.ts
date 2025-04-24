@@ -164,8 +164,8 @@ export const searchUserListRepo = async (
     const where: any = { isDeleted: false };
     if (key) {
       where[Op.and] = [
-        { email: { [Op.iLike]: `%${key}%` } },
-        { username: { [Op.iLike]: `%${key}%` } },
+        { email: { [Op.like]: `%${key}%` } },
+        { username: { [Op.like]: `%${key}%` } },
       ];
     }
 

@@ -90,10 +90,10 @@ export const searchPermissionRepo = async (
 
     if (key) {
       where.name = {
-        [Op.iLike]: `%${key}%`, // Case-insensitive search
+        [Op.like]: `%${key}%`, // Case-insensitive search
       };
       where.code = {
-        [Op.iLike]: `%${key}%`, // Case-insensitive search
+        [Op.like]: `%${key}%`, // Case-insensitive search
       };
     }
 
