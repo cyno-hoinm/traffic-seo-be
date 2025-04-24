@@ -85,24 +85,22 @@ export const deleteRoleRepo = async (id: number): Promise<boolean> => {
 };
 
 export const searchRoleRepo = async (
-  key: string |undefined,
+  key: string | undefined,
   page: number,
   limit: number
-
 ): Promise<{ roles: RoleAttributes[]; total: number }> => {
   try {
-
     const offset = (page - 1) * limit;
 
     // Build where clause for search
-    const where: WhereOptions<Role> = {
+    const where: any = {
       isDeleted: false,
     };
 
     if (key) {
-      where.name = {
-        [Op.iLike]: `%${key}%`, // Case-insensitive search
-      };
+      where[Op.or] = [
+        { name: { [Op.like]: `%${key}%` } }, // Use Op.like for MySQL
+      ];
     }
 
     // Query roles with pagination and search

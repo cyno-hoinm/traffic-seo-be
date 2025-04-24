@@ -25,9 +25,9 @@ export const getCampaignListRepo = async (filters: {
     // Add search by key (name, domain, search)
     if (filters.key) {
       where[Op.or] = [
-        { name: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for name
-        { domain: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for domain
-        { search: { [Op.iLike]: `%${filters.key}%` } }, // Case-insensitive search for search
+        { name: { [Op.like]: `%${filters.key}%` } }, // Case-insensitive search for name
+        { domain: { [Op.like]: `%${filters.key}%` } }, // Case-insensitive search for domain
+        { search: { [Op.like]: `%${filters.key}%` } }, // Case-insensitive search for search
       ];
     }
 
