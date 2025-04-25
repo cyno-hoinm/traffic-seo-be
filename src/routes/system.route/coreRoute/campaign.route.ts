@@ -618,7 +618,7 @@ router.get("/:id", authorization(["read-campaign"]), getCampaignById);
 /**
  * @swagger
  * /campaigns/stop/{id}:
- *   post:
+ *   put:
  *     summary: Stop a campaign by ID
  *     description: Pauses a campaign by setting its status to PAUSED, updating the endDate to the current time, and setting all associated keywords and links to INACTIVE.
  *     tags:
@@ -745,5 +745,5 @@ router.get("/:id", authorization(["read-campaign"]), getCampaignById);
  *                   type: integer
  *                   example: 500
  */
-router.post("/stop/:id", authorization(["read-campaign"]), stopCampaign);
+router.put("/stop/:id", authorization(["read-campaign"]), stopCampaign);
 export default router;
