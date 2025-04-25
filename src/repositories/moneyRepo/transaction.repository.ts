@@ -6,7 +6,7 @@ import {
   User,
   Wallet,
 } from "../../models/index.model";
-import { Op, QueryTypes, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { Transaction as SequelizeTransaction } from "sequelize";
 import { TransactionType } from "../../enums/transactionType.enum";
@@ -177,93 +177,16 @@ export const getListTransactionRepo = async (filters: {
 
 export const getTransactionByIdRepo = async (
   transactionId: number
-): Promise<any> => {
+): Promise<TransactionAttributes> => {
   try {
-    const [transaction]: any[] = await sequelizeSystem.query(
-      `
-      SELECT 
-        t.id,
-        t.walletId,
-        t.amount,
-        t.status,
-        t.type,
-        t.referenceId,
-        t.isDeleted,
-        t.createdAt,
-        t.updatedAt,
-        w.id AS wallet_id,
-        c.name AS campaign_name,
-        d.id AS deposit_id,
-        d.orderId AS deposit_orderId,
-        d.userId AS deposit_userId,
-        d.voucherId AS deposit_voucherId,
-        d.paymentMethodId AS deposit_paymentMethodId,
-        d.amount AS deposit_amount,
-        d.status AS deposit_status,
-        d.acceptedBy AS deposit_acceptedBy,
-        d.createdBy AS deposit_createdBy,
-        d.isDeleted AS deposit_isDeleted,
-        d.createdAt AS deposit_createdAt,
-        d.updatedAt AS deposit_updatedAt
-      FROM transactions t
-      LEFT JOIN deposits d ON d.id = t.referenceId AND d.isDeleted = false
-      LEFT JOIN wallets w ON w.id = t.walletId
-
-      WHERE t.id = :transactionId;
-      `,
-      {
-        replacements: { transactionId },
-        type: QueryTypes.SELECT,
-      }
-    );
+    const transaction = await Transaction.findByPk(transactionId);
 
     if (!transaction) {
       throw new ErrorType("NotFoundError", "Transaction not found");
     }
 
-    return {
-      id: transaction.id,
-      walletId: transaction.walletId,
-      wallet: transaction.wallet_id
-        ? {
-            id: transaction.wallet_id,
-            name: transaction.wallet_name,
-            // Map other wallet fields
-          }
-        : undefined,
-      amount: transaction.amount,
-      campaign: transaction.campaign_id
-        ? {
-            id: transaction.campaign_id,
-            name: transaction.campaign_name,
-            // Map other campaign fields
-          }
-        : undefined,
-      status: transaction.status,
-      type: transaction.type,
-      referenceId: transaction.referenceId,
-      isDeleted: transaction.isDeleted,
-      createdAt: transaction.createdAt,
-      updatedAt: transaction.updatedAt,
-      deposit: transaction.deposit_id
-        ? {
-            id: transaction.deposit_id,
-            orderId: transaction.deposit_orderId,
-            userId: transaction.deposit_userId,
-            voucherId: transaction.deposit_voucherId,
-            paymentMethodId: transaction.deposit_paymentMethodId,
-            amount: transaction.deposit_amount,
-            status: transaction.deposit_status,
-            acceptedBy: transaction.deposit_acceptedBy,
-            createdBy: transaction.deposit_createdBy,
-            isDeleted: transaction.deposit_isDeleted,
-            createdAt: transaction.deposit_createdAt,
-            updatedAt: transaction.deposit_updatedAt,
-          }
-        : undefined,
-    };
+    return transaction;
   } catch (error: any) {
-    console.log(error);
     throw new ErrorType(error.name, error.message, error.code);
   }
 };

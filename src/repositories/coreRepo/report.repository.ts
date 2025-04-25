@@ -120,7 +120,6 @@ export const getOneCampaignReportRepo = async (
     const campaign = await Campaign.findOne({
       where: {
         id: campaignId,
-        status: "ACTIVE",
         isDeleted: false,
       },
       attributes: [

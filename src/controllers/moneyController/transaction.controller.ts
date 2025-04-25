@@ -167,7 +167,6 @@ export const getListTransaction = async (
     });
   }
 };
-
 export const getOneTransaction = async (
   req: Request,
   res: Response<ResponseType<TransactionAttributes>>
@@ -175,6 +174,20 @@ export const getOneTransaction = async (
   try {
     const { transactionId } = req.body;
     const transaction = await getTransactionByIdRepo(transactionId);
+    
+    // Base transaction data
+    const transactionData: TransactionAttributes = {
+      id: transaction.id,
+      walletId: transaction.walletId,
+      amount: transaction.amount,
+      status: transaction.status,
+      type: transaction.type,
+      referenceId: transaction.referenceId,
+      isDeleted: transaction.isDeleted,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
+    };
+
     if (transaction.type === TransactionType.PAY_SERVICE) {
       const campaign = await getCampaignByIdRepo(
         Number(transaction.referenceId)
@@ -183,8 +196,8 @@ export const getOneTransaction = async (
         res.status(statusCode.OK).json({
           status: true,
           message:
-            "Transactions retrieved successfully, this transaction do not have campaign",
-          data: transaction,
+            "Transactions retrieved successfully, this transaction does not have a campaign",
+          data: transactionData,
         });
         return;
       }
@@ -193,32 +206,31 @@ export const getOneTransaction = async (
         campaign.links,
         campaign.keywords
       );
+      // Add campaign data to transaction
+      transactionData.campaign = {
+        id: campaign.id,
+        userId: campaign.userId,
+        countryId: campaign.countryId,
+        name: campaign.name,
+        campaignTypeId: campaign.campaignTypeId,
+        device: campaign.device,
+        title: campaign.title,
+        startDate: campaign.startDate,
+        endDate: campaign.endDate,
+        totalTraffic: metrics.totalTraffic,
+        totalCost: metrics.totalCost,
+        links: campaign.links,
+        keywords: campaign.keywords,
+        domain: campaign.domain,
+        search: campaign.search,
+        status: campaign.status,
+        createdAt: campaign.createdAt,
+        updatedAt: campaign.updatedAt,
+      };
       res.status(statusCode.OK).json({
         status: true,
         message: "Transactions retrieved successfully",
-        data: {
-          ...transaction,
-          campaign: {
-            id: campaign.id,
-            userId: campaign.userId,
-            countryId: campaign.countryId,
-            name: campaign.name,
-            campaignTypeId: campaign.campaignTypeId,
-            device: campaign.device,
-            title: campaign.title,
-            startDate: campaign.startDate,
-            endDate: campaign.endDate,
-            totalTraffic: metrics.totalTraffic,
-            totalCost: metrics.totalCost,
-            links : campaign.links,
-            keywords : campaign.keywords,
-            domain: campaign.domain,
-            search: campaign.search,
-            status: campaign.status,
-            createdAt: campaign.createdAt,
-            updatedAt: campaign.updatedAt,
-          },
-        },
+        data: transactionData,
       });
       return;
     }
@@ -226,7 +238,7 @@ export const getOneTransaction = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Transactions retrieved successfully",
-      data: transaction,
+      data: transactionData,
     });
     return;
   } catch (error: any) {
