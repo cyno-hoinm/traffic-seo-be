@@ -9,6 +9,8 @@ import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { TransactionAttributes } from "../../interfaces/Transaction.interface";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
+import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
+import { calculateCampaignMetrics } from "../../utils/utils";
 
 // Create a new transaction
 export const createTransaction = async (
@@ -162,16 +164,66 @@ export const getOneTransaction = async (
     const { transactionId } = req.body;
 
     const transaction = await getTransactionByIdRepo(transactionId);
+    if (transaction.type === TransactionType.PAY_SERVICE) {
+      const campaign = await getCampaignByIdRepo(
+        Number(transaction.referenceId)
+      );
+      if (!campaign) {
+        res.status(statusCode.OK).json({
+          status: true,
+          message:
+            "Transactions retrieved successfully, this transaction do not have campaign",
+          data: transaction,
+        });
+        return;
+      }
+      // Calculate total traffic and cost from links and keywords
+      const metrics = calculateCampaignMetrics(
+        campaign.links,
+        campaign.keywords
+      );
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Transactions retrieved successfully",
+        data: {
+          ...transaction,
+          campaign: {
+            id: campaign.id,
+            userId: campaign.userId,
+            countryId: campaign.countryId,
+            name: campaign.name,
+            campaignTypeId: campaign.campaignTypeId,
+            device: campaign.device,
+            title: campaign.title,
+            startDate: campaign.startDate,
+            endDate: campaign.endDate,
+            totalTraffic: metrics.totalTraffic,
+            totalCost: metrics.totalCost,
+            links : campaign.links,
+            keywords : campaign.keywords,
+            domain: campaign.domain,
+            search: campaign.search,
+            status: campaign.status,
+            createdAt: campaign.createdAt,
+            updatedAt: campaign.updatedAt,
+          },
+        },
+      });
+      return;
+    }
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Transactions retrieved successfully",
       data: transaction,
     });
+    return;
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error fetching transactions",
       error: error.message,
     });
+    return;
   }
 };

@@ -417,6 +417,7 @@ export const createCampaign = async (
           await createTransactionRepo({
             walletId: wallet.id || 0,
             amount: totalCost,
+            referenceId : campaign.id ? campaign.id.toString() : "NULL",
             status: TransactionStatus.COMPLETED,
             type: TransactionType.PAY_SERVICE,
           });
