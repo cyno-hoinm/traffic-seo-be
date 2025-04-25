@@ -267,7 +267,6 @@ export const stopCampaignRepo = async (
       await campaign.update(
         {
           status: CampaignStatus.PAUSED,
-          endDate: new Date(),
         },
         { transaction: t }
       );
