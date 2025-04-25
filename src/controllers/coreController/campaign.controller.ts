@@ -29,6 +29,7 @@ import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
+import { keywordStatus } from "../../enums/keywordStatus.enum";
 
 // Get campaign list with filters
 
@@ -366,7 +367,7 @@ export const createCampaign = async (
               name: keyword.name,
               urls: keyword.urls,
               cost: cost,
-              status: keyword.status,
+              status: keywordStatus.ACTIVE,
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,

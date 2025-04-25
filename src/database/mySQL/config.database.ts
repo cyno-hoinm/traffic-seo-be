@@ -11,7 +11,7 @@ import {
   minPoolSize,
   socketTimeoutMS,
 } from "../../config/database.config";
-
+import mysql from "mysql2/promise"
 dotenv.config();
 
 export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
@@ -26,4 +26,15 @@ export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
     acquire: socketTimeoutMS,
     idle: connectTimeoutMS,
   },
+});
+
+export const pool = mysql.createPool({
+  host: dbHost,
+  user: dbUser,
+  password: dbPassword,
+  database: dbName,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 10000 // Increase timeout to 10 seconds
 });

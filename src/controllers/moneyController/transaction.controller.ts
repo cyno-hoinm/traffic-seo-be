@@ -174,7 +174,6 @@ export const getOneTransaction = async (
 ): Promise<void> => {
   try {
     const { transactionId } = req.body;
-
     const transaction = await getTransactionByIdRepo(transactionId);
     if (transaction.type === TransactionType.PAY_SERVICE) {
       const campaign = await getCampaignByIdRepo(

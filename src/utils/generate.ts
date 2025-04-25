@@ -60,3 +60,12 @@ export function generateBackupDbName(dbName: string) {
   const timestamp = `${year}_${month}_${day}_${hours}_${minutes}_${seconds}`;
   return `backup_${dbName}_${timestamp}`.slice(0, 63);
 }
+
+export const generateOtp = (length = 6) => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let otp = '';
+  for (let i = 0; i < length; i++) {
+      otp += characters.charAt(crypto.randomInt(characters.length));
+  }
+  return otp;
+};
