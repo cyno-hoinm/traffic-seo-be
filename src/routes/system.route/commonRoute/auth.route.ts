@@ -529,8 +529,7 @@ router.get("/refresh", authenticateToken, refreshToken);
  *         description: Email verified successfully
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: true
  *               message: Email verified successfully
@@ -538,8 +537,7 @@ router.get("/refresh", authenticateToken, refreshToken);
  *         description: Invalid input (e.g., missing email/OTP, invalid password)
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: Password, if provided, must be at least 6 characters
@@ -548,8 +546,7 @@ router.get("/refresh", authenticateToken, refreshToken);
  *         description: Invalid or expired OTP
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: Invalid or expired OTP
@@ -558,8 +555,7 @@ router.get("/refresh", authenticateToken, refreshToken);
  *         description: User not found
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: User not found
@@ -568,8 +564,7 @@ router.get("/refresh", authenticateToken, refreshToken);
  *         description: Internal server error
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: Error verifying email
@@ -602,8 +597,7 @@ router.post("/confirm", confirmUser);
  *         description: OTP resent successfully
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: true
  *               message: OTP resent successfully. Please check your email.
@@ -611,8 +605,7 @@ router.post("/confirm", confirmUser);
  *         description: Invalid input or user already verified
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: Valid email is required
@@ -621,8 +614,7 @@ router.post("/confirm", confirmUser);
  *         description: User not found
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: User not found
@@ -631,8 +623,7 @@ router.post("/confirm", confirmUser);
  *         description: Internal server error
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ResponseType'
+
  *             example:
  *               status: false
  *               message: Error resending OTP
