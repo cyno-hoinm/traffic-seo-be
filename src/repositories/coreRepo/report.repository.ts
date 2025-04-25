@@ -5,7 +5,7 @@ import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { baseApiPython } from "../../config/botAPI.config";
-import { calculateCampaignMetrics } from "../../utils/utils";
+import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
 
 export const getCampaignsReportUserRepo = async (
   userId: string,
@@ -152,13 +152,6 @@ export const getOneCampaignReportRepo = async (
     }
     const keywordsCampaign = campaign.keywords || [];
     const metrics = calculateCampaignMetrics(campaign.links,campaign.keywords)
-    // Format dates to YYYY-MM-DDTHH:mm:ssZ
-    const formatDate = (date: Date | string | null): string => {
-      if (!date) return "";
-      const d = new Date(date);
-      return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T00:00:00Z
-    };
-
     // Post data to Python API for each keyword and collect trafficCompleted
     const updatedKeywords = await Promise.all(
       keywordsCampaign.map(async (keyword: any) => {

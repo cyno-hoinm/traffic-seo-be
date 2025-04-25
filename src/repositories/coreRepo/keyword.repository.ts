@@ -65,6 +65,7 @@ export const createKeywordRepo = async (data: {
       keywordId: keyword.id,
       urls: keyword.urls,
       keyword: keyword.name,
+      title : campaign?.title,
       traffic: keyword.traffic,
       distribution: keyword.distribution,
       cost: keyword.cost,

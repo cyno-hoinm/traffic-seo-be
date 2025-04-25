@@ -58,7 +58,6 @@ export const createTransaction = async (
   }
 };
 
-// Get list of transactions with filters
 export const getListTransaction = async (
   req: Request,
   res: Response<ResponseType<any>>
@@ -127,23 +126,36 @@ export const getListTransaction = async (
     if (type) {
       filters.type = type;
     }
+
     const transactions = await getListTransactionRepo(filters);
 
-    res.status(statusCode.OK).json({
-      status: true,
-      message: "Transactions retrieved successfully",
-      data: {
-        transaction: transactions.map((transaction: TransactionAttributes) => ({
+    // Fetch campaign details for each PAY_SERVICE transaction
+    const transactionWithCampaigns = await Promise.all(
+      transactions.map(async (transaction: TransactionAttributes) => {
+        let campaign = null;
+        if (transaction.type === TransactionType.PAY_SERVICE && transaction.referenceId) {
+          campaign = await getCampaignByIdRepo(parseInt(transaction.referenceId));
+        }
+        return {
           id: transaction.id,
           walletId: transaction.walletId,
           username: transaction.wallet?.users?.username,
+          campaignName: campaign ? campaign.name : null, // Include campaign name or null if not applicable
           amount: transaction.amount,
           status: transaction.status,
           type: transaction.type,
           referenceId: transaction.referenceId,
           createdAt: transaction.createdAt,
           updatedAt: transaction.updatedAt,
-        })),
+        };
+      })
+    );
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Transactions retrieved successfully",
+      data: {
+        transaction: transactionWithCampaigns,
         total: transactions.length,
       },
     });

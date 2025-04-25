@@ -138,3 +138,9 @@ export const calculateCampaignMetrics = (
     totalCost,
   };
 };
+
+export const formatDate = (date: Date | string | null): string => {
+  if (!date) return "";
+  const d = new Date(date);
+  return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T00:00:00Z
+};

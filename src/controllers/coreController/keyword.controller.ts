@@ -144,8 +144,20 @@ export const createKeyword = async (
       distribution,
       cost,
     });
-
-    await baseApiPython("keyword/set", keyword);
+    const dataPython = {
+      keywordId: keyword.id,
+      title: keyword.title,
+      keyword: keyword.name,
+      urls: keyword.urls,
+      distribution: keyword.distribution,
+      traffic: keyword.traffic || 0,
+      device: keyword.device,
+      domain: keyword.domain,
+      timeStart: keyword.startDate,
+      timeEnd: keyword.endDate,
+      searchTool: keyword.search,
+    };
+    await baseApiPython("keyword/set", dataPython);
 
     res.status(statusCode.CREATED).json({
       status: true,
