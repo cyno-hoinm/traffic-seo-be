@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import {
   createUserRepo,
+  findUserByEmailForConfirmRepo,
   findUserByEmailRepo,
   findUserByIdRepo,
   findUserByUsernameRepo,
@@ -14,6 +15,7 @@ import {
   hashedPasswordString,
   isTokenBlacklisted,
   removeSensitivity,
+  saveOtpToRedis,
   signToken,
 } from "../../utils/utils";
 import statusCode from "../../constants/statusCode";
@@ -22,6 +24,8 @@ import { ttlInSecondsGlobal } from "../../constants/redis.constant";
 import { getWalletByUserIdRepo } from "../../repositories/moneyRepo/wallet.repository";
 import { UserAttributes } from "../../interfaces/User.interface";
 import { queueEmail } from "../../services/sendMail.service";
+import { redisClient } from "../../config/redis.config";
+import { generateOtp } from "../../utils/generate";
 
 export const loginUser = async (
   req: Request,
@@ -238,6 +242,7 @@ export const registerUser = async (
       });
       return;
     }
+
     // Check if user already exists
     const existingUserByEmail = await findUserByEmailRepo(email);
     if (existingUserByEmail) {
@@ -258,6 +263,7 @@ export const registerUser = async (
       });
       return;
     }
+
     // Hash password
     const hashedPassword = await hashedPasswordString(password, 10);
 
@@ -267,18 +273,36 @@ export const registerUser = async (
       password: hashedPassword,
       email,
       roleId: 2,
-      isDeleted: false,
+      isDeleted: true,
     };
 
     // Create user using repository
     const user = await createUserRepo(userData);
-    if (user) {
-      await queueEmail(user.email, "Welcome to Cyno Traffic System", "<p>Minh Hội provip123</p>");
-    }
+
+    // Generate OTP
+    const otp = generateOtp(); // Assuming you have a generateOTP function
+
+    // Store OTP in Redis with 5-minute expiration
+    await saveOtpToRedis(user.email, otp);
+
+    // Send OTP email
+    const emailContent = `
+      <h1>Welcome to Cyno Traffic System</h1>
+      <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+      <p>Please use this code to verify your email address.</p>
+    `;
+
+    await queueEmail(
+      user.email,
+      "Verify Your Email - Cyno Traffic System",
+      emailContent
+    );
+
     // Return success response (exclude password)
     res.status(statusCode.OK).json({
       status: true,
-      message: "User registered successfully",
+      message:
+        "User registered successfully. Please verify your email with the OTP sent.",
       data: {
         id: user.id,
         username: user.username,
@@ -298,7 +322,6 @@ export const registerUser = async (
     return;
   }
 };
-
 export const changePassword = async (
   req: AuthenticatedRequest,
   res: Response<ResponseType<null>>
@@ -395,5 +418,124 @@ export const changePassword = async (
       message: "Error changing password",
       error: error.message,
     });
+  }
+};
+
+export const confirmUser = async (
+  req: Request,
+  res: Response<ResponseType<null>>
+): Promise<void> => {
+  try {
+    const { email, otp, password } = req.body;
+
+    if (password && (typeof password !== "string" || password.length < 6)) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Password, if provided, must be at least 6 characters",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    // Fetch user by email
+    const user = await findUserByEmailForConfirmRepo(email);
+    if (!user) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+
+    // Verify OTP from Redis
+    const storedOtp = await redisClient.get(`otp:${email}`);
+    if (!storedOtp || storedOtp !== otp) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Invalid or expired OTP",
+        error: "Authentication failed",
+      });
+      return;
+    }
+
+    // Update isDeleted to 0 (false)
+    await updateUserOneFieldRepo(user.id, "isDeleted", false);
+
+    // Update password if provided
+    if (password) {
+      const hashedNewPassword = await hashedPasswordString(password, 10);
+      await updateUserOneFieldRepo(user.id, "password", hashedNewPassword);
+    }
+
+    // Delete OTP from Redis after successful verification
+    await redisClient.del(`otp:${email}`);
+
+    // Return success response
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Email verified successfully",
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error verifying email",
+      error: error.message,
+    });
+    return;
+  }
+};
+
+export const resendOtp = async (
+  req: Request,
+  res: Response<ResponseType<null>>
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    // Fetch user by email
+    const user = await findUserByEmailForConfirmRepo(email);
+    if (!user) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+
+    // Generate new OTP
+    const otp = generateOtp();
+
+    // Store OTP in Redis with 5-minute expiration
+    await saveOtpToRedis(user.email, otp);
+
+    // Send OTP email
+    const emailContent = `
+      <h1>Welcome to Cyno Traffic System</h1>
+      <p>Your new OTP for email verification is: <strong>${otp}</strong></p>
+      <p>Please use this code to verify your email address.</p>
+    `;
+
+    await queueEmail(
+      user.email,
+      "Verify Your Email - Cyno Traffic System",
+      emailContent
+    );
+
+    // Return success response
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "OTP resent successfully. Please check your email.",
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error resending OTP",
+      error: error.message,
+    });
+    return;
   }
 };

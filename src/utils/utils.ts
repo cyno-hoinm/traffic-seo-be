@@ -82,6 +82,24 @@ export const isTokenBlacklisted = async (token: string): Promise<boolean> => {
   return result === "true";
 };
 
+export const saveOtpToRedis = async (
+  email: string,
+  otp: string,
+  expirySeconds: number = 300
+): Promise<boolean> => {
+  const redisKey = `otp:${email}`;
+  try {
+    // Ensure Redis is connected
+    await redisClient.connect();
+    
+    // Use setEx method from your Redis client (key, value, ttl)
+    await redisClient.set(redisKey, otp, expirySeconds);
+    return true;
+  } catch (error) {
+    logger.error(`Error saving OTP to Redis for key ${redisKey}:`, error);
+    return false;
+  }
+};
 export const removeSensitivity = (payload: any): any => {
   delete payload.iat;
   delete payload.exp;
@@ -144,3 +162,4 @@ export const formatDate = (date: Date | string | null): string => {
   const d = new Date(date);
   return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T00:00:00Z
 };
+

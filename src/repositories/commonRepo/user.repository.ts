@@ -37,7 +37,7 @@ export const findUserByIdRepo = async (
                 {
                   model: Permission,
                   as: "permissions",
-                  attributes: ["name","code"],
+                  attributes: ["name", "code"],
                 },
               ],
             },
@@ -200,6 +200,19 @@ export const deleteUserRepo = async (id: number): Promise<boolean> => {
     }
     await user.update({ isDeleted: true });
     return true;
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const findUserByEmailForConfirmRepo = async (
+  email: string
+): Promise<User | null> => {
+  try {
+    const user = await User.findOne({
+      where: { email },
+    });
+    return user;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }

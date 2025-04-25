@@ -1,10 +1,12 @@
 import express from "express";
 import {
   changePassword,
+  confirmUser,
   getMe,
   loginUser,
   refreshToken,
   registerUser,
+  resendOtp,
 } from "../../../controllers/commonController/auth.controller";
 import { authenticateToken } from "../../../middleware/auth";
 
@@ -492,5 +494,149 @@ router.get("/getMe", authenticateToken, getMe);
  *         bearerFormat: JWT
  */
 router.get("/refresh", authenticateToken, refreshToken);
-
+/**
+ * @swagger
+ * /auth/confirm:
+ *   post:
+ *     summary: Confirm user email with OTP
+ *     tags: [Authentication]
+ *     description: Verifies a user's email by validating the provided OTP and updates `isDeleted` to false. Optionally updates the user's password if provided.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address.
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 description: The OTP sent to the user's email for verification.
+ *                 example: "123456"
+ *               password:
+ *                 type: string
+ *                 description: Optional new password for the user (minimum 6 characters).
+ *                 example: "newPassword123"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: true
+ *               message: Email verified successfully
+ *       400:
+ *         description: Invalid input (e.g., missing email/OTP, invalid password)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: Password, if provided, must be at least 6 characters
+ *               error: Invalid field
+ *       401:
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: Invalid or expired OTP
+ *               error: Authentication failed
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: User not found
+ *               error: Resource not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: Error verifying email
+ *               error: Internal server error
+ */
+router.post("/confirm", confirmUser);
+/**
+ * @swagger
+ * /auth/resend-otp:
+ *   post:
+ *     summary: Resend OTP for email verification
+ *     tags: [Authentication]
+ *     description: Resends a new OTP to the user's email for email verification. The user must exist and not be verified (isDeleted = true).
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address.
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP resent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: true
+ *               message: OTP resent successfully. Please check your email.
+ *       400:
+ *         description: Invalid input or user already verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: Valid email is required
+ *               error: Invalid field
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: User not found
+ *               error: Resource not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResponseType'
+ *             example:
+ *               status: false
+ *               message: Error resending OTP
+ *               error: Internal server error
+ */
+router.post("/resend-otp", resendOtp);
 export default router;
