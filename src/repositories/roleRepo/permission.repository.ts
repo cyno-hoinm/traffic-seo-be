@@ -2,14 +2,33 @@ import { Permission, RolePermission } from "../../models/index.model";
 import { PermissionAttributes } from "../../interfaces/Permission.interface";
 import { Op, WhereOptions } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
+import statusCode from "../../constants/statusCode";
 
 export const createPermissionRepo = async (
   permissionData: Omit<PermissionAttributes, "id" | "createdAt" | "updatedAt">
 ): Promise<PermissionAttributes> => {
   try {
+    // Check if permission already exists by name (or other unique field)
+    const existingPermission = await Permission.findOne({
+      where: { name: permissionData.name }, // Adjust 'name' to your unique field
+    });
+
+    if (existingPermission) {
+      throw new ErrorType(
+        "ConflictError", // Error name
+        `Permission with name '${permissionData.name}' already exists`, // Message
+        undefined, // Optional code (not used here)
+        statusCode.CONFLICT // HTTP status code for Conflict
+      );
+    }
+
+    // Create new permission
     const permission = await Permission.create(permissionData);
     return permission.toJSON() as PermissionAttributes;
   } catch (error) {
+    if (error instanceof ErrorType) {
+      throw error; // Re-throw ErrorType as-is
+    }
     throw new Error(`Error creating permission: ${(error as Error).message}`);
   }
 };
