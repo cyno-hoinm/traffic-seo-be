@@ -431,23 +431,37 @@ async function manageBackups(): Promise<void> {
 // Initialize and start backup service
 export async function startBackupService() {
   try {
+    // Connect to the database
     await connectDB();
     logger.info(`Backup database service worker ${process.pid} started`);
+
     // Schedule backup every 2 hours
-    cron.schedule("0 */2 * * *", async () => {
-      // console.log("Starting scheduled backup...");
-      await createBackup();
-    });
+    cron.schedule(
+      "0 */2 * * *", // Every 2 hours (00:00, 02:00, 04:00, etc.)
+      async () => {
+        try {
+          logger.info("Starting scheduled backup...");
+          await createBackup();
+          logger.info("Backup completed successfully");
+        } catch (error: any) {
+          logger.error("Scheduled backup failed:", error.message);
+        }
+      },
+      {
+        scheduled: true, // Ensure the task is scheduled
+        timezone: "UTC", // Set timezone (adjust as needed, e.g., "Asia/Ho_Chi_Minh")
+      }
+    );
 
-    // console.log("Backup service started. Backups will run every 2 hours.");
+    // Run initial backup (optional)
+    logger.info("Running initial backup...");
+    await createBackup();
+    logger.info("Initial backup completed");
 
-    // Run initial backup
-    // await createBackup();
+    logger.info("Backup service started. Backups will run every 2 hours.");
   } catch (error: any) {
     logger.error("Failed to start backup service:", error.message);
     process.exit(1);
-  } finally {
-    // Close admin connection
-    await sequelizeSystem.close();
   }
+  // Note: Do NOT close sequelizeSystem connection here, as cron jobs need it
 }
