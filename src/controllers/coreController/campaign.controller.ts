@@ -564,7 +564,7 @@ export const stopCampaign = async (
         async (keyword: KeywordAttributes) => {
           const dataPython = {
             keywordId: keyword.id,
-            timeEnd: formatDate(campaign.endDate),
+            timeEnd: formatDate(new Date()),
           };
           return baseApiPythonUpdate("keyword/update", dataPython);
         }
