@@ -15,13 +15,16 @@ config();
 // Create a new backup database and copy schema/data using Sequelize
 async function createBackup() {
   const backupDbName = generateBackupDbName(dbName);
+  let sourceSequelize: Sequelize | null = null;
+  let backupSequelize: Sequelize | null = null;
+
   try {
     // Create new database
     await sequelizeSystem.query(`CREATE DATABASE \`${backupDbName}\``);
-    logger.info(`Backup database is starting`);
+    // logger.info(`Backup database ${backupDbName} created`);
 
     // Connect to the source database
-    const sourceSequelize = new Sequelize(dbName, dbUser, dbPassword, {
+    sourceSequelize = new Sequelize(dbName, dbUser, dbPassword, {
       host: dbHost,
       port: dbPort,
       dialect: "mysql",
@@ -29,7 +32,7 @@ async function createBackup() {
     });
 
     // Connect to the new backup database
-    const backupSequelize = new Sequelize(backupDbName, dbUser, dbPassword, {
+    backupSequelize = new Sequelize(backupDbName, dbUser, dbPassword, {
       host: dbHost,
       port: dbPort,
       dialect: "mysql",
@@ -48,28 +51,18 @@ async function createBackup() {
       }
     );
 
-    // Debug: Log raw query result
-    // console.log("Raw tables result:", tables);
-
-    // Map to table names
     const tableNames = tables
       .map((row: any) => row.TABLE_NAME)
       .filter((name) => name);
-    // console.log("Table names:", tableNames);
 
-    // Ensure tableNames is not empty
     if (!tableNames.length) {
       throw new Error("No tables found in the source database.");
     }
+    // logger.info(`Found ${tableNames.length} tables to backup`);
 
     // Step 2: Copy schema (create tables)
     for (const tableName of tableNames) {
-      if (!tableName) {
-        // console.warn("Skipping undefined table name");
-        continue;
-      }
-
-      // Get column definitions from information_schema
+      // Get column definitions
       const columns = await sourceSequelize.query(
         `SELECT 
            COLUMN_NAME,
@@ -86,13 +79,6 @@ async function createBackup() {
         }
       );
 
-      // Debug: Log column names
-      // console.log(
-      //   `Columns for "${tableName}":`,
-      //   columns.map((col: any) => col.COLUMN_NAME)
-      // );
-
-      // Build CREATE TABLE statement
       const columnDefs = columns
         .map((col: any) => {
           let def = `\`${col.COLUMN_NAME}\` ${col.DATA_TYPE}`;
@@ -134,25 +120,16 @@ async function createBackup() {
           ${columnDefs}${primaryKeyDef}
         )
       `;
-
-      // console.log(`Executing CREATE TABLE SQL: ${createTableSQL}`);
       await backupSequelize.query(createTableSQL);
-      // console.log(`Created table "${tableName}" in ${backupDbName}`);
+      // logger.info(`Created table ${tableName} in ${backupDbName}`);
     }
 
     // Step 3: Copy data
-    // Step 3: Copy data
     for (const tableName of tableNames) {
-      if (!tableName) {
-        // console.warn("Skipping undefined table name");
-        continue;
-      }
-
-      // Get column definitions including DATA_TYPE for type checking
       const columns = await sourceSequelize.query(
         `SELECT COLUMN_NAME, DATA_TYPE
-     FROM information_schema.columns
-     WHERE TABLE_SCHEMA = :dbName AND TABLE_NAME = :tableName`,
+         FROM information_schema.columns
+         WHERE TABLE_SCHEMA = :dbName AND TABLE_NAME = :tableName`,
         {
           replacements: { dbName, tableName },
           type: QueryTypes.SELECT,
@@ -162,37 +139,24 @@ async function createBackup() {
       const validColumns = columns
         .map((col: any) => col.COLUMN_NAME)
         .filter((name) => name);
-      // console.log(`Valid columns for "${tableName}":`, validColumns);
 
       if (validColumns.length === 0) {
-        // console.warn(`No columns found for "${tableName}", skipping data copy`);
+        // logger.warn(`No columns found for ${tableName}, skipping data copy`);
         continue;
       }
 
-      // Create a map of column names to their data types
       const columnTypes = new Map<string, string>(
-        columns.map((col: any) => [
-          col.COLUMN_NAME,
-          col.DATA_TYPE.toLowerCase(),
-        ])
+        columns.map((col: any) => [col.COLUMN_NAME, col.DATA_TYPE.toLowerCase()])
       );
 
-      const selectColumnsSQL = validColumns
-        .map((col: string) => `\`${col}\``)
-        .join(", ");
-      // console.log(`SELECT columns SQL for "${tableName}":`, selectColumnsSQL);
-
+      const selectColumnsSQL = validColumns.map((col: string) => `\`${col}\``).join(", ");
       const rows = await sourceSequelize.query(
         `SELECT ${selectColumnsSQL} FROM \`${tableName}\``,
         { type: QueryTypes.SELECT }
       );
 
       if (rows.length > 0) {
-        const columnsSQL = validColumns
-          .map((col: string) => `\`${col}\``)
-          .join(", ");
-        // console.log(`INSERT columns SQL for "${tableName}":`, columnsSQL);
-
+        const columnsSQL = validColumns.map((col: string) => `\`${col}\``).join(", ");
         const values = rows
           .map((row: any) => {
             return `(${validColumns
@@ -202,10 +166,8 @@ async function createBackup() {
 
                 if (val === null) return "NULL";
 
-                // Handle DATETIME and TIMESTAMP columns
                 if (colType === "datetime" || colType === "timestamp") {
                   if (val instanceof Date) {
-                    // Format Date object to YYYY-MM-DD HH:MM:SS
                     const year = val.getFullYear();
                     const month = String(val.getMonth() + 1).padStart(2, "0");
                     const day = String(val.getDate()).padStart(2, "0");
@@ -214,39 +176,23 @@ async function createBackup() {
                     const seconds = String(val.getSeconds()).padStart(2, "0");
                     return `'${year}-${month}-${day} ${hours}:${minutes}:${seconds}'`;
                   } else if (typeof val === "string") {
-                    // Parse ISO string and format to YYYY-MM-DD HH:MM:SS
                     const date = new Date(val);
                     if (!isNaN(date.getTime())) {
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(
-                        2,
-                        "0"
-                      );
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
                       const day = String(date.getDate()).padStart(2, "0");
                       const hours = String(date.getHours()).padStart(2, "0");
-                      const minutes = String(date.getMinutes()).padStart(
-                        2,
-                        "0"
-                      );
-                      const seconds = String(date.getSeconds()).padStart(
-                        2,
-                        "0"
-                      );
+                      const minutes = String(date.getMinutes()).padStart(2, "0");
+                      const seconds = String(date.getSeconds()).padStart(2, "0");
                       return `'${year}-${month}-${day} ${hours}:${minutes}:${seconds}'`;
                     }
                   }
-                  // Fallback: Return NULL if the date is invalid
-                  // console.warn(
-                  //   `Invalid date value for column "${col}" in table "${tableName}": ${val}`
-                  // );
+                  // logger.warn(`Invalid date value for column "${col}" in table "${tableName}": ${val}`);
                   return "NULL";
                 }
 
-                // Handle other types
-                if (typeof val === "string")
-                  return `'${val.replace(/'/g, "''")}'`;
-                if (typeof val === "object")
-                  return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
+                if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
+                if (typeof val === "object") return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
                 return val;
               })
               .join(", ")})`;
@@ -254,31 +200,21 @@ async function createBackup() {
           .join(", ");
 
         const insertSQL = `
-      INSERT INTO \`${tableName}\` (${columnsSQL})
-      VALUES ${values}
-    `;
-
-        // console.log(`Executing INSERT SQL for "${tableName}"`);
+          INSERT INTO \`${tableName}\` (${columnsSQL})
+          VALUES ${values}
+        `;
         await backupSequelize.query(insertSQL);
-        // console.log(
-        //   `Copied ${rows.length} rows to "${tableName}" in ${backupDbName}`
-        // );
+        // logger.info(`Copied ${rows.length} rows to ${tableName} in ${backupDbName}`);
       }
     }
 
     // Step 4: Copy indexes, constraints, and triggers
     for (const tableName of tableNames) {
-      if (!tableName) {
-        // console.warn("Skipping undefined table name");
-        continue;
-      }
-
       const indexesRaw: any = await sourceSequelize.query(
         `SHOW INDEXES FROM \`${tableName}\` WHERE KEY_NAME != 'PRIMARY'`,
         { type: QueryTypes.SELECT }
       );
 
-      // Group indexes by Key_name to handle multi-column indexes
       const indexesByKey: { [key: string]: any[] } = {};
       for (const index of indexesRaw) {
         const keyName = index["Key_name"];
@@ -288,9 +224,6 @@ async function createBackup() {
         indexesByKey[keyName].push(index);
       }
 
-      // Debug: Log grouped indexes
-      // console.log(`Indexes for "${tableName}":`, indexesByKey);
-
       for (const keyName in indexesByKey) {
         const indexRows = indexesByKey[keyName];
         const firstIndex = indexRows[0];
@@ -299,32 +232,25 @@ async function createBackup() {
           firstIndex["Index_type"] === "FULLTEXT"
             ? "FULLTEXT"
             : nonUnique
-            ? "INDEX"
+            ? "" // Non-unique index, no keyword needed
             : "UNIQUE";
 
-        // Collect all columns for this index, preserving order
         const columnNames = indexRows
           .sort((a: any, b: any) => a["Seq_in_index"] - b["Seq_in_index"])
           .map((index: any) => `\`${index["Column_name"]}\``)
           .join(", ");
 
-        const indexSQL = `CREATE ${indexType} INDEX \`${keyName}\` ON \`${tableName}\` (${columnNames})`;
-        // console.log(`Executing index SQL: ${indexSQL}`);
+        const indexSQL = `CREATE ${indexType} INDEX \`${keyName}\` ON \`${tableName}\` (${columnNames})`.trim();
         try {
           await backupSequelize.query(indexSQL);
-          // console.log(
-          //   `Created index "${keyName}" for "${tableName}" in ${backupDbName}`
-          // );
+          // logger.info(`Created index ${keyName} for ${tableName} in ${backupDbName}`);
         } catch (error: any) {
-          // logger.error("Cannot backup database")
-          console.warn(
-            `Failed to create index "${keyName}" for "${tableName}": ${error.message}`
-          );
+          // logger.warn(`Failed to create index ${keyName} for ${tableName}: ${error.message}`);
           // Continue to avoid stopping the backup process
         }
       }
 
-      // Get foreign key constraints
+      // Copy foreign key constraints
       const constraints: any = await sourceSequelize.query(
         `SELECT 
            CONSTRAINT_NAME,
@@ -348,14 +274,11 @@ async function createBackup() {
           FOREIGN KEY (\`${constraint.COLUMN_NAME}\`)
           REFERENCES \`${constraint.REFERENCED_TABLE_NAME}\` (\`${constraint.REFERENCED_COLUMN_NAME}\`)
         `;
-        // console.log(`Executing constraint SQL: ${constraintSQL}`);
         await backupSequelize.query(constraintSQL);
-        // console.log(
-        //   `Added constraint "${constraint.CONSTRAINT_NAME}" to "${tableName}" in ${backupDbName}`
-        // );
+        // logger.info(`Added constraint ${constraint.CONSTRAINT_NAME} to ${tableName} in ${backupDbName}`);
       }
 
-      // Get triggers
+      // Copy triggers
       const triggers: any = await sourceSequelize.query(
         `SELECT TRIGGER_NAME, ACTION_TIMING, EVENT_MANIPULATION, ACTION_STATEMENT
          FROM information_schema.TRIGGERS
@@ -375,27 +298,29 @@ async function createBackup() {
           FOR EACH ROW
           ${trigger.ACTION_STATEMENT}
         `;
-        // console.log(`Executing trigger SQL: ${triggerSQL}`);
         await backupSequelize.query(triggerSQL);
-        // console.log(
-        //   `Created trigger "${trigger.TRIGGER_NAME}" for "${tableName}" in ${backupDbName}`
-        // );
+        // logger.info(`Created trigger ${trigger.TRIGGER_NAME} for ${tableName} in ${backupDbName}`);
       }
     }
 
-    // Close database connections
-    await sourceSequelize.close();
+    // Commit and close connections
     await backupSequelize.query("COMMIT");
-    await backupSequelize.close();
-    logger.info("Backup database is done");
-    // Manage backups to keep only the latest MAX_BACKUPS
+    logger.info(`Backup database ${backupDbName} completed successfully`);
     await manageBackups();
-  } catch (error) {
-    // console.error(`Error creating backup ${backupDbName}:`, error);
-    // logger.error("Cannot backup database")
+  } catch (error: any) {
+    // logger.error(`Error creating backup ${backupDbName}: ${error.message}`);
     // Cleanup: Drop the backup database if it was created
-    await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${backupDbName}\``);
+    try {
+      await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${backupDbName}\``);
+      // logger.info(`Cleaned up incomplete backup database ${backupDbName}`);
+    } catch (cleanupError: any) {
+      // logger.error(`Failed to clean up backup database ${backupDbName}: ${cleanupError.message}`);
+    }
     throw error;
+  } finally {
+    // Close database connections
+    if (sourceSequelize) await sourceSequelize.close();
+    if (backupSequelize) await backupSequelize.close();
   }
 }
 

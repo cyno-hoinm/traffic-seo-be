@@ -75,7 +75,7 @@ if (cluster.isPrimary && !isDev) {
     };
 
     startServer();
-
+    startBackupService();
     process.on("SIGTERM", async () => {
       logger.info(`App worker ${process.pid} received SIGTERM`);
       await gracefulShutdown(server, "SIGTERM");
