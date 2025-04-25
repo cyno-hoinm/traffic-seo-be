@@ -1,4 +1,5 @@
 import { DistributionType } from "../enums/distribution.enum";
+import { keywordStatus } from "../enums/keywordStatus.enum";
 
 export interface KeywordAttributes {
   id?: number;
@@ -6,8 +7,9 @@ export interface KeywordAttributes {
   name: string;
   cost: number;
   urls?: string[];
+  status: string;
   distribution: DistributionType;
-  traffic : number;
+  traffic: number;
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

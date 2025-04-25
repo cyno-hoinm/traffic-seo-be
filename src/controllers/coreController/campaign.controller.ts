@@ -4,6 +4,7 @@ import {
   getCampaignListRepo,
   createCampaignRepo,
   getCampaignByIdRepo,
+  stopCampaignRepo,
 } from "../../repositories/coreRepo/campagin.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
@@ -15,7 +16,7 @@ import { Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";
 import { LinkAttributes } from "../../interfaces/Link.interface";
-import { baseApiPython } from "../../config/botAPI.config";
+import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
 import { ErrorType } from "../../types/Error.type";
@@ -27,8 +28,7 @@ import {
 import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
-import { calculateCampaignMetrics } from "../../utils/utils";
-import { filter } from "compression";
+import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
 
 // Get campaign list with filters
 
@@ -366,6 +366,7 @@ export const createCampaign = async (
               name: keyword.name,
               urls: keyword.urls,
               cost: cost,
+              status: keyword.status,
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,
@@ -417,7 +418,7 @@ export const createCampaign = async (
           await createTransactionRepo({
             walletId: wallet.id || 0,
             amount: totalCost,
-            referenceId : campaign.id ? campaign.id.toString() : "NULL",
+            referenceId: campaign.id ? campaign.id.toString() : "NULL",
             status: TransactionStatus.COMPLETED,
             type: TransactionType.PAY_SERVICE,
           });
@@ -535,5 +536,71 @@ export const getCampaignById = async (
       message: "Error fetching campaign",
       error: error.message,
     });
+  }
+};
+
+export const stopCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const campaignId = parseInt(req.params.id, 10);
+
+    // Fetch the campaign to get keywords and endDate
+    const campaign: CampaignAttributes | null = await getCampaignByIdRepo(
+      campaignId
+    ); // Assume a function to fetch campaign
+    if (!campaign) {
+      throw new ErrorType(
+        "NotFoundError",
+        "Campaign not found",
+        statusCode.NOT_FOUND
+      );
+    }
+
+    // Update Python API for keywords first
+    if (campaign.keywords && campaign.keywords.length > 0) {
+      const apiPromises = campaign.keywords.map(
+        async (keyword: KeywordAttributes) => {
+          const dataPython = {
+            keywordId: keyword.id,
+            timeEnd: formatDate(campaign.endDate),
+          };
+          return baseApiPythonUpdate("keyword/update", dataPython);
+        }
+      );
+
+      // Wait for all Python API calls to complete
+      await Promise.all(apiPromises);
+    }
+
+    // Update campaign in your server after Python API calls
+    const updatedCampaign: boolean = await stopCampaignRepo(campaignId);
+    if (updatedCampaign) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Stop campaign successfully",
+      });
+    } else {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Stop campaign failed",
+      });
+    }
+    return;
+  } catch (error: any) {
+    const errorResponse =
+      error instanceof ErrorType
+        ? error
+        : new ErrorType(
+            "UnknownError",
+            "Failed to stop campaign",
+            statusCode.INTERNAL_SERVER_ERROR
+          );
+    res.status(errorResponse.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: errorResponse.message,
+    });
+    return;
   }
 };

@@ -1,10 +1,20 @@
 import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
-import { Campaign, Keyword, Link, sequelizeSystem, User } from "../../models/index.model";
+import {
+  Campaign,
+  Keyword,
+  Link,
+  sequelizeSystem,
+  User,
+} from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 import CampaignType from "../../models/CampaignType.model";
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
+import { CampaignReportList } from "../../interfaces/CampaignReport.interface";
+import { LinkStatus } from "../../enums/linkStatus.enum";
+import { keywordStatus } from "../../enums/keywordStatus.enum";
+import statusCode from "../../constants/statusCode";
 
 export const getCampaignListRepo = async (filters: {
   key?: string;
@@ -154,10 +164,10 @@ export const getCampaignReport = async (
 ): Promise<CampaignReportList[]> => {
   try {
     // Validate date formats if provided
-    if (startDate && !isValidDate(startDate)) {
+    if (startDate) {
       throw new ErrorType("ValidationError", "Invalid start date format");
     }
-    if (endDate && !isValidDate(endDate)) {
+    if (endDate) {
       throw new ErrorType("ValidationError", "Invalid end date format");
     }
 
@@ -224,17 +234,88 @@ export const getCampaignReport = async (
       : new ErrorType("UnknownError", "Failed to fetch campaign report");
   }
 };
-export interface CampaignReportList {
-  campaignTypeId: number;
-  campaignTypeName: string;
-  count: number;
-}
 
-// Utility function to validate YYYY-MM-DD date format
-const isValidDate = (dateString: string): boolean => {
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(dateString)) return false;
+export const stopCampaignRepo = async (
+  id: number,
+  transaction?: Transaction
+): Promise<boolean> => {
+  try {
+    if (!sequelizeSystem) {
+      throw new ErrorType(
+        "InitializationError",
+        "Sequelize instance is not initialized",
+        statusCode.INTERNAL_SERVER_ERROR
+      );
+    }
 
-  const date = new Date(dateString);
-  return !isNaN(date.getTime()) && date.toISOString().startsWith(dateString);
+    // Use provided transaction or create a new one
+    const t = transaction || (await sequelizeSystem.transaction());
+
+    try {
+      // Find the campaign
+      const campaign = await Campaign.findByPk(id, { transaction: t });
+
+      if (!campaign) {
+        throw new ErrorType(
+          "NotFoundError",
+          `Campaign with id ${id} not found`,
+          statusCode.NOT_FOUND
+        );
+      }
+
+      // Update campaign status to PAUSED and set endDate to now
+      await campaign.update(
+        {
+          status: CampaignStatus.PAUSED,
+          endDate: new Date(),
+        },
+        { transaction: t }
+      );
+
+      // Update all associated keywords to INACTIVE
+      await Keyword.update(
+        { status: keywordStatus.INACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Update all associated links to INACTIVE
+      await Link.update(
+        { status: LinkStatus.INACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Commit the transaction if it was created here
+      if (!transaction) {
+        await t.commit();
+      }
+
+      return true;
+    } catch (error) {
+      // Rollback the transaction if it was created here and not yet committed
+      if (!transaction) {
+        await t.rollback();
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    throw error instanceof ErrorType
+      ? error
+      : new ErrorType(
+          error.name,
+          error.message,
+          error.code || statusCode.INTERNAL_SERVER_ERROR
+        );
+  }
 };

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
-import { CampaignReportList, getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
+import {  getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
 import { getKeywordsByDistributionType } from "../../repositories/coreRepo/keyword.repository";
 import { getLinksReport } from "../../repositories/coreRepo/link.repository";
 import {
@@ -12,6 +12,7 @@ import {
   getOneCampaignReportRepo,
 } from "../../repositories/coreRepo/report.repository";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { CampaignReportList } from "../../interfaces/CampaignReport.interface";
 
 export const countCampaignReport = async (
   req: AuthenticatedRequest,

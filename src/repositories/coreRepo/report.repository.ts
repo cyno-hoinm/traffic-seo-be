@@ -60,7 +60,7 @@ export const getCampaignsReportUserRepo = async (
         // Subquery for counting active (non-deleted) links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.isDeleted = FALSE)`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.status = 'ACTIVE')`
           ),
           "activeLink",
         ],
@@ -74,7 +74,7 @@ export const getCampaignsReportUserRepo = async (
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.isDeleted = FALSE)`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.status = 'ACTIVE')`
           ),
           "activeKeyword",
         ],
@@ -242,7 +242,7 @@ export const getCampaignsReportAllRepo = async (
         // Subquery for counting active (non-deleted) links
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.isDeleted = FALSE)`
+            `(SELECT COUNT(*) FROM links AS l WHERE l.campaignId = Campaign.id AND l.status = 'ACTIVE')`
           ),
           "activeLink",
         ],
@@ -256,7 +256,7 @@ export const getCampaignsReportAllRepo = async (
         // Subquery for counting active (non-deleted) keywords
         [
           sequelizeSystem.literal(
-            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.isDeleted = FALSE)`
+            `(SELECT COUNT(*) FROM keywords AS k WHERE k.campaignId = Campaign.id AND k.status = 'ACTIVE')`
           ),
           "activeKeyword",
         ],

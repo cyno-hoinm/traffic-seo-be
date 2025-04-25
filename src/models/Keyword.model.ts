@@ -7,6 +7,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
   public campaignId!: number | null; // Nullable if not always present
   public name!: string;
+  public status!: string;
   public urls!: string[]; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
@@ -49,6 +50,10 @@ Keyword.init(
     },
     traffic: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     isDeleted: {

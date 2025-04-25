@@ -55,6 +55,7 @@ export const createKeywordRepo = async (data: {
   name: string;
   urls: string[];
   traffic: number;
+  status: string;
   distribution: DistributionType;
   cost: number;
 }): Promise<any> => {
@@ -65,7 +66,7 @@ export const createKeywordRepo = async (data: {
       keywordId: keyword.id,
       urls: keyword.urls,
       keyword: keyword.name,
-      title : campaign?.title,
+      title: campaign?.title,
       traffic: keyword.traffic,
       distribution: keyword.distribution,
       cost: keyword.cost,

@@ -11,6 +11,7 @@ import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { DistributionType } from "../../enums/distribution.enum";
 import { ErrorType } from "../../types/Error.type";
 import { baseApiPython } from "../../config/botAPI.config";
+import { keywordStatus } from "../../enums/keywordStatus.enum";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -84,6 +85,7 @@ export const getKeywordList = async (
           campaignId: keyword.campaignId,
           name: keyword.name,
           urls: keyword.url,
+          status : keyword.status,
           cost: keyword.cost,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
@@ -141,6 +143,7 @@ export const createKeyword = async (
       name,
       urls,
       traffic,
+      status : keywordStatus.ACTIVE,
       distribution,
       cost,
     });
@@ -168,6 +171,7 @@ export const createKeyword = async (
         name: keyword.name,
         urls: keyword.url,
         distribution: keyword.distribution,
+        status : keyword.status,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
         cost: keyword.cost,
@@ -209,6 +213,7 @@ export const getKeywordById = async (
         campaignId: keyword.campaignId,
         name: keyword.name,
         urls: keyword.urls,
+        status : keyword.status,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         cost: keyword.cost,
