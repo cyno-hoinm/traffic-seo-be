@@ -1,9 +1,11 @@
 import { DistributionType } from "../enums/distribution.enum";
 import { keywordStatus } from "../enums/keywordStatus.enum";
+import { CampaignAttributes } from "./Campaign.interface";
 
 export interface KeywordAttributes {
   id?: number;
   campaignId: number | null; // Nullable if not always present
+  campaigns? : CampaignAttributes
   name: string;
   cost: number;
   urls?: string[];

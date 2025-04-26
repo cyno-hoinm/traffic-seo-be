@@ -4,6 +4,8 @@ import {
   getCampaignListRepo,
   createCampaignRepo,
   getCampaignByIdRepo,
+  continueCampaignRepo,
+  pauseCampaignRepo,
   stopCampaignRepo,
 } from "../../repositories/coreRepo/campagin.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
@@ -182,7 +184,6 @@ export const createCampaign = async (
       endDate,
       domain,
       search,
-      status,
       campaignTypeId,
       keywords, // Array of KeywordAttributes, optional
       links, // Array of LinkAttributes, optional
@@ -199,8 +200,7 @@ export const createCampaign = async (
       !endDate ||
       !domain ||
       !search ||
-      !campaignTypeId ||
-      !status
+      !campaignTypeId 
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -221,14 +221,11 @@ export const createCampaign = async (
       return;
     }
 
-    if (!Object.values(CampaignStatus).includes(status)) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Valid status is required (ACTIVE, INACTIVE, PENDING)",
-        error: "Invalid field",
-      });
-      return;
-    }
+
+    // Determine campaign status based on startDate
+    const currentDate = new Date();
+    const campaignStatus = start > currentDate ? CampaignStatus.NOT_STARTED :  CampaignStatus.ACTIVE;
+
     let keywordTrafficCost = 1;
     const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
       ConfigApp.KEYWORD_TRAFFIC_COST
@@ -333,7 +330,7 @@ export const createCampaign = async (
         }
       }
     }
-
+   
     // Use a transaction to ensure data consistency
     const campaign = await sequelizeSystem.transaction(
       async (transaction: Transaction) => {
@@ -350,8 +347,8 @@ export const createCampaign = async (
             domain,
             search,
             campaignTypeId,
-            status,
-            isDeleted: false, // Set default value
+            status: campaignStatus, // Use determined status
+            isDeleted: false,
           },
           transaction
         );
@@ -367,7 +364,7 @@ export const createCampaign = async (
               name: keyword.name,
               urls: keyword.urls,
               cost: cost,
-              status: keywordStatus.ACTIVE,
+              status: start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE, // Set INACTIVE if future start
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,
@@ -390,8 +387,6 @@ export const createCampaign = async (
               searchTool: campaign.search,
             };
             await baseApiPython("keyword/set", dataPython);
-            // console.log(result);
-            // Create keyword in database
           }
         }
 
@@ -405,7 +400,7 @@ export const createCampaign = async (
             traffic: link.traffic || 0,
             cost: (link.traffic || 0) * 1,
             anchorText: link.anchorText,
-            status: link.status,
+            status: start > currentDate ? LinkStatus.INACTIVE : link.status, // Set INACTIVE if future start
             url: link.url,
             page: link.page,
             isDeleted: false,
@@ -413,7 +408,6 @@ export const createCampaign = async (
           await Link.bulkCreate(linkData, { transaction });
         }
 
-        // await updateWalletBalanceByUserId(userId,{balance: totalCost})
         const wallet = await getWalletByUserIdRepo(userId);
         if (wallet) {
           await createTransactionRepo({
@@ -438,24 +432,7 @@ export const createCampaign = async (
         { model: Link, as: "links" },
       ],
     });
-    // // SUM cost từ keyword
-    // const keywordCostResult = await Keyword.findOne({
-    //   where: { campaignId: campaignWithAssociations?.id },
-    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
-    //   raw: true,
-    // });
 
-    // // SUM cost từ link
-    // const linkCostResult = await Link.findOne({
-    //   where: { campaignId: campaignWithAssociations?.id },
-    //   attributes: [[Sequelize.fn('SUM', Sequelize.col('cost')), 'cost']],
-    //   raw: true,
-    // });
-
-    // const totalCost =
-    //   Number(keywordCostResult?.cost || 0) +
-    //   Number(linkCostResult?.cost || 0);
-    // console.log(campaignWithAssociations);
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Campaign created successfully",
@@ -540,7 +517,7 @@ export const getCampaignById = async (
   }
 };
 
-export const stopCampaign = async (
+export const pauseCampaign = async (
   req: Request,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
@@ -576,6 +553,141 @@ export const stopCampaign = async (
     }
 
     // Update campaign in your server after Python API calls
+    const updatedCampaign: boolean = await pauseCampaignRepo(campaignId);
+    if (updatedCampaign) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Pause campaign successfully",
+      });
+    } else {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Pause campaign failed",
+      });
+    }
+    return;
+  } catch (error: any) {
+    const errorResponse =
+      error instanceof ErrorType
+        ? error
+        : new ErrorType(
+            "UnknownError",
+            "Failed to Pause campaign",
+            statusCode.INTERNAL_SERVER_ERROR
+          );
+    res.status(errorResponse.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: errorResponse.message,
+    });
+    return;
+  }
+};
+
+export const getContinueCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const campaignId = parseInt(req.params.id, 10);
+
+    // Fetch the campaign to get keywords and endDate
+    const campaign: CampaignAttributes | null = await getCampaignByIdRepo(
+      campaignId
+    ); // Assume a function to fetch campaign
+    if (!campaign) {
+      throw new ErrorType(
+        "NotFoundError",
+        "Campaign not found",
+        statusCode.NOT_FOUND
+      );
+    }
+
+    // Update Python API for keywords first
+    if (campaign.keywords && campaign.keywords.length > 0) {
+      const apiPromises = campaign.keywords.map(
+        async (keyword: KeywordAttributes) => {
+          const dataPython = {
+            keywordId: keyword.id,
+            timeEnd: formatDate(campaign.endDate),
+          };
+          return baseApiPythonUpdate("keyword/update", dataPython);
+        }
+      );
+
+      // Wait for all Python API calls to complete
+      await Promise.all(apiPromises);
+    }
+
+    // Update campaign in your server after Python API calls
+    const updatedCampaign: boolean = await continueCampaignRepo(campaignId);
+    if (updatedCampaign) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Continue campaign successfully",
+      });
+    } else {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Continue campaign failed",
+      });
+    }
+    return;
+  } catch (error: any) {
+    const errorResponse =
+      error instanceof ErrorType
+        ? error
+        : new ErrorType(
+            "UnknownError",
+            "Failed to continue campaign",
+            statusCode.INTERNAL_SERVER_ERROR
+          );
+    res.status(errorResponse.code || statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: errorResponse.message,
+    });
+    return;
+  }
+};
+
+export const stopCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const campaignId = parseInt(req.params.id, 10);
+
+    // Fetch the campaign to get keywords and endDate
+    const campaign: CampaignAttributes | null = await getCampaignByIdRepo(
+      campaignId
+    ); // Assume a function to fetch campaign
+    if (!campaign) {
+      throw new ErrorType(
+        "NotFoundError",
+        "Campaign not found",
+        statusCode.NOT_FOUND
+      );
+    }
+
+    // Update Python API for keywords first
+    if (campaign.keywords && campaign.keywords.length > 0) {
+      const activeKeywords = campaign.keywords.filter(
+        (keyword: KeywordAttributes) => keyword.status === keywordStatus.ACTIVE
+      );
+    
+      const apiPromises = activeKeywords.map(
+        async (keyword: KeywordAttributes) => {
+          const dataPython = {
+            keywordId: keyword.id,
+            timeEnd: formatDate(new Date()),
+          };
+          return baseApiPythonUpdate("keyword/update", dataPython);
+        }
+      );
+    
+      // Wait for all Python API calls to complete
+      await Promise.all(apiPromises);
+    }
+    // Update campaign in your server after Python API calls
     const updatedCampaign: boolean = await stopCampaignRepo(campaignId);
     if (updatedCampaign) {
       res.status(statusCode.OK).json({
@@ -595,7 +707,7 @@ export const stopCampaign = async (
         ? error
         : new ErrorType(
             "UnknownError",
-            "Failed to stop campaign",
+            "Failed to Stop campaign",
             statusCode.INTERNAL_SERVER_ERROR
           );
     res.status(errorResponse.code || statusCode.INTERNAL_SERVER_ERROR).json({
@@ -605,3 +717,4 @@ export const stopCampaign = async (
     return;
   }
 };
+

@@ -366,10 +366,18 @@ async function manageBackups(): Promise<void> {
   const backupDbs = result
     .map((row: any) => Object.values(row)[0] as string)
     .sort((a, b) => {
-      const timeA = a.match(/backup_.*_([\d-T]+)_/)?.[1];
-      const timeB = b.match(/backup_.*_([\d-T]+)_/)?.[1];
+      const timeA = a.match(/backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/)?.[1];
+      const timeB = b.match(/backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/)?.[1];
       if (!timeA || !timeB) return 0;
-      return new Date(timeB).getTime() - new Date(timeA).getTime();
+      // Convert YYYY_MM_DD_HH_MM_SS to YYYY-MM-DDTHH:MM:SS
+      const dateA = timeA.replace(/(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/, '$1-$2-$3T$4:$5:$6');
+      const dateB = timeB.replace(/(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/, '$1-$2-$3T$4:$5:$6');
+      const parsedA = new Date(dateA);
+      const parsedB = new Date(dateB);
+      // Debug parsed dates
+      // Validate dates
+      if (isNaN(parsedA.getTime()) || isNaN(parsedB.getTime())) return 0;
+      return parsedB.getTime() - parsedA.getTime(); // Newest first
     });
   // console.log('Backup databases:', backupDbs);
 
@@ -378,14 +386,14 @@ async function manageBackups(): Promise<void> {
     // Calculate how many databases to delete
     const numToDelete = backupDbs.length - MAX_BACKUPS;
 
-    // Select the oldest databases (reverse to get oldest first)
+    // Select the oldest databases (last numToDelete elements, as sorted newest to oldest)
     const dbsToDelete = backupDbs.slice(-numToDelete);
 
     // console.log('Databases to delete:', dbsToDelete);
 
     // Drop the selected databases
     for (const db of dbsToDelete) {
-      // console.log(`Deleting old backup database: ${db}`);
+      logger.info(`Deleting old backup database: ${db}`);
       await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${db}\``);
     }
   }

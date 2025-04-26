@@ -3,6 +3,8 @@ import {
   getCampaignList,
   createCampaign,
   getCampaignById,
+  getContinueCampaign,
+  pauseCampaign,
   stopCampaign,
 } from "../../../controllers/coreController/campaign.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
@@ -617,6 +619,268 @@ router.post("/", authorization(["create-campaign"]), createCampaign);
 router.get("/:id", authorization(["read-campaign"]), getCampaignById);
 /**
  * @swagger
+ * /campaigns/pause/{id}:
+ *   put:
+ *     summary: Pause a campaign by ID
+ *     description: Pauses a campaign by setting its status to PAUSED, updating the endDate to the current time, and setting all associated keywords and links to INACTIVE.
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the campaign to stop
+ *     responses:
+ *       200:
+ *         description: Campaign stopped successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: The ID of the campaign
+ *                 title:
+ *                   type: string
+ *                   description: The title of the campaign
+ *                 name:
+ *                   type: string
+ *                   description: The name of the campaign
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The start date of the campaign
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The end date of the campaign (set to current time)
+ *                 domain:
+ *                   type: string
+ *                   description: The domain associated with the campaign
+ *                 status:
+ *                   type: string
+ *                   enum: [PAUSED]
+ *                   description: The status of the campaign (PAUSED)
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The creation date of the campaign
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The last update date of the campaign
+ *                 links:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       url:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [INACTIVE]
+ *                   description: List of associated links (all set to INACTIVE)
+ *                 keywords:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       keyword:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [INACTIVE]
+ *                   description: List of associated keywords (all set to INACTIVE)
+ *       400:
+ *         description: Bad request due to invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: ValidationError
+ *                 message:
+ *                   type: string
+ *                   example: Invalid campaign ID
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *       404:
+ *         description: Campaign not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: NotFoundError
+ *                 message:
+ *                   type: string
+ *                   example: Campaign with id 123 not found
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: UnknownError
+ *                 message:
+ *                   type: string
+ *                   example: Failed to stop campaign
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ */
+router.put("/pause/:id", authorization(["read-campaign"]), pauseCampaign);
+/**
+ * @swagger
+ * /campaigns/continue/{id}:
+ *   put:
+ *     summary: continue a campaign by ID
+ *     description: continue a campaign by setting its status to ACTIVE
+ *     tags:
+ *       - Campaigns
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the campaign to continue
+ *     responses:
+ *       200:
+ *         description: Campaign continue successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: The ID of the campaign
+ *                 title:
+ *                   type: string
+ *                   description: The title of the campaign
+ *                 name:
+ *                   type: string
+ *                   description: The name of the campaign
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The start date of the campaign
+ *                 endDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The end date of the campaign (set to current time)
+ *                 domain:
+ *                   type: string
+ *                   description: The domain associated with the campaign
+ *                 status:
+ *                   type: string
+ *                   enum: [ACTIVE]
+ *                   description: The status of the campaign (ACTIVE)
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The creation date of the campaign
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The last update date of the campaign
+ *                 links:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       url:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ACTIVE]
+ *                   description: List of associated links (all set to ACTIVE)
+ *                 keywords:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       keyword:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ACTIVE]
+ *                   description: List of associated keywords (all set to ACTIVE)
+ *       400:
+ *         description: Bad request due to invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: ValidationError
+ *                 message:
+ *                   type: string
+ *                   example: Invalid campaign ID
+ *                 code:
+ *                   type: integer
+ *                   example: 400
+ *       404:
+ *         description: Campaign not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: NotFoundError
+ *                 message:
+ *                   type: string
+ *                   example: Campaign with id 123 not found
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: UnknownError
+ *                 message:
+ *                   type: string
+ *                   example: Failed to continue campaign
+ *                 code:
+ *                   type: integer
+ *                   example: 500
+ */
+router.put("/continue/:id", authorization(["read-campaign"]), getContinueCampaign);
+/**
+ * @swagger
  * /campaigns/stop/{id}:
  *   put:
  *     summary: Stop a campaign by ID
@@ -660,8 +924,8 @@ router.get("/:id", authorization(["read-campaign"]), getCampaignById);
  *                   description: The domain associated with the campaign
  *                 status:
  *                   type: string
- *                   enum: [PAUSED]
- *                   description: The status of the campaign (PAUSED)
+ *                   enum: [COMPLETED]
+ *                   description: The status of the campaign (COMPLETED)
  *                 createdAt:
  *                   type: string
  *                   format: date-time

@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import { ErrorType } from "../../types/Error.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
+import { keywordStatus } from "../../enums/keywordStatus.enum";
 
 export const getKeywordListRepo = async (filters: {
   campaignId?: number;
@@ -183,10 +184,13 @@ export const updateKeywordRepo = async (
     urls: string[];
     distribution: DistributionType;
     isDeleted: boolean;
+    status: keywordStatus;
   }>
 ): Promise<KeywordAttributes> => {
   try {
-    const keyword = await Keyword.findByPk(id);
+    const keyword = await Keyword.findByPk(id, {
+      include: [{ model: Campaign, as: 'campaigns' }], // Assuming 'campaign' is the alias for the association
+    });
     if (!keyword) {
       throw new ErrorType(
         "NotFoundError",
