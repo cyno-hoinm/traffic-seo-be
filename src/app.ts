@@ -13,6 +13,8 @@ import { ExtendedWorker } from "./types/Worker.type";
 import { redisClient } from "./config/redis.config";
 import { startBackupService } from "./services/backUpDatabase.service";
 import { startEmailService } from "./services/sendMail.service";
+import { startCampaignStatusService } from "./services/campaignStatus.service";
+import { startCampaignRefundService } from "./services/campaignRefund.service"; // New service
 import callbackRoute from "./routes/system.route/moneyRoute/callback.route";
 import bodyParser from "body-parser";
 
@@ -32,6 +34,8 @@ if (cluster.isPrimary && !isDev) {
   cluster.fork({ WORKER_TYPE: "app" });
   cluster.fork({ WORKER_TYPE: "email" });
   cluster.fork({ WORKER_TYPE: "backup" });
+  cluster.fork({ WORKER_TYPE: "campaignStatus" });
+  cluster.fork({ WORKER_TYPE: "campaignRefund" }); // New worker for campaign refund
 
   cluster.on("exit", (worker: ExtendedWorker, code, signal) => {
     logger.warn(
@@ -75,7 +79,6 @@ if (cluster.isPrimary && !isDev) {
     };
 
     startServer();
-
     process.on("SIGTERM", async () => {
       logger.info(`App worker ${process.pid} received SIGTERM`);
       await gracefulShutdown(server, "SIGTERM");
@@ -138,6 +141,58 @@ if (cluster.isPrimary && !isDev) {
 
     process.on("SIGINT", async () => {
       logger.info(`Backup worker ${process.pid} received SIGINT`);
+      await redisClient.disconnect();
+      process.exit(0);
+    });
+  } else if (workerType === "campaignStatus") {
+    const startCampaignStatusWorker = async () => {
+      try {
+        await connectDB();
+        await redisClient.connect();
+        await startCampaignStatusService();
+        logger.info(`Campaign status worker ${process.pid} started`);
+      } catch (error: any) {
+        logger.error("Failed to start campaign status worker:", error.message);
+        process.exit(1);
+      }
+    };
+
+    startCampaignStatusWorker();
+
+    process.on("SIGTERM", async () => {
+      logger.info(`Campaign status worker ${process.pid} received SIGTERM`);
+      await redisClient.disconnect();
+      process.exit(0);
+    });
+
+    process.on("SIGINT", async () => {
+      logger.info(`Campaign status worker ${process.pid} received SIGINT`);
+      await redisClient.disconnect();
+      process.exit(0);
+    });
+  } else if (workerType === "campaignRefund") {
+    const startCampaignRefundWorker = async () => {
+      try {
+        await connectDB();
+        await redisClient.connect();
+        await startCampaignRefundService();
+        logger.info(`Campaign refund worker ${process.pid} started`);
+      } catch (error: any) {
+        logger.error("Failed to start campaign refund worker:", error.message);
+        process.exit(1);
+      }
+    };
+
+    startCampaignRefundWorker();
+
+    process.on("SIGTERM", async () => {
+      logger.info(`Campaign refund worker ${process.pid} received SIGTERM`);
+      await redisClient.disconnect();
+      process.exit(0);
+    });
+
+    process.on("SIGINT", async () => {
+      logger.info(`Campaign refund worker ${process.pid} received SIGINT`);
       await redisClient.disconnect();
       process.exit(0);
     });

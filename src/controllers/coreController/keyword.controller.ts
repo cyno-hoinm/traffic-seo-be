@@ -10,8 +10,9 @@ import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { DistributionType } from "../../enums/distribution.enum";
 import { ErrorType } from "../../types/Error.type";
-import { baseApiPython } from "../../config/botAPI.config";
+import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
+import { formatDate } from "../../utils/utils";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -85,7 +86,7 @@ export const getKeywordList = async (
           campaignId: keyword.campaignId,
           name: keyword.name,
           urls: keyword.url,
-          status : keyword.status,
+          status: keyword.status,
           cost: keyword.cost,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
@@ -143,7 +144,7 @@ export const createKeyword = async (
       name,
       urls,
       traffic,
-      status : keywordStatus.ACTIVE,
+      status: keywordStatus.ACTIVE,
       distribution,
       cost,
     });
@@ -171,7 +172,7 @@ export const createKeyword = async (
         name: keyword.name,
         urls: keyword.url,
         distribution: keyword.distribution,
-        status : keyword.status,
+        status: keyword.status,
         traffic: keyword.traffic,
         createdAt: keyword.createdAt,
         cost: keyword.cost,
@@ -213,7 +214,7 @@ export const getKeywordById = async (
         campaignId: keyword.campaignId,
         name: keyword.name,
         urls: keyword.urls,
-        status : keyword.status,
+        status: keyword.status,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
         cost: keyword.cost,
@@ -238,17 +239,42 @@ export const updateKeyword = async (
     const { id } = req.params;
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
-      throw new ErrorType("ValidationError", "Invalid keyword ID", statusCode.BAD_REQUEST);
+      throw new ErrorType(
+        "ValidationError",
+        "Invalid keyword ID",
+        statusCode.BAD_REQUEST
+      );
     }
-
+    // const dataPython = {
+    //   keywordId: keyword.id,
+    //   timeEnd: formatDate(new Date()),
+    // };
+    //  baseApiPythonUpdate("keyword/update", dataPython);
     const data = req.body as Partial<{
       name: string;
       urls: string[];
       distribution: DistributionType;
       isDeleted: boolean;
+      status: keywordStatus;
     }>;
 
     const updatedKeyword = await updateKeywordRepo(parsedId, data);
+    if (updatedKeyword.status === keywordStatus.INACTIVE) {
+      const dataPython = {
+        keywordId: updatedKeyword.id,
+        timeEnd: formatDate(new Date()),
+      };
+      baseApiPythonUpdate("keyword/update", dataPython);
+    } else if (updatedKeyword.status === keywordStatus.ACTIVE) {
+      const endDateKeyword = updatedKeyword.campaigns?.endDate
+        ? updatedKeyword.campaigns.endDate
+        : new Date();
+      const dataPython = {
+        keywordId: updatedKeyword.id,
+        timeEnd: formatDate(endDateKeyword),
+      };
+      baseApiPythonUpdate("keyword/update", dataPython);
+    }
     res.status(statusCode.OK).json(updatedKeyword);
     return;
   } catch (error: any) {

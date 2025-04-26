@@ -8,4 +8,4 @@ export const dbUser = process.env.DB_US ?? "postgres";
 export const dbPassword = process.env.DB_PW ?? "password";
 export const dbHost = process.env.DB_HOST ?? "localhost";
 export const dbPort = parseInt(process.env.DB_PORT ?? "5432", 10);
-export const MAX_BACKUPS = 5;
+export const MAX_BACKUPS = 3;

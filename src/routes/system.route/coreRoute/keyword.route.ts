@@ -371,6 +371,10 @@ router.get("/:id", authorization(["read-keyword"]), getKeywordById);
  *                 type: string
  *                 enum: [DAY, MONTH, YEAR]
  *                 description: The distribution type of the keyword
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, INACTIVE]
+ *                 description: The status type of the keyword
  *               isDeleted:
  *                 type: boolean
  *                 description: Whether the keyword is marked as deleted
@@ -379,6 +383,7 @@ router.get("/:id", authorization(["read-keyword"]), getKeywordById);
  *               url: ["https://example.com", "https://example.org"]
  *               distribution: "DAY"
  *               isDeleted: false
+ *               status : "INACTIVE"
  *     responses:
  *       200:
  *         description: Keyword updated successfully

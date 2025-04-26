@@ -235,7 +235,7 @@ export const getCampaignReport = async (
   }
 };
 
-export const stopCampaignRepo = async (
+export const pauseCampaignRepo = async (
   id: number,
   transaction?: Transaction
 ): Promise<boolean> => {
@@ -267,6 +267,174 @@ export const stopCampaignRepo = async (
       await campaign.update(
         {
           status: CampaignStatus.PAUSED,
+        },
+        { transaction: t }
+      );
+
+      // Update all associated keywords to INACTIVE
+      await Keyword.update(
+        { status: keywordStatus.INACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Update all associated links to INACTIVE
+      await Link.update(
+        { status: LinkStatus.INACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Commit the transaction if it was created here
+      if (!transaction) {
+        await t.commit();
+      }
+
+      return true;
+    } catch (error) {
+      // Rollback the transaction if it was created here and not yet committed
+      if (!transaction) {
+        await t.rollback();
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    throw error instanceof ErrorType
+      ? error
+      : new ErrorType(
+          error.name,
+          error.message,
+          error.code || statusCode.INTERNAL_SERVER_ERROR
+        );
+  }
+};
+export const continueCampaignRepo = async (
+  id: number,
+  transaction?: Transaction
+): Promise<boolean> => {
+  try {
+    if (!sequelizeSystem) {
+      throw new ErrorType(
+        "InitializationError",
+        "Sequelize instance is not initialized",
+        statusCode.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    // Use provided transaction or create a new one
+    const t = transaction || (await sequelizeSystem.transaction());
+
+    try {
+      // Find the campaign
+      const campaign = await Campaign.findByPk(id, { transaction: t });
+
+      if (!campaign) {
+        throw new ErrorType(
+          "NotFoundError",
+          `Campaign with id ${id} not found`,
+          statusCode.NOT_FOUND
+        );
+      }
+
+      // Update campaign status to ACTIVE 
+      await campaign.update(
+        {
+          status: CampaignStatus.ACTIVE,
+        },
+        { transaction: t }
+      );
+
+      // Update all associated keywords to ACTIVE
+      await Keyword.update(
+        { status: keywordStatus.ACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Update all associated links to ACTIVE
+      await Link.update(
+        { status: LinkStatus.ACTIVE },
+        {
+          where: {
+            campaignId: id,
+            isDeleted: false,
+          },
+          transaction: t,
+        }
+      );
+
+      // Commit the transaction if it was created here
+      if (!transaction) {
+        await t.commit();
+      }
+
+      return true;
+    } catch (error) {
+      // Rollback the transaction if it was created here and not yet committed
+      if (!transaction) {
+        await t.rollback();
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    throw error instanceof ErrorType
+      ? error
+      : new ErrorType(
+          error.name,
+          error.message,
+          error.code || statusCode.INTERNAL_SERVER_ERROR
+        );
+  }
+};
+
+export const stopCampaignRepo = async (
+  id: number,
+  transaction?: Transaction
+): Promise<boolean> => {
+  try {
+    if (!sequelizeSystem) {
+      throw new ErrorType(
+        "InitializationError",
+        "Sequelize instance is not initialized",
+        statusCode.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    // Use provided transaction or create a new one
+    const t = transaction || (await sequelizeSystem.transaction());
+
+    try {
+      // Find the campaign
+      const campaign = await Campaign.findByPk(id, { transaction: t });
+
+      if (!campaign) {
+        throw new ErrorType(
+          "NotFoundError",
+          `Campaign with id ${id} not found`,
+          statusCode.NOT_FOUND
+        );
+      }
+
+      // Update campaign status to COMPLETED 
+      await campaign.update(
+        {
+          status: CampaignStatus.COMPLETED,
+          endDate : new Date()
         },
         { transaction: t }
       );
