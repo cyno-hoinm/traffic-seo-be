@@ -6,7 +6,14 @@ import { sequelizeSystem } from "../models/index.model";
 import { logger } from "../config/logger.config";
 import { connectDB } from "../database/mySQL/connect";
 import { generateBackupDbName } from "../utils/generate";
-import { dbHost, dbName, dbPassword, dbPort, dbUser, MAX_BACKUPS } from "../config/database.config";
+import {
+  dbHost,
+  dbName,
+  dbPassword,
+  dbPort,
+  dbUser,
+  MAX_BACKUPS,
+} from "../config/database.config";
 
 config();
 
@@ -146,17 +153,24 @@ async function createBackup() {
       }
 
       const columnTypes = new Map<string, string>(
-        columns.map((col: any) => [col.COLUMN_NAME, col.DATA_TYPE.toLowerCase()])
+        columns.map((col: any) => [
+          col.COLUMN_NAME,
+          col.DATA_TYPE.toLowerCase(),
+        ])
       );
 
-      const selectColumnsSQL = validColumns.map((col: string) => `\`${col}\``).join(", ");
+      const selectColumnsSQL = validColumns
+        .map((col: string) => `\`${col}\``)
+        .join(", ");
       const rows = await sourceSequelize.query(
         `SELECT ${selectColumnsSQL} FROM \`${tableName}\``,
         { type: QueryTypes.SELECT }
       );
 
       if (rows.length > 0) {
-        const columnsSQL = validColumns.map((col: string) => `\`${col}\``).join(", ");
+        const columnsSQL = validColumns
+          .map((col: string) => `\`${col}\``)
+          .join(", ");
         const values = rows
           .map((row: any) => {
             return `(${validColumns
@@ -179,11 +193,20 @@ async function createBackup() {
                     const date = new Date(val);
                     if (!isNaN(date.getTime())) {
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
                       const day = String(date.getDate()).padStart(2, "0");
                       const hours = String(date.getHours()).padStart(2, "0");
-                      const minutes = String(date.getMinutes()).padStart(2, "0");
-                      const seconds = String(date.getSeconds()).padStart(2, "0");
+                      const minutes = String(date.getMinutes()).padStart(
+                        2,
+                        "0"
+                      );
+                      const seconds = String(date.getSeconds()).padStart(
+                        2,
+                        "0"
+                      );
                       return `'${year}-${month}-${day} ${hours}:${minutes}:${seconds}'`;
                     }
                   }
@@ -191,8 +214,10 @@ async function createBackup() {
                   return "NULL";
                 }
 
-                if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
-                if (typeof val === "object") return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
+                if (typeof val === "string")
+                  return `'${val.replace(/'/g, "''")}'`;
+                if (typeof val === "object")
+                  return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
                 return val;
               })
               .join(", ")})`;
@@ -240,7 +265,8 @@ async function createBackup() {
           .map((index: any) => `\`${index["Column_name"]}\``)
           .join(", ");
 
-        const indexSQL = `CREATE ${indexType} INDEX \`${keyName}\` ON \`${tableName}\` (${columnNames})`.trim();
+        const indexSQL =
+          `CREATE ${indexType} INDEX \`${keyName}\` ON \`${tableName}\` (${columnNames})`.trim();
         try {
           await backupSequelize.query(indexSQL);
           // logger.info(`Created index ${keyName} for ${tableName} in ${backupDbName}`);
@@ -311,7 +337,9 @@ async function createBackup() {
     // logger.error(`Error creating backup ${backupDbName}: ${error.message}`);
     // Cleanup: Drop the backup database if it was created
     try {
-      await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${backupDbName}\``);
+      await sequelizeSystem.query(
+        `DROP DATABASE IF EXISTS \`${backupDbName}\``
+      );
       // logger.info(`Cleaned up incomplete backup database ${backupDbName}`);
     } catch (cleanupError: any) {
       // logger.error(`Failed to clean up backup database ${backupDbName}: ${cleanupError.message}`);
@@ -343,13 +371,22 @@ async function manageBackups(): Promise<void> {
       if (!timeA || !timeB) return 0;
       return new Date(timeB).getTime() - new Date(timeA).getTime();
     });
+  // console.log('Backup databases:', backupDbs);
 
   // Drop older databases if exceeding MAX_BACKUPS
   if (backupDbs.length > MAX_BACKUPS) {
-    const dbsToDelete = backupDbs.slice(MAX_BACKUPS);
+    // Calculate how many databases to delete
+    const numToDelete = backupDbs.length - MAX_BACKUPS;
+
+    // Select the oldest databases (reverse to get oldest first)
+    const dbsToDelete = backupDbs.slice(-numToDelete);
+
+    // console.log('Databases to delete:', dbsToDelete);
+
+    // Drop the selected databases
     for (const db of dbsToDelete) {
+      // console.log(`Deleting old backup database: ${db}`);
       await sequelizeSystem.query(`DROP DATABASE IF EXISTS \`${db}\``);
-      // console.log(`Deleted old backup database: ${db}`);
     }
   }
 }
@@ -374,7 +411,7 @@ export async function startBackupService() {
       },
       {
         scheduled: true, // Ensure the task is scheduled
-        timezone: "UTC", // Set timezone (adjust as needed, e.g., "Asia/Ho_Chi_Minh")
+        timezone: "Asia/Ho_Chi_Minh", // Set timezone (adjust as needed, e.g., "Asia/Ho_Chi_Minh")
       }
     );
 
