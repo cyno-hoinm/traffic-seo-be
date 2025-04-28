@@ -17,6 +17,7 @@ import {
   removeSensitivity,
   saveOtpToRedis,
   signToken,
+  verifyToken,
 } from "../../utils/utils";
 import statusCode from "../../constants/statusCode";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
@@ -44,7 +45,13 @@ export const loginUser = async (
 
     // Fetch user with role using the repository
     const user = await findUserByEmailRepo(email);
-
+    if (user?.isActive === false) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "The account do not verify yet",
+      });
+      return;
+    }
     // Check if user exists
     if (!user) {
       res
@@ -84,7 +91,6 @@ export const loginUser = async (
     });
     return;
   } catch (error: any) {
-    // console.log(error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",
@@ -273,25 +279,30 @@ export const registerUser = async (
       password: hashedPassword,
       email,
       roleId: 2,
-      isDeleted: true,
+      isDeleted: false,
+      isActive: false,
     };
 
     // Create user using repository
     const user = await createUserRepo(userData);
-
+    const type = "confirmUser";
     // Generate OTP
     const otp = generateOtp(); // Assuming you have a generateOTP function
+    const dataToken: dataToken = {
+      email: user.email,
+      otp: otp,
+      type: type,
+    };
+    const token = signToken(dataToken);
 
     // Store OTP in Redis with 5-minute expiration
-    await saveOtpToRedis(user.email, otp, "confirmUser");
+    await saveOtpToRedis(user.email, otp, type);
 
     // Send OTP email
     const emailContent = `
     <h1>Welcome to Cyno Traffic System</h1>
     <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-    <p>Please confirm at <a href="${
-      process.env.FRONT_END_URL
-    }/en/otp/${encodeURIComponent(email)}">Verify Email</a></p>
+    <p>Please confirm at <a href="${process.env.FRONT_END_URL}/verify-email/${token}">Verify Email</a></p>
     <p>Please use this code to verify your email address.</p>
   `;
 
@@ -306,14 +317,6 @@ export const registerUser = async (
       status: true,
       message:
         "User registered successfully. Please verify your email with the OTP sent.",
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roleId: user.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
     });
     return;
   } catch (error: any) {
@@ -426,22 +429,67 @@ export const changePassword = async (
 
 export const confirmUser = async (
   req: Request,
-  res: Response<ResponseType<null>>
+  res: Response<ResponseType<UserAttributes | null>>
 ): Promise<void> => {
   try {
-    const { email, otp, password, type } = req.body;
+    const { email, otp, password, type, token } = req.body;
 
-    if (password && (typeof password !== "string" || password.length < 6)) {
+    // Validate input: either token or (email, otp, type) must be provided
+    if (!token && (!email || !otp || !type)) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "Password, if provided, must be at least 6 characters",
-        error: "Invalid field",
+        message: "Either token or email, otp, and type must be provided",
+        error: "Invalid input",
       });
       return;
     }
 
+    let dataFromToken: dataToken = { email: "", type: "", otp: "" };
+    let finalEmail = email;
+    let finalOtp = otp;
+    let finalType = type;
+
+    // Handle token-based verification
+    if (token) {
+      try {
+        dataFromToken = verifyToken(token);
+        finalEmail = dataFromToken.email;
+        finalOtp = dataFromToken.otp;
+        finalType = dataFromToken.type;
+      } catch (tokenError: any) {
+        res.status(statusCode.UNAUTHORIZED).json({
+          status: false,
+          message: "Invalid or expired token",
+          error: tokenError.message,
+        });
+        return;
+      }
+    }
+
+    // Validate required fields
+    if (!finalEmail || !finalOtp || !finalType) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Email, OTP, and type are required",
+        error: "Invalid input",
+      });
+      return;
+    }
+
+    // Validate password if provided
+    if (password !== null && password !== undefined) {
+      if (typeof password !== "string" || password.length < 6) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Password must be a string with at least 6 characters",
+          error: "Invalid field",
+        });
+        return;
+      }
+    }
+
     // Fetch user by email
-    const user = await findUserByEmailForConfirmRepo(email);
+    const user = await findUserByEmailForConfirmRepo(finalEmail);
     if (!user) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -450,9 +498,10 @@ export const confirmUser = async (
       });
       return;
     }
+
     // Verify OTP from Redis
-    const storedOtp = await redisClient.get(`${type}:otp:${email}`);
-    if (!storedOtp || storedOtp !== otp) {
+    const storedOtp = await redisClient.get(`${finalType}:otp:${finalEmail}`);
+    if (!storedOtp || storedOtp !== finalOtp) {
       res.status(statusCode.UNAUTHORIZED).json({
         status: false,
         message: "Invalid or expired OTP",
@@ -461,31 +510,30 @@ export const confirmUser = async (
       return;
     }
 
-    // Update isDeleted to 0 (false)
-    await updateUserOneFieldRepo(user.id, "isDeleted", false);
-
+    // Update isActive to true
+    const finalUser = await updateUserOneFieldRepo(user.id, "isActive", true);
     // Update password if provided
     if (password) {
       const hashedNewPassword = await hashedPasswordString(password, 10);
       await updateUserOneFieldRepo(user.id, "password", hashedNewPassword);
+
     }
 
     // Delete OTP from Redis after successful verification
-    await redisClient.del(`otp:${email}`);
+    await redisClient.del(`${finalType}:otp:${finalEmail}`);
 
     // Return success response
     res.status(statusCode.OK).json({
       status: true,
       message: "Email verified successfully",
+      data: finalUser ? finalUser : null,
     });
-    return;
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error verifying email",
       error: error.message,
     });
-    return;
   }
 };
 
@@ -509,7 +557,8 @@ export const resendOtp = async (
 
     // Generate new OTP
     const otp = generateOtp();
-
+    if (type === "confirmUser") {
+    }
     // Store OTP in Redis with 5-minute expiration
     await saveOtpToRedis(user.email, otp, type);
 
@@ -541,3 +590,9 @@ export const resendOtp = async (
     return;
   }
 };
+
+export interface dataToken {
+  email: string;
+  type: string;
+  otp: string;
+}

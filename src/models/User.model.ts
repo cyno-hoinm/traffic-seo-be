@@ -10,6 +10,7 @@ class User extends Model<UserAttributes> implements UserAttributes {
   public email!: string;
   public roleId!: number;
   public role!: RoleAttributes;
+  public isActive!: boolean; // Added
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -40,6 +41,11 @@ User.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 2, // Customer
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false, // Inactive by default (e.g., pending email verification)
     },
     isDeleted: {
       type: DataTypes.BOOLEAN,
