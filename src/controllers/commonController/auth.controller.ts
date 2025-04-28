@@ -542,20 +542,59 @@ export const resendOtp = async (
   res: Response<ResponseType<null>>
 ): Promise<void> => {
   try {
-    const { email, type } = req.body;
+    const { email, type, tokenFromReq } = req.body;
 
-    // Validate input
-    if (!email || typeof email !== "string" || !type || typeof type !== "string") {
+    // Validate input: either tokenFromReq or (email and type) must be provided
+    if (!tokenFromReq && (!email || !type)) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
-        message: "Email and type are required and must be strings",
+        message: "Either token or email and type must be provided",
         error: "Invalid input",
       });
       return;
     }
 
+    let finalEmail: string;
+    let finalType: string;
+
+    // Handle token-based input
+    if (tokenFromReq) {
+      try {
+        const dataParseFromToken = verifyToken(tokenFromReq) as dataToken;
+        if (!dataParseFromToken.email || !dataParseFromToken.type) {
+          res.status(statusCode.BAD_REQUEST).json({
+            status: false,
+            message: "Invalid token: missing email or type",
+            error: "Invalid token",
+          });
+          return;
+        }
+        finalEmail = dataParseFromToken.email;
+        finalType = dataParseFromToken.type;
+      } catch (tokenError: any) {
+        res.status(statusCode.UNAUTHORIZED).json({
+          status: false,
+          message: "Invalid or expired token",
+          error: tokenError.message,
+        });
+        return;
+      }
+    } else {
+      // Validate email and type directly from req.body
+      if (typeof email !== "string" || typeof type !== "string") {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Email and type must be strings",
+          error: "Invalid input",
+        });
+        return;
+      }
+      finalEmail = email;
+      finalType = type;
+    }
+
     // Fetch user by email
-    const user = await findUserByEmailForConfirmRepo(email);
+    const user = await findUserByEmailForConfirmRepo(finalEmail);
     if (!user) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -570,25 +609,25 @@ export const resendOtp = async (
     let token: string | undefined;
 
     // Generate token for confirmUser type
-    if (type === "confirmUser") {
+    if (finalType === "confirmUser") {
       const dataToken: dataToken = {
         email: user.email,
         otp,
-        type,
+        type: finalType,
       };
       token = signToken(dataToken);
     }
 
     // Store OTP in Redis with 5-minute expiration
-    await saveOtpToRedis(user.email, otp, type);
+    await saveOtpToRedis(user.email, otp, finalType);
 
     // Send OTP email
     const emailContent = `
       <h1>Welcome to Cyno Traffic System</h1>
       <p>Your OTP for email verification is: <strong>${otp}</strong></p>
       ${
-        type === "confirmUser"
-          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${encodeURIComponent(
+        finalType === "confirmUser"
+          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/otp/${encodeURIComponent(
               user.email
             )}">Verify Email</a></p>`
           : ""
@@ -615,7 +654,6 @@ export const resendOtp = async (
     });
   }
 };
-
 export interface dataToken {
   email: string;
   type: string;
