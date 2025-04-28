@@ -58,6 +58,7 @@ if (cluster.isPrimary && !isDev) {
         },
       })
     );
+    app.set("trust proxy", 1);
     configureMiddleware(app);
     app.use("/callback", callbackRoute);
     configureRoutes(app);
