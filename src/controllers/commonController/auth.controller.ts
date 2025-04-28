@@ -517,9 +517,6 @@ export const resendOtp = async (
     const emailContent = `
     <h1>Welcome to Cyno Traffic System</h1>
     <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-    <p>Please confirm at <a href="${
-      process.env.FRONT_END_URL
-    }/en/otp/${encodeURIComponent(email)}">Verify Email</a></p>
     <p>Please use this code to verify your email address.</p>
   `;
 
