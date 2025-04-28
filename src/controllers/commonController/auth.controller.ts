@@ -302,7 +302,7 @@ export const registerUser = async (
     const emailContent = `
     <h1>Welcome to Cyno Traffic System</h1>
     <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-    <p>Please confirm at <a href="${process.env.FRONT_END_URL}/verify-email/${token}">Verify Email</a></p>
+    <p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${token}">Verify Email</a></p>
     <p>Please use this code to verify your email address.</p>
   `;
 
@@ -544,6 +544,16 @@ export const resendOtp = async (
   try {
     const { email, type } = req.body;
 
+    // Validate input
+    if (!email || typeof email !== "string" || !type || typeof type !== "string") {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Email and type are required and must be strings",
+        error: "Invalid input",
+      });
+      return;
+    }
+
     // Fetch user by email
     const user = await findUserByEmailForConfirmRepo(email);
     if (!user) {
@@ -557,17 +567,34 @@ export const resendOtp = async (
 
     // Generate new OTP
     const otp = generateOtp();
+    let token: string | undefined;
+
+    // Generate token for confirmUser type
     if (type === "confirmUser") {
+      const dataToken: dataToken = {
+        email: user.email,
+        otp,
+        type,
+      };
+      token = signToken(dataToken);
     }
+
     // Store OTP in Redis with 5-minute expiration
     await saveOtpToRedis(user.email, otp, type);
 
     // Send OTP email
     const emailContent = `
-    <h1>Welcome to Cyno Traffic System</h1>
-    <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-    <p>Please use this code to verify your email address.</p>
-  `;
+      <h1>Welcome to Cyno Traffic System</h1>
+      <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+      ${
+        type === "confirmUser"
+          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${encodeURIComponent(
+              user.email
+            )}">Verify Email</a></p>`
+          : ""
+      }
+      <p>Please use this code to verify your email address.</p>
+    `;
 
     await queueEmail(
       user.email,
@@ -580,14 +607,12 @@ export const resendOtp = async (
       status: true,
       message: "OTP resent successfully. Please check your email.",
     });
-    return;
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error resending OTP",
       error: error.message,
     });
-    return;
   }
 };
 
