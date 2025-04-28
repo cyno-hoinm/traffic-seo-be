@@ -423,10 +423,6 @@ export async function startBackupService() {
       }
     );
 
-    // Run initial backup (optional)
-    logger.info("Running initial backup...");
-    await createBackup();
-    logger.info("Initial backup completed");
 
     logger.info("Backup service started. Backups will run every 2 hours.");
   } catch (error: any) {
