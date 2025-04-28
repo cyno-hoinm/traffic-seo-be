@@ -283,14 +283,17 @@ export const registerUser = async (
     const otp = generateOtp(); // Assuming you have a generateOTP function
 
     // Store OTP in Redis with 5-minute expiration
-    await saveOtpToRedis(user.email, otp);
+    await saveOtpToRedis(user.email, otp, "confirmUser");
 
     // Send OTP email
     const emailContent = `
-      <h1>Welcome to Cyno Traffic System</h1>
-      <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-      <p>Please use this code to verify your email address.</p>
-    `;
+    <h1>Welcome to Cyno Traffic System</h1>
+    <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+    <p>Please confirm at <a href="${
+      process.env.FRONT_END_URL
+    }/en/otp/${encodeURIComponent(email)}">Verify Email</a></p>
+    <p>Please use this code to verify your email address.</p>
+  `;
 
     await queueEmail(
       user.email,
@@ -426,7 +429,7 @@ export const confirmUser = async (
   res: Response<ResponseType<null>>
 ): Promise<void> => {
   try {
-    const { email, otp, password } = req.body;
+    const { email, otp, password, type } = req.body;
 
     if (password && (typeof password !== "string" || password.length < 6)) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -447,9 +450,8 @@ export const confirmUser = async (
       });
       return;
     }
-
     // Verify OTP from Redis
-    const storedOtp = await redisClient.get(`otp:${email}`);
+    const storedOtp = await redisClient.get(`${type}:otp:${email}`);
     if (!storedOtp || storedOtp !== otp) {
       res.status(statusCode.UNAUTHORIZED).json({
         status: false,
@@ -492,7 +494,7 @@ export const resendOtp = async (
   res: Response<ResponseType<null>>
 ): Promise<void> => {
   try {
-    const { email } = req.body;
+    const { email, type } = req.body;
 
     // Fetch user by email
     const user = await findUserByEmailForConfirmRepo(email);
@@ -509,14 +511,17 @@ export const resendOtp = async (
     const otp = generateOtp();
 
     // Store OTP in Redis with 5-minute expiration
-    await saveOtpToRedis(user.email, otp);
+    await saveOtpToRedis(user.email, otp, type);
 
     // Send OTP email
     const emailContent = `
-      <h1>Welcome to Cyno Traffic System</h1>
-      <p>Your new OTP for email verification is: <strong>${otp}</strong></p>
-      <p>Please use this code to verify your email address.</p>
-    `;
+    <h1>Welcome to Cyno Traffic System</h1>
+    <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+    <p>Please confirm at <a href="${
+      process.env.FRONT_END_URL
+    }/en/otp/${encodeURIComponent(email)}">Verify Email</a></p>
+    <p>Please use this code to verify your email address.</p>
+  `;
 
     await queueEmail(
       user.email,

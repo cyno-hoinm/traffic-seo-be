@@ -85,9 +85,10 @@ export const isTokenBlacklisted = async (token: string): Promise<boolean> => {
 export const saveOtpToRedis = async (
   email: string,
   otp: string,
+  type : string,
   expirySeconds: number = 300
 ): Promise<boolean> => {
-  const redisKey = `otp:${email}`;
+  const redisKey = `${type}:otp:${email}`;
   try {
     // Ensure Redis is connected
     await redisClient.connect();
