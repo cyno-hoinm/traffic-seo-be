@@ -627,7 +627,7 @@ export const resendOtp = async (
       <p>Your OTP for email verification is: <strong>${otp}</strong></p>
       ${
         finalType === "confirmUser"
-          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/otp/${encodeURIComponent(
+          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${encodeURIComponent(
               user.email
             )}">Verify Email</a></p>`
           : ""
