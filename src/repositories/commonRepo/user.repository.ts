@@ -33,6 +33,7 @@ export const findUserByIdRepo = async (
             {
               model: RolePermission,
               as: "rolePermissions",
+              where: { isDeleted: false },
               include: [
                 {
                   model: Permission,
