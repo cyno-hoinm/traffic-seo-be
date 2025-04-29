@@ -4,6 +4,7 @@ import {
   getDepositListRepo,
   getDepositByIdRepo,
   getDepositByOrderIdRepo,
+  createDepositRepo,
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
@@ -86,7 +87,7 @@ export const getDepositList = async (
           userId: deposit.userId,
           username: deposit.users?.username,
           orderId: deposit.orderId,
-          paymentMethodId: deposit.paymentMethodId,
+          paymentMethods: deposit.paymentMethods,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
           status: deposit.status,
@@ -115,6 +116,7 @@ export const createDeposit = async (
     const { userId, voucherId, amount, paymentMethodId } = req.body;
     const orderId = uuIDv4();
     const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
+    const roleId = req.data?.role.id || 0;
     if (
       !userId ||
       !voucherId ||
@@ -195,7 +197,35 @@ export const createDeposit = async (
         });
         return;
       }
-
+      case 4: {
+        // GIFT
+        const orderCodeUnique = uuidToNumber(orderId);
+        if (roleId === 1) {
+          await createDepositRepo({
+            createdBy: createdBy,
+            amount: amount,
+            orderId: orderCodeUnique.toString(),
+            paymentMethodId: 4,
+            status: DepositStatus.COMPLETED,
+            userId: userId,
+            voucherId: voucherId,
+          });
+          res.status(statusCode.OK).json({
+            status: true,
+            message: "Successfully charge credit for user",
+            error: "Successfully charge credit for user",
+          });
+          return;
+        }else {
+          res.status(statusCode.FORBIDDEN).json({
+            status: false,
+            message: "You not have permission",
+            error: "You not have permission",
+          });
+          return;
+        }
+        
+      }
       default: {
         res.status(statusCode.BAD_REQUEST).json({
           status: false,

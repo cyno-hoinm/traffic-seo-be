@@ -1,4 +1,5 @@
 import { DepositStatus } from "../enums/depositStatus.enum";
+import { PaymentMethodAttributes } from "./PaymentMethod.interface";
 import { UserAttributes } from "./User.interface";
 
 export interface DepositAttributes {
@@ -7,6 +8,7 @@ export interface DepositAttributes {
   users? : UserAttributes
   orderId: string;
   paymentMethodId?: number;
+  paymentMethods? : PaymentMethodAttributes
   voucherId: number;
   amount: number;
   status: DepositStatus;
