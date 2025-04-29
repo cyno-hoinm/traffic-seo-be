@@ -11,7 +11,7 @@ import Voucher from "./Voucher.model";
 import Keyword from "./Keyword.model";
 import Link from "./Link.model";
 import Notification from "./Notification.model"; // Add Notification
-import Transaction from "./Transaction.model"; // Add Transaction
+import TransactionModel from "./Transaction.model"; // Add Transaction
 import PaymentMethod from "./PaymentMethod.model";
 import CampaignType from "./CampaignType.model";
 import Config from "./Config.model";
@@ -30,7 +30,7 @@ export const models = {
   Keyword,
   Link,
   Notification,
-  Transaction,
+  TransactionModel,
   PaymentMethod,
   CampaignType,
   Config
@@ -93,7 +93,7 @@ RolePermission.belongsTo(Permission, {
 Notification.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
 User.hasMany(Notification, { foreignKey: "userId", as: "notifications", onDelete: 'SET NULL' });
 
-Transaction.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'SET NULL'  });
+TransactionModel.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'SET NULL'  });
 
 // Export models
 export {
@@ -109,7 +109,7 @@ export {
   Keyword,
   Link,
   Notification,
-  Transaction,
+  TransactionModel,
   PaymentMethod,
   Config,
   sequelizeSystem,

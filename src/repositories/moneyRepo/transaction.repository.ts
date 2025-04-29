@@ -1,8 +1,7 @@
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import {
-  Deposit,
   sequelizeSystem,
-  Transaction,
+  TransactionModel,
   User,
   Wallet,
 } from "../../models/index.model";
@@ -46,7 +45,7 @@ export const createTransactionRepo = async (
     const transaction = _transaction || (await sequelizeSystem.transaction());
 
     try {
-      const newTransaction = await Transaction.create(
+      const newTransaction = await TransactionModel.create(
         {
           walletId: data.walletId,
           amount: data.amount,
@@ -168,7 +167,7 @@ export const getListTransactionRepo = async (filters: {
       queryOptions.limit = filters.limit;
     }
 
-    const transactions = await Transaction.findAll(queryOptions);
+    const transactions = await TransactionModel.findAll(queryOptions);
     return transactions;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
@@ -179,7 +178,7 @@ export const getTransactionByIdRepo = async (
   transactionId: number
 ): Promise<TransactionAttributes> => {
   try {
-    const transaction = await Transaction.findByPk(transactionId);
+    const transaction = await TransactionModel.findByPk(transactionId);
 
     if (!transaction) {
       throw new ErrorType("NotFoundError", "Transaction not found");

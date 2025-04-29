@@ -6,7 +6,7 @@ import {
   Keyword,
   Link,
   sequelizeSystem,
-  Transaction,
+  TransactionModel,
   Wallet,
 } from "../models/index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
@@ -87,7 +87,7 @@ export const processCampaignRefund = async (campaignId: number) => {
         transaction,
       });
       if (wallet) {
-        await Transaction.create(
+        await TransactionModel.create(
           {
             walletId: wallet.id,
             amount: refundAmount,

@@ -88,6 +88,7 @@ export const getDepositList = async (
           username: deposit.users?.username,
           orderId: deposit.orderId,
           paymentMethods: deposit.paymentMethods,
+          transactions: deposit.transactions,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
           status: deposit.status,

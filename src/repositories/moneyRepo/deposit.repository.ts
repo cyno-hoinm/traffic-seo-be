@@ -1,7 +1,13 @@
-import { Deposit, PaymentMethod, User, Wallet } from "../../models/index.model";
+import {
+  Deposit,
+  PaymentMethod,
+  TransactionModel,
+  User,
+  Wallet,
+} from "../../models/index.model";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { sequelizeSystem } from "../../models/index.model";
-import { Op, Transaction } from "sequelize";
+import { Op, QueryTypes, Sequelize, Transaction } from "sequelize";
 import { createTransactionRepo } from "././transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
@@ -20,57 +26,95 @@ export const getDepositListRepo = async (filters: {
   limit?: number;
 }): Promise<{ deposits: DepositAttributes[]; total: number }> => {
   try {
-    const where: any = { isDeleted: false };
+    const whereConditions: string[] = ['d.isDeleted = false'];
+    const queryParams: any = {};
 
     if (filters.userId) {
-      where.userId = filters.userId;
+      whereConditions.push('d.userId = :userId');
+      queryParams.userId = filters.userId;
     }
     if (filters.status) {
-      where.status = filters.status;
+      whereConditions.push('d.status = :status');
+      queryParams.status = filters.status;
     }
-    if (filters.start_date || filters.end_date) {
-      where.createdAt = {};
-      if (filters.start_date) {
-        where.createdAt[Op.gte] = filters.start_date;
-      }
-      if (filters.end_date) {
-        where.createdAt[Op.lte] = filters.end_date;
-      }
+    if (filters.start_date) {
+      whereConditions.push('d.createdAt >= :start_date');
+      queryParams.start_date = filters.start_date;
     }
-
-    const queryOptions: any = {
-      where,
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: User,
-          as: "users",
-          attributes: ["username"], // Only fetch the username
-        },
-        {
-          model: PaymentMethod,
-          as: "paymentMethods",
-          attributes: ["id", "name", "unit"], // Only fetch the username
-        },
-      ],
-    };
-
-    // Apply pagination only if page and limit are not 0
-    if (
-      filters.page &&
-      filters.limit &&
-      filters.page > 0 &&
-      filters.limit > 0
-    ) {
-      queryOptions.offset = (filters.page - 1) * filters.limit;
-      queryOptions.limit = filters.limit;
+    if (filters.end_date) {
+      whereConditions.push('d.createdAt <= :end_date');
+      queryParams.end_date = filters.end_date;
     }
 
-    const { rows: deposits, count: total } = await Deposit.findAndCountAll(
-      queryOptions
-    );
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    let limitOffsetClause = '';
+    if (filters.page && filters.limit && filters.page > 0 && filters.limit > 0) {
+      queryParams.offset = (filters.page - 1) * filters.limit;
+      queryParams.limit = filters.limit;
+      limitOffsetClause = 'LIMIT :limit OFFSET :offset';
+    }
 
-    return { deposits, total };
+    const mainQuery = `
+      SELECT 
+        d.*,
+        u.username AS users_username,
+        pm.id AS paymentMethods_id,
+        pm.name AS paymentMethods_name,
+        pm.unit AS paymentMethods_unit,
+        t.id AS transactions_id,
+        t.referenceId AS transactions_referenceId,
+        t.amount AS transactions_amount
+      FROM deposits d
+      LEFT JOIN users u ON d.userId = u.id
+      LEFT JOIN paymentMethods pm ON d.paymentMethodId = pm.id
+      LEFT JOIN transactions t ON d.id = t.referenceId
+      ${whereClause}
+      ORDER BY d.createdAt DESC
+      ${limitOffsetClause}
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM deposits d
+      ${whereClause}
+    `;
+
+    const [deposits] = await Promise.all([
+      sequelizeSystem.query(mainQuery, {
+        replacements: queryParams,
+        type: QueryTypes.SELECT,
+        nest: true,
+        raw: true,
+      }),
+      sequelizeSystem.query(countQuery, {
+        replacements: queryParams,
+        type: QueryTypes.SELECT,
+      }),
+    ]);
+
+    const formattedDeposits = deposits.map((deposit: any) => ({
+      ...deposit,
+      users: deposit.users_username ? { username: deposit.users_username } : null,
+      paymentMethods: deposit.paymentMethods_id
+        ? {
+            id: deposit.paymentMethods_id,
+            name: deposit.paymentMethods_name,
+            unit: deposit.paymentMethods_unit,
+          }
+        : null,
+      transactions: deposit.transactions_id
+        ? [
+            {
+              id: deposit.transactions_id,
+              amount: deposit.transactions_amount,
+            },
+          ]
+        : [],
+    }));
+
+    const total = deposits.length;
+
+    return { deposits: formattedDeposits, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
