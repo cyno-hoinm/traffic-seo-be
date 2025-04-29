@@ -6,7 +6,7 @@ import {
   getCampaignByIdRepo,
   continueCampaignRepo,
   pauseCampaignRepo,
-  stopCampaignRepo,
+  cancelCampaignRepo,
 } from "../../repositories/coreRepo/campagin.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
@@ -649,7 +649,7 @@ export const getContinueCampaign = async (
   }
 };
 
-export const stopCampaign = async (
+export const cancelCampaign = async (
   req: Request,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
@@ -688,7 +688,7 @@ export const stopCampaign = async (
       await Promise.all(apiPromises);
     }
     // Update campaign in your server after Python API calls
-    const updatedCampaign: boolean = await stopCampaignRepo(campaignId);
+    const updatedCampaign: boolean = await cancelCampaignRepo(campaignId);
     if (updatedCampaign) {
       res.status(statusCode.OK).json({
         status: true,

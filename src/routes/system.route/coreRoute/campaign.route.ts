@@ -5,7 +5,7 @@ import {
   getCampaignById,
   getContinueCampaign,
   pauseCampaign,
-  stopCampaign,
+  cancelCampaign,
 } from "../../../controllers/coreController/campaign.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -881,7 +881,7 @@ router.put("/pause/:id", authorization(["read-campaign"]), pauseCampaign);
 router.put("/continue/:id", authorization(["read-campaign"]), getContinueCampaign);
 /**
  * @swagger
- * /campaigns/stop/{id}:
+ * /campaigns/cancel/{id}:
  *   put:
  *     summary: Stop a campaign by ID
  *     description: Pauses a campaign by setting its status to PAUSED, updating the endDate to the current time, and setting all associated keywords and links to INACTIVE.
@@ -1009,5 +1009,5 @@ router.put("/continue/:id", authorization(["read-campaign"]), getContinueCampaig
  *                   type: integer
  *                   example: 500
  */
-router.put("/stop/:id", authorization(["read-campaign"]), stopCampaign);
+router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
 export default router;

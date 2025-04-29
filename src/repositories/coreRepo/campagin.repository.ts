@@ -402,7 +402,7 @@ export const continueCampaignRepo = async (
   }
 };
 
-export const stopCampaignRepo = async (
+export const cancelCampaignRepo = async (
   id: number,
   transaction?: Transaction
 ): Promise<boolean> => {
@@ -433,7 +433,7 @@ export const stopCampaignRepo = async (
       // Update campaign status to COMPLETED 
       await campaign.update(
         {
-          status: CampaignStatus.COMPLETED,
+          status: CampaignStatus.CANCEL,
           endDate : new Date()
         },
         { transaction: t }

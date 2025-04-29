@@ -133,10 +133,12 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
     // Start a transaction for the query
     transaction = await sequelizeSystem.transaction();
 
-    // Find ACTIVE campaigns with endDate < currentDate
+    // Find ACTIVE and CANCEL campaigns
     const campaigns = await Campaign.findAll({
       where: {
-        status: CampaignStatus.ACTIVE,
+        status: {
+          [Op.in]: [CampaignStatus.ACTIVE, CampaignStatus.CANCEL],
+        },
         endDate: {
           [Op.lt]: currentDate,
         },
@@ -151,10 +153,10 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
     logger.info(
       `Found ${
         campaigns.length
-      } campaigns to process for refund on ${currentDate.toISOString()}`
+      } campaigns to process on ${currentDate.toISOString()}`
     );
 
-    // Process campaigns: Update statuses and enqueue
+    // Process campaigns: Cancel ACTIVE campaigns, enqueue CANCEL campaigns for refund
     const campaignIds: string[] = [];
     for (const campaign of campaigns) {
       const isProcessed = await redisClient.sIsMember(
@@ -166,53 +168,57 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
         continue;
       }
 
-      const updateTransaction = await sequelizeSystem.transaction();
-      try {
-        // Update campaign status to COMPLETED
-        await campaign.update(
-          { status: CampaignStatus.COMPLETED },
-          { transaction: updateTransaction }
-        );
+      if (campaign.status === CampaignStatus.ACTIVE) {
+        // Cancel ACTIVE campaigns
+        const updateTransaction = await sequelizeSystem.transaction();
+        try {
+          // Update campaign status to COMPLETED
+          await campaign.update(
+            { status: CampaignStatus.COMPLETED },
+            { transaction: updateTransaction }
+          );
 
-        // Update keywords to INACTIVE
-        if (campaign.keywords && campaign.keywords.length > 0) {
-          await Keyword.update(
-            { status: keywordStatus.INACTIVE },
-            {
-              where: { campaignId: campaign.id },
-              transaction: updateTransaction,
-            }
+          // Update keywords to INACTIVE
+          if (campaign.keywords && campaign.keywords.length > 0) {
+            await Keyword.update(
+              { status: keywordStatus.INACTIVE },
+              {
+                where: { campaignId: campaign.id },
+                transaction: updateTransaction,
+              }
+            );
+            logger.info(
+              `Set ${campaign.keywords.length} keywords to INACTIVE for campaign ${campaign.id}`
+            );
+          }
+
+          // Update links to INACTIVE
+          if (campaign.links && campaign.links.length > 0) {
+            await Link.update(
+              { status: LinkStatus.INACTIVE },
+              {
+                where: { campaignId: campaign.id },
+                transaction: updateTransaction,
+              }
+            );
+            logger.info(
+              `Set ${campaign.links.length} links to INACTIVE for campaign ${campaign.id}`
+            );
+          }
+
+          logger.info(`Cancelled campaign ${campaign.id}`);
+          await updateTransaction.commit();
+        } catch (error: any) {
+          await updateTransaction.rollback();
+          logger.error(
+            `Error cancelling campaign ${campaign.id}: ${error.message}`
           );
-          logger.info(
-            `Set ${campaign.keywords.length} keywords to INACTIVE for campaign ${campaign.id}`
-          );
+          continue;
         }
-
-        // Update links to INACTIVE
-        if (campaign.links && campaign.links.length > 0) {
-          await Link.update(
-            { status: LinkStatus.INACTIVE },
-            {
-              where: { campaignId: campaign.id },
-              transaction: updateTransaction,
-            }
-          );
-          logger.info(
-            `Set ${campaign.links.length} links to INACTIVE for campaign ${campaign.id}`
-          );
-        }
-
-        // Enqueue campaign for refund processing
+      } else if (campaign.status === CampaignStatus.CANCEL) {
+        // Enqueue CANCEL campaigns for refund processing without updating status
         campaignIds.push(campaign.id.toString());
-        logger.info(`Prepared campaign ${campaign.id} for enqueue`);
-
-        await updateTransaction.commit();
-      } catch (error: any) {
-        await updateTransaction.rollback();
-        logger.error(
-          `Error updating campaign ${campaign.id}: ${error.message}`
-        );
-        continue;
+        logger.info(`Prepared campaign ${campaign.id} for refund enqueue`);
       }
     }
 
@@ -229,7 +235,7 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
         logger.error(`Failed to enqueue campaigns: ${error.message}`);
       }
     } else {
-      logger.info("No new campaigns to enqueue");
+      logger.info("No campaigns to enqueue for refund");
     }
 
     return campaignIds.length; // Return the number of campaigns enqueued
@@ -237,7 +243,7 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
     if (transaction) {
       await transaction.rollback();
     }
-    logger.error(`Error enqueuing campaigns for refund: ${error.message}`);
+    logger.error(`Error processing campaigns: ${error.message}`);
     return 0; // Return 0 to indicate no campaigns were enqueued
   }
 };
