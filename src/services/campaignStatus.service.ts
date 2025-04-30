@@ -14,7 +14,7 @@ export const checkAndUpdateCampaignStatus = async () => {
   try {
     // Get current date without time for comparison (to match startDate)
     const currentDate = new Date();
-    currentDate.setHours(7, 0, 0, 0);
+    currentDate.setHours(8, 0, 0, 0);
 
     // Find campaigns with NOT_STARTED status and startDate <= currentDate
     const campaigns = await Campaign.findAll({
@@ -74,7 +74,7 @@ export const checkAndUpdateCampaignStatus = async () => {
 
 export const startCampaignStatusService = async () => {
   logger.info("Starting campaign status service...");
-  // await checkAndUpdateCampaignStatus()
+  await checkAndUpdateCampaignStatus()
   // Schedule the task to run every day at 1 AM
   cron.schedule("0 0 * * *", async () => {
     try {

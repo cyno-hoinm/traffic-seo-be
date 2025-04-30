@@ -430,14 +430,28 @@ export const cancelCampaignRepo = async (
         );
       }
 
-      // Update campaign status to COMPLETED 
-      await campaign.update(
-        {
-          status: CampaignStatus.CANCEL,
-          endDate : new Date()
-        },
-        { transaction: t }
-      );
+      // Get current date and reset time to 00:00:00.000
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      // Get campaign startDate and reset time to 00:00:00.000
+      const startDate = new Date(campaign.startDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Prepare update data
+      const updateData: { status: CampaignStatus; startDate?: Date; endDate: Date } = {
+        status: CampaignStatus.CANCEL,
+        endDate: new Date(), // Always set endDate to current date/time
+      };
+
+      // If startDate is before currentDate, set both startDate and endDate to current date
+      if (startDate < currentDate) {
+        updateData.startDate = new Date();
+        updateData.endDate = new Date();
+      }
+
+      // Update campaign
+      await campaign.update(updateData, { transaction: t });
 
       // Update all associated keywords to INACTIVE
       await Keyword.update(

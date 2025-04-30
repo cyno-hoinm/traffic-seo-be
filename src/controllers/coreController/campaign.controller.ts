@@ -209,9 +209,10 @@ export const createCampaign = async (
       });
       return;
     }
-
     const start = new Date(startDate);
     const end = new Date(endDate);
+    
+    // Validate date formats
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -220,11 +221,25 @@ export const createCampaign = async (
       });
       return;
     }
-
-
+    
+    // Reset time to 00:00:00.000 for both dates
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    // Validate that startDate is before endDate
+    if (start >= end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "startDate must be before endDate",
+        error: "Invalid date range",
+      });
+      return;
+    }
+    
     // Determine campaign status based on startDate
     const currentDate = new Date();
-    const campaignStatus = start > currentDate ? CampaignStatus.NOT_STARTED :  CampaignStatus.ACTIVE;
+    currentDate.setHours(0, 0, 0, 0); // Optional: reset currentDate time for consistency
+    const campaignStatus = start > currentDate ? CampaignStatus.NOT_STARTED : CampaignStatus.ACTIVE;
 
     let keywordTrafficCost = 1;
     const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
