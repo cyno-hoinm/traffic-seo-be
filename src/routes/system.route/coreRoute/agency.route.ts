@@ -6,10 +6,70 @@ import {
   updateAgency,
   deleteAgency,
   searchAgencies,
+  getMyAgency,
 } from "../../../controllers/coreController/agency.controller";
 import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * /agencies/getMe:
+ *   post:
+ *     summary: Get agencies assigned to the authenticated user
+ *     tags:
+ *       - Agencies
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Agencies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Agencies retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Agency'
+ *       401:
+ *         description: Unauthorized access
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ *                 error:
+ *                   type: string
+ *                   example: Detailed error message
+ */
+
+router.post("/getMe", authorization(["read-agency"]), getMyAgency);
 
 /**
  * @swagger
@@ -265,5 +325,9 @@ router.delete("/:id", authorization(["delete-agency"]), deleteAgency);
  *         description: Internal server error
  */
 router.post("/search", authorization(["read-agency"]), searchAgencies);
+
+
+
+
 
 export default router;

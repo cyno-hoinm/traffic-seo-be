@@ -85,14 +85,14 @@ export const isTokenBlacklisted = async (token: string): Promise<boolean> => {
 export const saveOtpToRedis = async (
   email: string,
   otp: string,
-  type : string,
+  type: string,
   expirySeconds: number = 300
 ): Promise<boolean> => {
   const redisKey = `${type}:otp:${email}`;
   try {
     // Ensure Redis is connected
     await redisClient.connect();
-    
+
     // Use setEx method from your Redis client (key, value, ttl)
     await redisClient.set(redisKey, otp, expirySeconds);
     return true;
@@ -161,6 +161,23 @@ export const calculateCampaignMetrics = (
 export const formatDate = (date: Date | string | null): string => {
   if (!date) return "";
   const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
   return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T00:00:00Z
 };
-
+export const formatInTheEndDate = (date: Date | string | null): string => {
+  if (!date) return "";
+  const d = new Date(date);
+  // Set time to 23:59:59.000 UTC
+  d.setUTCHours(23, 59, 59, 0);
+  return d.toISOString().replace(/\.\d{3}/, ""); // e.g., 2025-04-24T23:59:59Z
+};
+export const getDateRange = (start: string, end: string): string[] => {
+  const dates: string[] = [];
+  let currentDate = new Date(start);
+  const endDateObj = new Date(end);
+  while (currentDate <= endDateObj) {
+    dates.push(formatInTheEndDate(currentDate));
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+  }
+  return dates;
+};

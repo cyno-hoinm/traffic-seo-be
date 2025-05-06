@@ -132,27 +132,37 @@ export const searchAgencyRepo = async (
 };
 
 
-export const getAgenciesByUserIdRepo = async (userId: number): Promise<AgencyAttributes[] | null> => {
+export const getAgenciesByUserIdRepo = async (userId: number): Promise<AgencyAttributes | null> => {
   try {
     const agencies = await Agency.findAll({
       include: [
+
         {
           model: User,
-          as: "user",
+          as: "users",
           where: {
-            isDeleted: false // Only include non-deleted role agencies
+            isDeleted: false
           },
-          attributes: [], // Exclude RoleAgency attributes from the result
-          required: true, // Inner join to only return agencies with matching roleId
+          attributes: [],
+          required: true,
+        },
+        {
+          model: User,
+          as: "invitedUsers",
+          where: {
+            isDeleted: false
+          },
+          attributes: ["id", "userName", "email", "createdAt"],
+          required: false,
         },
       ],
       where: {
         userId,
-        isDeleted: false, // Only include non-deleted agencies
+        isDeleted: false,
       },
     });
 
-    return agencies.length > 0 ? agencies : null;
+    return agencies.length > 0 ? agencies[0] : null;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }

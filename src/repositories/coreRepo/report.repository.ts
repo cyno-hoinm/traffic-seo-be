@@ -5,7 +5,12 @@ import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { baseApiPython } from "../../config/botAPI.config";
-import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
+import {
+  calculateCampaignMetrics,
+  formatDate,
+  formatInTheEndDate,
+  getDateRange,
+} from "../../utils/utils";
 
 export const getCampaignsReportUserRepo = async (
   userId: string,
@@ -82,17 +87,39 @@ export const getCampaignsReportUserRepo = async (
       raw: true,
     };
 
-    const result = await Campaign.findAll(queryOptions);
+    const campaigns = await Campaign.findAll(queryOptions);
+    
+    const result = await Promise.all(
+      campaigns.map(async (campaign: any) => {
+        // Fetch active keywords for the campaign
+        const keywords = await sequelizeSystem.models.Keyword.findAll({
+          where: { campaignId: campaign.id },
+          attributes: ["id"],
+          raw: true,
+        });
+        const keywordIds: { id: string }[] = keywords.map((keyword: any) => ({
+          id: keyword.id,
+        }));
+        let traffic: { date: string; traffic: number }[] = [];
 
-    return result.map((item: any) => ({
-      campaignId: item.id,
-      campaignName: item.name,
-      campaignTitle: item.title,
-      linkCount: parseInt(item.linkCount) || 0,
-      keywordCount: parseInt(item.keywordCount) || 0,
-      activeLink: parseInt(item.activeLink) || 0,
-      activeKeyword: parseInt(item.activeKeyword) || 0,
-    }));
+        if (startDate && endDate && keywords.length > 0) {
+          traffic = await calculateTraffic(keywordIds, startDate, endDate);
+        }
+
+        return {
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          campaignTitle: campaign.title,
+          linkCount: parseInt(campaign.linkCount) || 0,
+          keywordCount: parseInt(campaign.keywordCount) || 0,
+          activeLink: parseInt(campaign.activeLink) || 0,
+          activeKeyword: parseInt(campaign.activeKeyword) || 0,
+          traffic,
+        };
+      })
+    );
+
+    return result;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
@@ -122,14 +149,7 @@ export const getOneCampaignReportRepo = async (
         id: campaignId,
         isDeleted: false,
       },
-      attributes: [
-        "id",
-        "title",
-        "name",
-        "startDate",
-        "endDate",
-        "domain",
-      ],
+      attributes: ["id", "title", "name", "startDate", "endDate", "domain"],
       include: [
         {
           model: Link,
@@ -150,7 +170,7 @@ export const getOneCampaignReportRepo = async (
       return null; // Campaign not found or is deleted
     }
     const keywordsCampaign = campaign.keywords || [];
-    const metrics = calculateCampaignMetrics(campaign.links,campaign.keywords)
+    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
     // Post data to Python API for each keyword and collect trafficCompleted
     const updatedKeywords = await Promise.all(
       keywordsCampaign.map(async (keyword: any) => {
@@ -202,6 +222,10 @@ export const getCampaignsReportAllRepo = async (
     keywordCount: number;
     activeLink: number;
     activeKeyword: number;
+    traffic: {
+      date: string; // ISO string, e.g., 2025-04-24T23:59:59Z
+      traffic: number;
+    }[];
   }[]
 > => {
   try {
@@ -263,18 +287,107 @@ export const getCampaignsReportAllRepo = async (
       raw: true,
     };
 
-    const result = await Campaign.findAll(queryOptions);
+    const campaigns = await Campaign.findAll(queryOptions);
 
-    return result.map((item: any) => ({
-      campaignId: item.id,
-      campaignName: item.name,
-      campaignTitle: item.title,
-      linkCount: parseInt(item.linkCount) || 0,
-      keywordCount: parseInt(item.keywordCount) || 0,
-      activeLink: parseInt(item.activeLink) || 0,
-      activeKeyword: parseInt(item.activeKeyword) || 0,
-    }));
+    // Fetch keywords and traffic for each campaign
+    const result = await Promise.all(
+      campaigns.map(async (campaign: any) => {
+        // Fetch active keywords for the campaign
+        const keywords = await sequelizeSystem.models.Keyword.findAll({
+          where: { campaignId: campaign.id },
+          attributes: ["id"],
+          raw: true,
+        });
+        const keywordIds: { id: string }[] = keywords.map((keyword: any) => ({
+          id: keyword.id,
+        }));
+        let traffic: { date: string; traffic: number }[] = [];
+
+        if (startDate && endDate && keywords.length > 0) {
+          traffic = await calculateTraffic(keywordIds, startDate, endDate);
+        }
+
+        return {
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          campaignTitle: campaign.title,
+          linkCount: parseInt(campaign.linkCount) || 0,
+          keywordCount: parseInt(campaign.keywordCount) || 0,
+          activeLink: parseInt(campaign.activeLink) || 0,
+          activeKeyword: parseInt(campaign.activeKeyword) || 0,
+          traffic,
+        };
+      })
+    );
+
+    return result;
   } catch (error: any) {
-    throw new ErrorType(error.name, error.message, error.code);
+    throw new ErrorType(
+      error.name || "DatabaseError",
+      error.message || "Failed to fetch campaign reports",
+      error.code || 500
+    );
   }
+};
+
+const calculateTraffic = async (
+  keywords: { id: string }[],
+  startDate: string,
+  endDate: string
+): Promise<{ date: string; traffic: number }[]> => {
+  const currentDate = formatInTheEndDate(new Date());
+    
+  // Use current date if endDate is in the future
+  const effectiveEndDate = new Date(endDate) > new Date(currentDate)
+    ? currentDate
+    : endDate;
+
+  const dateRange = getDateRange(startDate, effectiveEndDate);
+  const trafficByDate: { [key: string]: number } = {};
+
+  // Initialize traffic aggregation
+  dateRange.forEach((date) => {
+    trafficByDate[date] = 0;
+  });
+
+  // Fetch traffic data for each date and keyword
+  for (const date of dateRange) {
+    const dailyTrafficData = await Promise.all(
+      keywords.map(async (keyword: any) => {
+        const dataPython = {
+          keywordId: keyword.id,
+          time_start: formatDate(date),
+          time_end: formatInTheEndDate(date),
+        };
+        try {
+          const result = await baseApiPython(
+            "keyword/traffic-count-duration",
+            dataPython
+          );
+          return {
+            date,
+            traffic: Number(result.traffic_count) || 0,
+          };
+        } catch (apiError) {
+          console.error(
+            `Failed to fetch traffic for keyword ${keyword.id} on ${date}:`,
+            apiError
+          );
+          return { date, traffic: 0 };
+        }
+      })
+    );
+
+    // Sum traffic for the date across all keywords
+    const totalTraffic = dailyTrafficData.reduce(
+      (sum, entry) => sum + entry.traffic,
+      0
+    );
+    trafficByDate[date] = totalTraffic;
+  }
+
+  return dateRange.map((date) => ({
+    date,
+    traffic: trafficByDate[date],
+  }));
 };
