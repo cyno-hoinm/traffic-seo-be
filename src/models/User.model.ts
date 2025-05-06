@@ -10,6 +10,7 @@ class User extends Model<UserAttributes> implements UserAttributes {
   public email!: string;
   public roleId!: number;
   public role!: RoleAttributes;
+  public invitedBy!: number;
   public isActive!: boolean; // Added
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
@@ -26,7 +27,6 @@ User.init(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -41,6 +41,10 @@ User.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 2, // Customer
+    },
+    invitedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     isActive: {
       type: DataTypes.BOOLEAN,

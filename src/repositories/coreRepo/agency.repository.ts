@@ -174,3 +174,20 @@ export const checkInviteCodeExistsRepo = async (
     throw new Error(`Error checking invite code: ${(error as Error).message}`);
   }
 };
+
+export const getAgencyByInviteCodeRepo = async (
+  inviteCode: string
+): Promise<AgencyAttributes | null> => {
+  try {
+    const agency = await Agency.findOne({
+      where: {
+        inviteCode, // Tìm kiếm theo inviteCode
+        isDeleted: false, // Chỉ lấy agency chưa bị xóa
+      },
+    });
+
+    return agency ? (agency.toJSON() as AgencyAttributes) : null;
+  } catch (error) {
+    throw new Error(`Error finding agency by invite code: ${(error as Error).message}`);
+  }
+};

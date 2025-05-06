@@ -6,7 +6,7 @@ import {
   updateAgency,
   deleteAgency,
   searchAgencies,
-} from "../../../controllers/coreController/agency.controller"; // Adjust path to your Agency controller
+} from "../../../controllers/coreController/agency.controller";
 import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
@@ -17,28 +17,40 @@ const router = express.Router();
  *   schemas:
  *     Agency:
  *       type: object
- *       required:
- *         - userId
  *       properties:
  *         id:
  *           type: integer
- *           description: The auto-generated ID of the agency
- *         name:
+ *         userId:
+ *           type: integer
+ *         inviteCode:
  *           type: string
- *           description: The name of the agency
+ *         bankName:
+ *           type: string
+ *         bankAccount:
+ *           type: string
+ *         accountHolder:
+ *           type: string
+ *         status:
+ *           type: integer
+ *         isDeleted:
+ *           type: boolean
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Creation timestamp (UTC+7)
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: Last update timestamp (UTC+7)
  *       example:
  *         id: 1
- *         name: "read_users"
- *         createdAt: "2025-04-10T14:00:00.000 "
- *         updatedAt: "2025-04-10T14:00:00.000 "
+ *         userId: 2
+ *         inviteCode: "d80fadc3-2c3b-4ae7-9476-1a9c2a9e1e1b"
+ *         bankName: "Vietcombank"
+ *         bankAccount: "0123456789"
+ *         accountHolder: "Nguyen Van A"
+ *         status: 1
+ *         isDeleted: false
+ *         createdAt: "2025-05-06T08:00:00.000Z"
+ *         updatedAt: "2025-05-06T08:00:00.000Z"
  */
 
 /**
@@ -47,6 +59,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new agency
  *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -54,45 +68,29 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - name
- *               - code
+ *               - bankName
+ *               - bankAccount
+ *               - accountHolder
  *             properties:
- *               name:
+ *               bankName:
  *                 type: string
- *                 description: The name of the agency
- *               code:
+ *               bankAccount:
  *                 type: string
- *                 description: The code of the agency
+ *               accountHolder:
+ *                 type: string
  *             example:
- *               name: "Tạo quyền"
- *               code: "create-agency"
+ *               bankName: "VietinBank"
+ *               bankAccount: "123456789"
+ *               accountHolder: "Le Thi B"
  *     responses:
  *       201:
  *         description: Agency created successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Agency'
- *       400:
- *         description: Validation failed or duplicate name
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
+ *               $ref: '#/components/schemas/Agency'
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Internal server error
  */
@@ -102,29 +100,24 @@ router.post("/", authorization(["create-agency"]), createAgency);
  * @swagger
  * /agencies/{id}:
  *   get:
- *     summary: Get a agency by ID
+ *     summary: Get an agency by ID
  *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: The agency ID
+ *         description: ID of the agency
  *     responses:
  *       200:
  *         description: Agency retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Agency'
+ *               $ref: '#/components/schemas/Agency'
  *       400:
  *         description: Invalid ID
  *       404:
@@ -140,22 +133,17 @@ router.get("/:id", authorization(["read-agency"]), getAgencyById);
  *   get:
  *     summary: Get all agencies
  *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Agencies retrieved successfully
+ *         description: List of all agencies
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Agency'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Agency'
  *       500:
  *         description: Internal server error
  */
@@ -165,45 +153,39 @@ router.get("/", authorization(["read-agencies"]), getAllAgencies);
  * @swagger
  * /agencies/{id}:
  *   put:
- *     summary: Update a agency by ID
+ *     summary: Update an agency by ID
  *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: The agency ID
+ *         description: ID of the agency
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
  *             properties:
- *               name:
+ *               bankName:
  *                 type: string
- *                 description: The new name of the agency
+ *               bankAccount:
+ *                 type: string
+ *               accountHolder:
+ *                 type: string
  *             example:
- *               name: "update_users"
+ *               bankName: "BIDV"
+ *               bankAccount: "987654321"
+ *               accountHolder: "Tran Van C"
  *     responses:
  *       200:
  *         description: Agency updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Agency'
  *       400:
- *         description: Validation failed or duplicate name
+ *         description: Invalid input
  *       404:
  *         description: Agency not found
  *       500:
@@ -215,27 +197,20 @@ router.put("/:id", authorization(["update-agency"]), updateAgency);
  * @swagger
  * /agencies/{id}:
  *   delete:
- *     summary: Delete a agency by ID
+ *     summary: Delete an agency by ID
  *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: The agency ID
+ *         description: ID of the agency
  *     responses:
  *       200:
  *         description: Agency deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                 message:
- *                   type: string
  *       400:
  *         description: Invalid ID
  *       404:
@@ -249,100 +224,46 @@ router.delete("/:id", authorization(["delete-agency"]), deleteAgency);
  * @swagger
  * /agencies/search:
  *   post:
- *     summary: Search and retrieve a paginated list of agencies
- *     description: Retrieves a list of agencies based on a search key with pagination support. Returns the agencies, total count, and pagination details.
- *     tags:
- *       - Agencies
+ *     summary: Search agencies with pagination
+ *     tags: [Agencies]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - page
- *               - limit
  *             properties:
  *               key:
  *                 type: string
- *                 description: Optional search key to filter agencies
- *                 example: read
  *               page:
- *                 type: string
- *                 description: Page number for pagination (non-negative integer)
- *                 example: "1"
+ *                 type: integer
  *               limit:
- *                 type: string
- *                 description: Number of agencies per page (non-negative integer)
- *                 example: "10"
+ *                 type: integer
+ *             example:
+ *               key: "viet"
+ *               page: 1
+ *               limit: 10
  *     responses:
  *       200:
- *         description: Agencies retrieved successfully
+ *         description: Search results
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: agencies retrieved successfully
- *                 page:
+ *                 total:
  *                   type: integer
- *                   example: 1
- *                 limit:
- *                   type: integer
- *                   example: 10
- *                 totalPages:
- *                   type: integer
- *                   example: 5
- *                 data:
- *                   type: object
- *                   properties:
- *                     total:
- *                       type: integer
- *                       example: 50
- *                     list:
- *                       type: array
- *                       items:
- *                         type: object
- *                         description: Agency object (structure depends on the repository)
+ *                 list:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Agency'
  *       400:
  *         description: Invalid input
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Invalid input
- *                 error:
- *                   type: string
- *                   example: pageLimit must be a non-negative integer
  *       500:
  *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Internal server error
- *                 error:
- *                   type: string
- *                   example: An unexpected error occurred
  */
-router.post("/search",
-  authorization(["read-agencies"]),
-  searchAgencies)
+router.post("/search", authorization(["read-agency"]), searchAgencies);
+
 export default router;

@@ -5,6 +5,9 @@ export interface AgencyAttributes {
   userId: number;
   users?: UserAttributes;
   inviteCode: string;
+  bankName: string;
+  bankAccount: string;
+  accountHolder: string;
   isDeleted: boolean;
   status: number;
   createdAt?: Date;

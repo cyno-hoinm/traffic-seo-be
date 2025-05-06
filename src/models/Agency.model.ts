@@ -6,6 +6,9 @@ class Agency extends Model<AgencyAttributes> implements AgencyAttributes {
   public id!: number;
   public userId!: number;
   public inviteCode!: string;
+  public bankName!: string;
+  public bankAccount!: string;
+  public accountHolder!: string;
   public isDeleted!: boolean;
   public status!: number;
   public readonly createdAt!: Date;
@@ -28,6 +31,18 @@ Agency.init(
       }
     },
     inviteCode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    bankName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    bankAccount: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    accountHolder: {
       type: DataTypes.STRING,
       allowNull: false,
     },
