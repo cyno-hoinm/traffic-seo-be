@@ -9,6 +9,7 @@ import {
   updateAgencyRepo,
   deleteAgencyRepo,
   searchAgencyRepo,
+  getAgenciesByUserIdRepo,
 } from "../../repositories/coreRepo/agency.repository";
 import {  uuIDv4 } from "../../utils/generate";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
@@ -103,10 +104,78 @@ export const getAgencyById = async (
   }
 };
 
+export const getAgencyByUserId = async (
+  req: Request,
+  res: Response<ResponseType<AgencyAttributes>>
+): Promise<void> => {
+  try {
+    const { userId} = req.body
+    const agencies = await getAgenciesByUserIdRepo(userId);
+    if (!agencies) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Agency not found",
+        error: "Not found"
+      })
+      return
+    }
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Agencies retrieved successfully",
+      data: agencies,
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}
+
+export const getMyAgency = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<AgencyAttributes>>
+): Promise<void> => {
+  try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const userId = user.id
+    const agencies = await getAgenciesByUserIdRepo(userId);
+    // if (!agencies) {
+    //   res.status(statusCode.NOT_FOUND).json({
+    //     status: true,
+    //     message: "Agency not found",
+    //     error: "Not found",
+    //     data: undefined
+    //   })
+    //   return
+    // }
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Agencies retrieved successfully",
+      data: agencies || undefined,
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+}
+
+
 // Get all agencies
 export const getAllAgencies = async (
   req: Request,
-  res: Response<ResponseType<AgencyAttributes>>
+  res: Response<ResponseType<AgencyAttributes[]>>
 ): Promise<void> => {
   try {
     const agencies = await findAllAgenciesRepo();
