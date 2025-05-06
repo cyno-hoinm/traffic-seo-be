@@ -20,6 +20,7 @@ export const createAgency = async (
   res: Response<ResponseType<AgencyAttributes>>
 ): Promise<void> => {
   try {
+
     const user = req.data;
     if (!user || !user.id) {
       res.status(statusCode.UNAUTHORIZED).json({
@@ -28,10 +29,22 @@ export const createAgency = async (
       });
       return;
     }
+    const {
+      bankName,
+      bankAccount,
+      accountHolder
+    } = req.body
     const inviteCode = uuIDv4()
     const userId = user.id
 
-    const agency = await createAgencyRepo({ userId, inviteCode, status: 1, isDeleted: false });
+    const agency = await createAgencyRepo({
+      userId,
+      inviteCode,
+      bankName,
+      bankAccount,
+      accountHolder,
+      status: 1,
+      isDeleted: false });
 
     res.status(statusCode.CREATED).json({
       status: true,

@@ -5,6 +5,7 @@ export interface UserAttributes {
   email: string;
   roleId: number;
   role?: any;
+  invitedBy?: number;
   isDeleted?: boolean;
   isActive?: boolean;
   createdAt?: Date;
