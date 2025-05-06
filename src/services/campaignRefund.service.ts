@@ -205,7 +205,7 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
               `Set ${campaign.links.length} links to INACTIVE for campaign ${campaign.id}`
             );
           }
-
+          campaignIds.push(campaign.id.toString());
           logger.info(`Completed campaign ${campaign.id}`);
           await updateTransaction.commit();
         } catch (error: any) {
