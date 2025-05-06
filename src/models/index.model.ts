@@ -15,6 +15,7 @@ import TransactionModel from "./Transaction.model"; // Add Transaction
 import PaymentMethod from "./PaymentMethod.model";
 import CampaignType from "./CampaignType.model";
 import Config from "./Config.model";
+import Agency from "./Agency.model"
 
 // Initialize models (this ensures they’re loaded)
 export const models = {
@@ -95,6 +96,10 @@ User.hasMany(Notification, { foreignKey: "userId", as: "notifications", onDelete
 
 TransactionModel.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'SET NULL'  });
 
+
+User.hasOne(Agency, { foreignKey: "userId", as: "agency", onDelete: 'SET NULL' });
+Agency.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
+
 // Export models
 export {
   Role,
@@ -112,5 +117,6 @@ export {
   TransactionModel,
   PaymentMethod,
   Config,
+  Agency,
   sequelizeSystem,
 };
