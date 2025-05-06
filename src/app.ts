@@ -78,7 +78,7 @@ if (cluster.isPrimary && !isDev) {
         process.exit(1);
       }
     };
-    // startCampaignRefundService();
+    startCampaignRefundService();
     startServer();
     process.on("SIGTERM", async () => {
       logger.info(`App worker ${process.pid} received SIGTERM`);
