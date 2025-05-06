@@ -17,7 +17,7 @@ dotenv.config();
 export const sequelizeSystem = new Sequelize(dbName, dbUser, dbPassword, {
   host: dbHost,
   port: dbPort,
-  logging: false,
+  logging: true,
   dialect: "mysql",
   timezone: "+07:00",
   pool: {
