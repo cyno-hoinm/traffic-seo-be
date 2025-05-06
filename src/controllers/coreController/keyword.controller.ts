@@ -5,6 +5,7 @@ import {
   createKeywordRepo,
   getKeywordByIdRepo,
   updateKeywordRepo,
+  getCampaignUserIdByKeywordIdRepo,
 } from "../../repositories/coreRepo/keyword.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
@@ -368,6 +369,64 @@ export const getKeywordByCampaignId = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error retrieving keywords by campaignId",
+      error: error.message,
+    });
+  }
+};
+
+
+export const searchLog = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<
+  {
+    list: {
+      device: string,
+      keywordId: number,
+      timestamp: string,
+      statusId: number
+      statusName: string
+    }
+
+}>>
+): Promise<void> => {
+  try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const { page, limit, keywordId} = req.body;
+    const userId = await getCampaignUserIdByKeywordIdRepo(keywordId)
+    if (user.role.id === 2 && user.id !==userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission"
+      })
+      return
+    }
+    const logs = await searchLogs(
+      {
+        page,
+        limit,
+        keywordId
+      }
+    )
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Keyword retrieved successfully",
+      data: {
+        list: logs
+      },
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching keyword",
       error: error.message,
     });
   }

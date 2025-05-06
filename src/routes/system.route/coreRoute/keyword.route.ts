@@ -4,9 +4,10 @@ import {
   createKeyword,
   getKeywordById,
   updateKeyword,
+  getKeywordByCampaignId,
+  searchLog
 } from "../../../controllers/coreController/keyword.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
-import { getKeywordByCampaignId } from "../../../controllers/coreController/keyword.controller";
 
 const router = express.Router();
 
@@ -257,6 +258,95 @@ router.post("/search", authorization(["search-keywords"]), getKeywordList);
 
 router.post("/getByCampaign",  authorization(["read-keyword"]),getKeywordByCampaignId)
 
+/**
+ * @swagger
+ * /keywords/searchLog:
+ *   post:
+ *     summary: Search keyword logs
+ *     description: Retrieve a paginated list of logs for a specific keyword.
+ *     tags: [Keywords]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - page
+ *               - limit
+ *               - keywordId
+ *             properties:
+ *               page:
+ *                 type: integer
+ *                 description: Page number
+ *                 example: 1
+ *               limit:
+ *                 type: integer
+ *                 description: Number of logs per page
+ *                 example: 10
+ *               keywordId:
+ *                 type: integer
+ *                 description: ID of the keyword to retrieve logs for
+ *                 example: 5
+ *     responses:
+ *       200:
+ *         description: Keyword logs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Keyword retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     list:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           device:
+ *                             type: string
+ *                             example: "Desktop"
+ *                           keywordId:
+ *                             type: integer
+ *                             example: 5
+ *                           timestamp:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-05-06T10:00:00Z"
+ *                           statusId:
+ *                             type: integer
+ *                             example: 2
+ *                           statusName:
+ *                             type: string
+ *                             example: "COMPLETED"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching keyword
+ *                 error:
+ *                   type: string
+ *                   example: Internal Server Error
+ */
+
+router.post("/searchLog",  authorization(["read-keyword"]),searchLog)
 
 /**
  * @swagger

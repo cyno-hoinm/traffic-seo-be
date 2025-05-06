@@ -217,3 +217,36 @@ export const updateKeywordRepo = async (
     );
   }
 };
+
+export const getCampaignUserIdByKeywordIdRepo = async (
+  keywordId: number
+): Promise<number> => {
+  const kw = await Keyword.findByPk(keywordId, {
+    include: [{
+      model: Campaign,
+      as: "campaigns",
+      attributes: ["userId"],
+      where: { isDeleted: false }
+    }]
+  });
+
+  if (!kw) {
+    throw new ErrorType(
+      "NotFoundError",
+      `Keyword with id ${keywordId} not found`,
+      statusCode.NOT_FOUND
+    );
+  }
+
+  const plain = kw.get({ plain: true }) as any;
+
+  if (!plain.campaigns) {
+    throw new ErrorType(
+      "DataError",
+      `Campaign for keyword ${keywordId} not found or isDeleted`,
+      statusCode.NOT_FOUND
+    );
+  }
+
+  return plain.campaigns.userId;
+};
