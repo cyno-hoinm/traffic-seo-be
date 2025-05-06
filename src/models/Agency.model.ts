@@ -1,29 +1,57 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem } from "./index.model";
-import { ConfigAttributes } from "../interfaces/Config.interface";
+import { AgencyAttributes } from "../interfaces/Agency.interface";
+import { sequelizeSystem, User} from "./index.model"
 
-class Config extends Model<ConfigAttributes> implements ConfigAttributes {
-  public id?: number;
-  public name!: string;
-  public value!: string;
+class Agency extends Model<AgencyAttributes> implements AgencyAttributes {
+  public id!: number;
+  public userId!: number;
+  public inviteCode!: string;
+  public bankName!: string;
+  public bankAccount!: string;
+  public accountHolder!: string;
+  public isDeleted!: boolean;
+  public status!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-Config.init(
+Agency.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-      primaryKey: true,
+      primaryKey: true
     },
-    name: {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "id",
+      }
+    },
+    inviteCode: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
-    value: {
+    bankName: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    bankAccount: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    accountHolder: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
     },
     createdAt: {
@@ -48,13 +76,16 @@ Config.init(
         return adjustedDate.toISOString().replace("Z", "");
       },
     },
+
+
   },
+
   {
-    sequelize: sequelizeSystem,
-    modelName: "Config",
-    tableName: "configs",
-    timestamps: true,
+      sequelize: sequelizeSystem,
+      modelName: "Agency",
+      tableName: "agencies",
+      timestamps: true,
   }
 );
 
-export default Config;
+export default Agency

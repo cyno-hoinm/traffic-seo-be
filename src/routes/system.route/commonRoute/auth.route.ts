@@ -93,7 +93,7 @@ router.post("/", loginUser);
  * /auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Creates a new user with the provided username, password, and email. Assigns a default roleId of 2. Returns the created user's details (excluding password).
+ *     description: Creates a new user with the provided username, password, and email. Assigns a default roleId of 2. Returns the created user's details (excluding password). If the user registers using an invite, the inviteCode must be provided.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -119,6 +119,11 @@ router.post("/", loginUser);
  *                 format: email
  *                 description: The user's email address.
  *                 example: john.doe@example.com
+ *               inviteCode:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The invite code of agency
+ *                 example: e08633b1-ddc3-499a-a798-e3d00a69c36f
  *     responses:
  *       200:
  *         description: User registered successfully

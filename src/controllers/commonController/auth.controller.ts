@@ -27,6 +27,7 @@ import { UserAttributes } from "../../interfaces/User.interface";
 import { queueEmail } from "../../services/sendMail.service";
 import { redisClient } from "../../config/redis.config";
 import { generateOtp } from "../../utils/generate";
+import { checkInviteCodeExistsRepo, getAgencyByInviteCodeRepo } from "../../repositories/coreRepo/agency.repository";
 
 export const loginUser = async (
   req: Request,
@@ -215,8 +216,7 @@ export const registerUser = async (
   res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
-    const { username, password, email } = req.body;
-
+    const { username, password, email, inviteCode } = req.body;
     // Validate input
     if (
       !username ||
@@ -229,6 +229,22 @@ export const registerUser = async (
         error: "Invalid field",
       });
       return;
+    }
+    let invitedBy = undefined
+    if (inviteCode) {
+      const exist = await checkInviteCodeExistsRepo(inviteCode)
+      if (!exist) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Invalid invite code",
+          error: "Invalid invite code",
+        });
+        return;
+      }
+      else {
+        const agency = await getAgencyByInviteCodeRepo(inviteCode)
+        invitedBy = agency?.id
+      }
     }
 
     if (!password || typeof password !== "string" || password.length < 6) {
@@ -260,15 +276,15 @@ export const registerUser = async (
       return;
     }
 
-    const existingUserByUsername = await findUserByUsernameRepo(username);
-    if (existingUserByUsername) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "User creation failed",
-        error: "Username already exists",
-      });
-      return;
-    }
+    // const existingUserByUsername = await findUserByUsernameRepo(username);
+    // if (existingUserByUsername) {
+    //   res.status(statusCode.BAD_REQUEST).json({
+    //     status: false,
+    //     message: "User creation failed",
+    //     error: "Username already exists",
+    //   });
+    //   return;
+    // }
 
     // Hash password
     const hashedPassword = await hashedPasswordString(password, 10);
@@ -279,10 +295,11 @@ export const registerUser = async (
       password: hashedPassword,
       email,
       roleId: 2,
+      invitedBy:invitedBy,
       isDeleted: false,
       isActive: false,
     };
-
+    console.log(userData)
     // Create user using repository
     const user = await createUserRepo(userData);
     const type = "confirmUser";
