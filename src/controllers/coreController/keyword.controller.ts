@@ -5,6 +5,7 @@ import {
   createKeywordRepo,
   getKeywordByIdRepo,
   updateKeywordRepo,
+  getCampaignUserIdByKeywordIdRepo,
 } from "../../repositories/coreRepo/keyword.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
@@ -13,6 +14,9 @@ import { ErrorType } from "../../types/Error.type";
 import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { formatDate } from "../../utils/utils";
+import { getCampaignByIdRepo, isCampaignOwnerRepo } from "../../repositories/coreRepo/campagin.repository";
+import { searchLogs } from "../../services/botService/searchLog.service";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -285,5 +289,145 @@ export const updateKeyword = async (
       code: err.code || statusCode.INTERNAL_SERVER_ERROR,
     });
     return;
+  }
+};
+
+export const getKeywordByCampaignId = async (
+  req: AuthenticatedRequest ,
+  res: Response<ResponseType<KeywordAttributes[]>>
+): Promise<void> => {
+  try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const { campaignId } = req.body;
+
+    if (!campaignId || isNaN(Number(campaignId))) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Valid campaignId is required",
+        error: "Invalid input",
+      });
+      return;
+    }
+
+
+    const campaign = await getCampaignByIdRepo(campaignId)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+        error: "Campaign Not Found"
+      })
+      return
+    }
+    if (user.role.id===2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission"
+      })
+      return
+    }
+    const filters = { campaignId: Number(campaignId) };
+    const keywords = await getKeywordListRepo(filters);
+    const updatedKeywords = await Promise.all(
+      keywords.keywords.map(async (keyword: any) => {
+        const dataPython = {
+          keywordId: keyword.id,
+          time_start: formatDate(campaign.startDate),
+          time_end: formatDate(campaign.endDate),
+        };
+        const result = await baseApiPython(
+          "keyword/traffic-count-duration",
+          dataPython
+        );
+        const logs = await searchLogs({
+          page: 1,
+          limit: 3,
+          keywordId: keyword.id
+        })
+        return {
+          ...keyword.dataValues, // Convert Sequelize instance to plain object
+          trafficCompleted: result.traffic_count, // Corrected typo
+          logs: logs
+        };
+      })
+    );
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Keywords retrieved successfully",
+      data: updatedKeywords,
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error retrieving keywords by campaignId",
+      error: error.message,
+    });
+  }
+};
+
+
+export const searchLog = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<
+  {
+    list: {
+      device: string,
+      keywordId: number,
+      timestamp: string,
+      statusId: number
+      statusName: string
+    }
+
+}>>
+): Promise<void> => {
+  try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const { page, limit, keywordId} = req.body;
+    const userId = await getCampaignUserIdByKeywordIdRepo(keywordId)
+    if (user.role.id === 2 && user.id !==userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission"
+      })
+      return
+    }
+    const logs = await searchLogs(
+      {
+        page,
+        limit,
+        keywordId
+      }
+    )
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Keyword retrieved successfully",
+      data: {
+        list: logs
+      },
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching keyword",
+      error: error.message,
+    });
   }
 };

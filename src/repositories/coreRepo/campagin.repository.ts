@@ -131,6 +131,7 @@ export const getCampaignByIdRepo = async (
         "startDate",
         "endDate",
         "domain",
+        "userId",
         "createdAt",
         "updatedAt",
       ],
@@ -150,7 +151,7 @@ export const getCampaignByIdRepo = async (
       ],
       order: [["createdAt", "DESC"]],
     });
-    return campaign;
+    return campaign?.dataValues || null;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
@@ -346,7 +347,7 @@ export const continueCampaignRepo = async (
         );
       }
 
-      // Update campaign status to ACTIVE 
+      // Update campaign status to ACTIVE
       await campaign.update(
         {
           status: CampaignStatus.ACTIVE,
@@ -490,6 +491,45 @@ export const cancelCampaignRepo = async (
       }
       throw error;
     }
+  } catch (error: any) {
+    throw error instanceof ErrorType
+      ? error
+      : new ErrorType(
+          error.name,
+          error.message,
+          error.code || statusCode.INTERNAL_SERVER_ERROR
+        );
+  }
+};
+
+export const isCampaignOwnerRepo = async (
+  {
+    campaignId, userId
+  }
+  :
+  {
+  campaignId: number,
+  userId: number
+}
+): Promise<boolean> => {
+  try {
+    const campaign = await Campaign.findOne({
+      where: {
+        id: campaignId,
+        isDeleted: false,
+      },
+      attributes: ["userId"],
+    });
+
+    if (!campaign) {
+      throw new ErrorType(
+        "NotFoundError",
+        `Campaign with id ${campaignId} not found`,
+        statusCode.NOT_FOUND
+      );
+    }
+
+    return campaign.userId === userId;
   } catch (error: any) {
     throw error instanceof ErrorType
       ? error
