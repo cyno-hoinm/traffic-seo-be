@@ -100,6 +100,17 @@ TransactionModel.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDel
 User.hasOne(Agency, { foreignKey: "userId", as: "agency", onDelete: 'SET NULL' });
 Agency.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
 
+User.belongsTo(Agency, {
+  foreignKey: 'invitedBy',
+  as: 'invitedByAgency',
+  onDelete: 'SET NULL',
+});
+// Agency model
+Agency.hasMany(User, {
+  foreignKey: 'invitedBy',
+  as: 'invitedUsers',
+});
+
 // Export models
 export {
   Role,
