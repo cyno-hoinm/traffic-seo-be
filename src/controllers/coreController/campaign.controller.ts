@@ -32,6 +32,7 @@ import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Get campaign list with filters
 
@@ -200,7 +201,7 @@ export const createCampaign = async (
       !endDate ||
       !domain ||
       !search ||
-      !campaignTypeId 
+      !campaignTypeId
     ) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -211,7 +212,7 @@ export const createCampaign = async (
     }
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     // Validate date formats
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -221,11 +222,11 @@ export const createCampaign = async (
       });
       return;
     }
-    
+
     // Reset time to 00:00:00.000 for both dates
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
-    
+
     // Validate that startDate is before endDate
     if (start >= end) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -235,7 +236,7 @@ export const createCampaign = async (
       });
       return;
     }
-    
+
     // Determine campaign status based on startDate
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0); // Optional: reset currentDate time for consistency
@@ -345,7 +346,7 @@ export const createCampaign = async (
         }
       }
     }
-   
+
     // Use a transaction to ensure data consistency
     const campaign = await sequelizeSystem.transaction(
       async (transaction: Transaction) => {
@@ -483,10 +484,18 @@ export const createCampaign = async (
 
 // Get campaign by ID
 export const getCampaignById = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<CampaignAttributes>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const { id } = req.params;
 
     const campaign = await getCampaignByIdRepo(Number(id));
@@ -497,6 +506,14 @@ export const getCampaignById = async (
         error: "Resource not found",
       });
       return;
+    }
+    if (user.role.id ===2 && user.id !== campaign.userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission"
+      })
+      return
     }
     // Calculate total traffic and cost from links and keywords
     const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
@@ -688,7 +705,7 @@ export const cancelCampaign = async (
       const activeKeywords = campaign.keywords.filter(
         (keyword: KeywordAttributes) => keyword.status === keywordStatus.ACTIVE
       );
-    
+
       const apiPromises = activeKeywords.map(
         async (keyword: KeywordAttributes) => {
           const dataPython = {
@@ -698,7 +715,7 @@ export const cancelCampaign = async (
           return baseApiPythonUpdate("keyword/update", dataPython);
         }
       );
-    
+
       // Wait for all Python API calls to complete
       await Promise.all(apiPromises);
     }
