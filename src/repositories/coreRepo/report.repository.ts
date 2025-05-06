@@ -335,7 +335,14 @@ const calculateTraffic = async (
   startDate: string,
   endDate: string
 ): Promise<{ date: string; traffic: number }[]> => {
-  const dateRange = getDateRange(startDate, endDate);
+  const currentDate = formatInTheEndDate(new Date());
+    
+  // Use current date if endDate is in the future
+  const effectiveEndDate = new Date(endDate) > new Date(currentDate)
+    ? currentDate
+    : endDate;
+
+  const dateRange = getDateRange(startDate, effectiveEndDate);
   const trafficByDate: { [key: string]: number } = {};
 
   // Initialize traffic aggregation
@@ -379,10 +386,8 @@ const calculateTraffic = async (
     trafficByDate[date] = totalTraffic;
   }
 
-  return dateRange
-    .filter((date) => trafficByDate[date] > 0)
-    .map((date) => ({
-      date,
-      traffic: trafficByDate[date],
-    }));
+  return dateRange.map((date) => ({
+    date,
+    traffic: trafficByDate[date],
+  }));
 };
