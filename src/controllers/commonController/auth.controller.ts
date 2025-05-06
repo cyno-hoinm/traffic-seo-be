@@ -27,6 +27,7 @@ import { UserAttributes } from "../../interfaces/User.interface";
 import { queueEmail } from "../../services/sendMail.service";
 import { redisClient } from "../../config/redis.config";
 import { generateOtp } from "../../utils/generate";
+import { checkInviteCodeExistsRepo } from "../../repositories/coreRepo/agency.repository";
 
 export const loginUser = async (
   req: Request,
@@ -215,7 +216,7 @@ export const registerUser = async (
   res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, inviteCode } = req.body;
 
     // Validate input
     if (
@@ -229,6 +230,17 @@ export const registerUser = async (
         error: "Invalid field",
       });
       return;
+    }
+    if (inviteCode) {
+      const exist = await checkInviteCodeExistsRepo(inviteCode)
+      if (!exist) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Invalid invite code",
+          error: "Invalid invite code",
+        });
+        return;
+      }
     }
 
     if (!password || typeof password !== "string" || password.length < 6) {
