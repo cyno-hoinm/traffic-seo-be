@@ -196,3 +196,13 @@ export const resizeBase64Image = async (base64Image: string) => {
   const resizedBase64Image = resizedImageBuffer.toString("base64");
   return resizedBase64Image;
 };
+
+
+export const parseUrlsStringToArray = (urlsString: string): string[] => {
+  try {
+    return JSON.parse(urlsString);
+  } catch (error: any) {
+    logger.error(`Error parsing URLs string to array: ${error.message}`);
+    return [];
+  }
+};

@@ -2,6 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { Campaign, sequelizeSystem } from "./index.model"; // Assuming this points to models/index.ts
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { DistributionType } from "../enums/distribution.enum";
+import { parseUrlsStringToArray } from "../utils/utils";
 
 class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
@@ -37,22 +38,21 @@ Keyword.init(
       allowNull: false,
     },
     urls: {
-      type: DataTypes.JSON, // Use JSON for MySQL instead of ARRAY
+      type: DataTypes.TEXT, // Store as JSON in MySQL
       allowNull: false,
       get() {
         const rawValue = this.getDataValue("urls");
-        if (typeof rawValue === "string") {
-          try {
-            return JSON.parse(rawValue);
-          } catch (e) {
-            return [];
-          }
+        try {
+          return typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+        } catch (error) {
+          console.error("Error parsing urls:", error);
+          return []; // Fallback to empty array
         }
-        return [];
       },
-      set(value: any) {
+      set(value: string[]) {
+        // Ensure the value is stored as a JSON string
         this.setDataValue("urls", JSON.stringify(value));
-      }
+      },
     },
     distribution: {
       type: DataTypes.STRING, // Enum type
