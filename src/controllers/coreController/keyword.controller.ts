@@ -344,7 +344,7 @@ export const getKeywordByCampaignId = async (
           time_end: formatDate(campaign.endDate),
         };
         const result = await baseApiPython(
-          "keyword/traffic-count-duration",
+          "keyword/success-count-duration",
           dataPython
         );
         const logs = await searchLogs({
@@ -354,7 +354,7 @@ export const getKeywordByCampaignId = async (
         })
         return {
           ...keyword.dataValues, // Convert Sequelize instance to plain object
-          trafficCompleted: result.traffic_count, // Corrected typo
+          trafficCompleted: result.success_count, // Corrected typo
           logs: logs
         };
       })
