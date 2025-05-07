@@ -181,12 +181,12 @@ export const getOneCampaignReportRepo = async (
           time_end: formatDate(campaign.endDate),
         };
         const result = await baseApiPython(
-          "keyword/traffic-count-duration",
+          "keyword/success-count-duration",
           dataPython
         );
         return {
           ...keyword.dataValues, // Convert Sequelize instance to plain object
-          trafficCompleted: result.traffic_count, // Corrected typo
+          trafficCompleted: result.success_count, // Corrected typo
         };
       })
     );
@@ -375,12 +375,12 @@ const calculateTraffic = async (
         };
         try {
           const result = await baseApiPython(
-            "keyword/traffic-count-duration",
+            "keyword/success-count-duration",
             dataPython
           );
           return {
             date,
-            traffic: Number(result.traffic_count) || 0,
+            traffic: Number(result.success_count) || 0,
           };
         } catch (apiError) {
           console.error(
