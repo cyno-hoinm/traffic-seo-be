@@ -155,7 +155,7 @@ export const getKeywordByCampaignIdRepo = async (
     // Fetch keywords using Sequelize
     const keywords = await Keyword.findAll({
       where: { campaignId: id },
-      attributes: ["distribution", "traffic", "urls", "name"],
+      attributes: ["distribution", "traffic", "urls", "name", "traffic"],
     });
 
     // Return null if no keywords found
