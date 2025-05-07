@@ -21,6 +21,10 @@ const SwaggerOptions = {
         url: `https://traffic-seo-be.mauwebsite.top/api/`,
         description: "Swagger Deployment Server",
       },
+      {
+        url: `https://be.autoranker.net/api/`,
+        description: "Swagger Deployment Server",
+      },
     ],
     components: {
       securitySchemes: {
