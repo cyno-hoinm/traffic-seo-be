@@ -13,6 +13,7 @@ export default [
       ecmaVersion: 2021,
       sourceType: "module",
       globals: {
+        global: true,
         ...eslint.configs.recommended.globals,
         process: "readonly",
         console: "readonly",

@@ -17,6 +17,8 @@ import { startCampaignStatusService } from "./services/campaignStatus.service";
 import { startCampaignRefundService } from "./services/campaignRefund.service"; // New service
 import callbackRoute from "./routes/system.route/moneyRoute/callback.route";
 import bodyParser from "body-parser";
+import { Server as SocketIOServer } from "socket.io";
+import { createServer } from "http";
 
 dotenv.config();
 
@@ -50,6 +52,32 @@ if (cluster.isPrimary && !isDev) {
 
   if (workerType === "app") {
     const app = express();
+    const httpServer = createServer(app);
+    const io = new SocketIOServer(httpServer, {
+      cors: {
+        origin: process.env.FRONT_END_URL || "*",
+        methods: ["GET", "POST"]
+      }
+    });
+
+    // Socket.IO connection handling
+    io.on("connection", (socket) => {
+      logger.info(`Client connected: ${socket.id}`);
+
+      // Handle user authentication and room joining
+      socket.on("join", (userId: number) => {
+        socket.join(`user_${userId}`);
+        logger.info(`User ${userId} joined their room`);
+      });
+
+      socket.on("disconnect", () => {
+        logger.info(`Client disconnected: ${socket.id}`);
+      });
+    });
+
+    // Make io accessible globally
+    (global as any).io = io;
+
     app.use(
       "/callback",
       bodyParser.json({
@@ -68,7 +96,7 @@ if (cluster.isPrimary && !isDev) {
       try {
         await connectDB();
         await redisClient.connect();
-        server = app.listen(PORT, () => {
+        server = httpServer.listen(PORT, () => {
           logger.info(`App worker ${process.pid} started on port ${PORT}`);
           debugApp(`App worker ${process.pid} successfully started`);
         });
