@@ -88,7 +88,7 @@ export const getCampaignsReportUserRepo = async (
     };
 
     const campaigns = await Campaign.findAll(queryOptions);
-    
+
     const result = await Promise.all(
       campaigns.map(async (campaign: any) => {
         // Fetch active keywords for the campaign
@@ -138,6 +138,7 @@ export interface CampaignReport {
   keywordCount: number;
   links: LinkAttributes[];
   keywords: KeywordAttributes[];
+  traffic: any;
 }
 
 export const getOneCampaignReportRepo = async (
@@ -189,7 +190,20 @@ export const getOneCampaignReportRepo = async (
         };
       })
     );
+    const keywordIds: { id: string }[] = keywordsCampaign.map(
+      (keyword: any) => ({
+        id: keyword.id,
+      })
+    );
+    let traffic: { date: string; traffic: number }[] = [];
 
+    if (campaign.startDate && campaign.endDate && keywordsCampaign.length > 0) {
+      traffic = await calculateTraffic(
+        keywordIds,
+        formatDate(campaign.startDate.toISOString()),
+        formatInTheEndDate(campaign.endDate.toISOString())
+      );
+    }
     return {
       campaignId: campaign.id,
       campaignName: campaign.name,
@@ -203,6 +217,7 @@ export const getOneCampaignReportRepo = async (
       keywordCount: campaign.keywords.length,
       links: campaign.links || [],
       keywords: updatedKeywords, // Use updated keywords with trafficCompleted
+      traffic,
     };
   } catch (error) {
     console.error("Error fetching campaign details:", error);
@@ -336,11 +351,10 @@ const calculateTraffic = async (
   endDate: string
 ): Promise<{ date: string; traffic: number }[]> => {
   const currentDate = formatInTheEndDate(new Date());
-    
+
   // Use current date if endDate is in the future
-  const effectiveEndDate = new Date(endDate) > new Date(currentDate)
-    ? currentDate
-    : endDate;
+  const effectiveEndDate =
+    new Date(endDate) > new Date(currentDate) ? currentDate : endDate;
 
   const dateRange = getDateRange(startDate, effectiveEndDate);
   const trafficByDate: { [key: string]: number } = {};
