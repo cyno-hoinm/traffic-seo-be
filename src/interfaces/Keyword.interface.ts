@@ -1,5 +1,4 @@
 import { DistributionType } from "../enums/distribution.enum";
-import { keywordStatus } from "../enums/keywordStatus.enum";
 import { CampaignAttributes } from "./Campaign.interface";
 
 export interface KeywordAttributes {

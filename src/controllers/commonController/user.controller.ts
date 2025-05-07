@@ -1,5 +1,6 @@
 import { hashedPasswordString } from "../../utils/utils";
 import { Request, Response } from "express";
+import { Buffer } from "buffer";
 import {
   createUserRepo,
   findUserByIdRepo,
@@ -14,6 +15,11 @@ import {
 import { UserAttributes } from "../../interfaces/User.interface";
 import statusCode from "../../constants/statusCode";
 import { ResponseType } from "../../types/Response.type";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { ImageType } from "../../enums/imageType.enum";
+import { createNewImage } from "../../repositories/commonRepo/image.repository";
+import { uuidToNumber, uuIDv4 } from "../../utils/generate";
+import Image from "../../models/Image.model";
 
 // Create a new user
 export const createUser = async (
@@ -21,7 +27,7 @@ export const createUser = async (
   res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
-    const { username, password, email, roleId } = req.body;
+    const { username, password, email, roleId, phoneNumber } = req.body;
 
     // Validate input
     if (!username || !password || !email) {
@@ -57,6 +63,7 @@ export const createUser = async (
     const hashedPassword = await hashedPasswordString(password, 10);
     const userData: UserAttributes = {
       username,
+      phoneNumber,
       password: hashedPassword,
       email,
       roleId,
@@ -70,6 +77,7 @@ export const createUser = async (
       data: {
         id: newUser.id,
         username: newUser.username,
+        phoneNumber: newUser.phoneNumber,
         email: newUser.email,
         roleId: newUser.roleId,
         createdAt: newUser.createdAt,
@@ -151,14 +159,21 @@ export const getAllUsers = async (
 
 // Update a user by ID
 export const updateUser = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<UserAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { username, password, email, roleId } = req.body;
+    const { username, password, email, roleId, phoneNumber } = req.body;
     const userId = parseInt(id, 10);
-
+    if (req.data?.id != userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You are not authorized to access this resource",
+        error: "Forbidden",
+      });
+      return;
+    }
     if (isNaN(userId)) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -180,9 +195,10 @@ export const updateUser = async (
 
     const userData: Partial<UserAttributes> = {};
     if (username) userData.username = username;
-    if (password) userData.password = password;
+    if (password) userData.password = await hashedPasswordString(password, 10);
     if (email) userData.email = email;
     if (roleId) userData.roleId = roleId;
+    if (phoneNumber) userData.phoneNumber = phoneNumber;
 
     const updatedUser = await updateUserRepo(userId, userData);
 
@@ -201,6 +217,7 @@ export const updateUser = async (
       data: {
         id: updatedUser.id,
         username: updatedUser.username,
+        phoneNumber: updatedUser.phoneNumber,
         email: updatedUser.email,
         roleId: updatedUser.roleId,
         createdAt: updatedUser.createdAt,
@@ -249,6 +266,7 @@ export const updateUserOneField = async (
       "password",
       "email",
       "roleId",
+      "phoneNumber",
     ];
     if (!validFields.includes(fieldName)) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -276,6 +294,7 @@ export const updateUserOneField = async (
       data: {
         id: updatedUser.id,
         username: updatedUser.username,
+        phoneNumber: updatedUser.phoneNumber,
         email: updatedUser.email,
         roleId: updatedUser.roleId,
         createdAt: updatedUser.createdAt,
@@ -330,8 +349,8 @@ export const searchUserList = async (
         status: true,
         message: "Users retrieved successfully",
         data: {
-          total : total,
-          list : users,
+          total: total,
+          list: users,
         },
       });
       return;
@@ -344,8 +363,8 @@ export const searchUserList = async (
       pageLimit: pageLimitNum,
       totalPages: Math.ceil(total / pageLimitNum),
       data: {
-        total : total,
-        list : users,
+        total: total,
+        list: users,
       },
     });
   } catch (error: any) {
@@ -390,6 +409,103 @@ export const deleteUser = async (
       status: true,
       message: "User deleted successfully",
     });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const uploadUserImage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "No image file provided",
+        error: "Missing field",
+      });
+      return;
+    }
+
+    // Convert buffer to base64
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString(
+      "base64"
+    )}`;
+    const newImage = await createNewImage({
+      id: uuidToNumber(uuIDv4()),
+      imageBase64: base64Image,
+      type: ImageType.USER,
+    });
+    // Update user with new image
+    const updatedUser = await updateUserRepo(Number(id), {
+      imageId: newImage.id,
+    });
+
+    if (!updatedUser) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "User not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "User image uploaded successfully",
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error uploading user image",
+      error: error.message,
+    });
+  }
+};
+
+export const getUserImage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const record = await Image.findOne({ where: { id: req.params.id } });
+
+    if (!record || !record.imageBase64) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Image not found",
+        error: "Image not found",
+      });
+      return;
+    }
+
+    // Extract base64 string from data URI
+    const base64Match = record.imageBase64.match(/^data:image\/[a-z]+;base64,(.+)$/);
+    if (!base64Match) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid image format",
+        error: "Invalid base64 data",
+      });
+      return;
+    }
+
+    const base64Data = base64Match[1]; // Get the base64-encoded part
+    const mimeType = record.imageBase64.split(";")[0].split(":")[1]; // e.g., "image/png"
+    // Convert base64 to buffer
+    const imgBuffer = Buffer.from(base64Data, "base64");
+
+    // Set correct Content-Type and send image
+    res.set("Content-Type", mimeType);
+    res.send(imgBuffer);
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,

@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { Server } from "http";
 import { logger } from "../config/logger.config";
 import { disconnectDB } from "../database/mySQL/connect";
@@ -5,6 +6,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import ms from "ms";
+import sharp from "sharp";
 import { redisClient } from "../config/redis.config";
 import { ttlInSecondsGlobal } from "../constants/redis.constant";
 import { LinkAttributes } from "../interfaces/Link.interface";
@@ -180,4 +182,17 @@ export const getDateRange = (start: string, end: string): string[] => {
     currentDate.setUTCDate(currentDate.getUTCDate() + 1);
   }
   return dates;
+};
+
+export const convertImageToBase64 = async (image: string) => {
+  const imageBuffer = Buffer.from(image, "base64");
+  const base64Image = imageBuffer.toString("base64");
+  return base64Image;
+};
+
+export const resizeBase64Image = async (base64Image: string) => {
+  const imageBuffer = Buffer.from(base64Image, "base64");
+  const resizedImageBuffer = await sharp(imageBuffer).resize(100, 100).toBuffer();
+  const resizedBase64Image = resizedImageBuffer.toString("base64");
+  return resizedBase64Image;
 };

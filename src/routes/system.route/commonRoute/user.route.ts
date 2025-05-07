@@ -7,8 +7,10 @@ import {
   searchUserList,
   updateUser,
   updateUserOneField,
+  uploadUserImage,
 } from "../../../controllers/commonController/user.controller";
 import { authorization } from "../../../middleware/auth";
+import { upload } from "../../../middleware/upload.middleware";
 
 const router = express.Router();
 
@@ -400,6 +402,10 @@ router.get("/", authorization(["read-users"]),getAllUsers);
  *                 type: string
  *                 description: The password of the user
  *                 example: newhashedpassword123
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The phone number of the user
+ *                 example: 081234567890
  *               email:
  *                 type: string
  *                 format: email
@@ -635,5 +641,46 @@ router.patch("/:id",authorization(["update-user"]), updateUserOneField);
  *                   example: Internal server error
  */
 router.delete("/:id",authorization(["delete-user"]), deleteUser);
+
+/**
+ * @swagger
+ * /users/image/{id}:
+ *   post:
+ *     summary: Upload a user image by ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to upload the image
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The user's profile image (JPEG, PNG, or GIF)
+ *     responses:
+ *       200:
+ *         description: User image uploaded successfully
+ *         content:
+ *           application/json:    
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User image uploaded successfully
+ */       
+router.post("/image/:id", authorization(["update-user"]), upload.single('image'), uploadUserImage);
+
+
 
 export default router;
