@@ -4,6 +4,7 @@ import {
   createLink,
   getLinkById,
   updateLink,
+  getLinkByCampaignId,
 } from "../../../controllers/coreController/link.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -541,4 +542,108 @@ router.get("/:id", authorization(["read-link"]), getLinkById);
  */
 router.patch("/:id", authorization(["update-link"]),  updateLink);
 
+
+/**
+ * @swagger
+ * /links/campaign/{id}:
+ *   get:
+ *     summary: Get a link by ID campaign
+ *     description: Retrieve a specific link by its ID campaign
+ *     tags: [Links]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Link campaign ID
+ *     responses:
+ *       200:
+ *         description: Link retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Link retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     campaignId:
+ *                       type: integer
+ *                       example: 1
+ *                     link:
+ *                       type: string
+ *                       example: "https://example.com/link"
+ *                     linkTo:
+ *                       type: string
+ *                       example: "https://example.com/destination"
+ *                     distribution:
+ *                       type: string
+ *                       example: "DAY"
+ *                     traffic:
+ *                       type: integer
+ *                       example: 0
+ *                     anchorText:
+ *                       type: string
+ *                       example: "Click here"
+ *                     status:
+ *                       type: string
+ *                       example: "ACTIVE"
+ *                     url:
+ *                       type: string
+ *                       example: "https://example.com"
+ *                     page:
+ *                       type: string
+ *                       example: "/home"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T07:00:00
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T07:00:00
+ *       404:
+ *         description: Link not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Link not found
+ *                 error:
+ *                   type: string
+ *                   example: Resource not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error fetching link
+ *                 error:
+ *                   type: string
+ *                   example: Database error
+ */
+router.get("/campaign/:id", authorization(["read-link"]), getLinkByCampaignId);
 export default router;

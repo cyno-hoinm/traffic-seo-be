@@ -33,6 +33,7 @@ import { TransactionType } from "../../enums/transactionType.enum";
 import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import CampaignType from "../../models/CampaignType.model";
 
 // Get campaign list with filters
 
@@ -190,26 +191,46 @@ export const createCampaign = async (
       links, // Array of LinkAttributes, optional
     } = req.body;
 
-    // Validate required fields
-    if (
-      !userId ||
-      !countryId ||
-      !name ||
-      !device ||
-      !title ||
-      !startDate ||
-      !endDate ||
-      !domain ||
-      !search ||
-      !campaignTypeId
-    ) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "All required fields must be provided",
-        error: "Missing or invalid field",
-      });
-      return;
+    // Validate required fields based on campaignTypeId
+    if (campaignTypeId !== 3) {
+      if (
+        !userId ||
+        !countryId ||
+        !name ||
+        !device ||
+        !title ||
+        !startDate ||
+        !endDate ||
+        !domain ||
+        !search ||
+        !campaignTypeId
+      ) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "All required fields must be provided",
+          error: "Missing or invalid field",
+        });
+        return;
+      }
+    } else {
+      if (
+        !userId ||
+        !countryId ||
+        !name ||
+        !title ||
+        !startDate ||
+        !endDate ||
+        !campaignTypeId
+      ) {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "All required fields must be provided",
+          error: "Missing or invalid field",
+        });
+        return;
+      }
     }
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -240,7 +261,8 @@ export const createCampaign = async (
     // Determine campaign status based on startDate
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0); // Optional: reset currentDate time for consistency
-    const campaignStatus = start > currentDate ? CampaignStatus.NOT_STARTED : CampaignStatus.ACTIVE;
+    const campaignStatus =
+      start > currentDate ? CampaignStatus.NOT_STARTED : CampaignStatus.ACTIVE;
 
     let keywordTrafficCost = 1;
     const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
@@ -270,7 +292,7 @@ export const createCampaign = async (
       ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0)
       : 0;
     const totalLinkTraffic = links
-      ? links.reduce((sum: number, item: Keyword) => sum + item.traffic, 0)
+      ? links.reduce((sum: number, item: Link) => sum + item.traffic, 0)
       : 0;
     const totalCost =
       totalKeywordTraffic * keywordTrafficCost +
@@ -285,6 +307,7 @@ export const createCampaign = async (
       });
       return;
     }
+
     // Validate keywords if provided
     if (keywords) {
       if (!Array.isArray(keywords)) {
@@ -325,17 +348,7 @@ export const createCampaign = async (
         return;
       }
       for (const link of links) {
-        if (
-          !link.link ||
-          !link.linkTo ||
-          !link.distribution ||
-          !Object.values(DistributionType).includes(link.distribution) ||
-          !link.anchorText ||
-          !link.status ||
-          !Object.values(LinkStatus).includes(link.status) ||
-          !link.url ||
-          !link.page
-        ) {
+        if (!link.link) {
           res.status(statusCode.BAD_REQUEST).json({
             status: false,
             message:
@@ -356,12 +369,12 @@ export const createCampaign = async (
             userId,
             countryId,
             name,
-            device,
+            device: campaignTypeId === 3 ? null : device, // Set to null if campaignTypeId is 3
             title,
             startDate: start,
             endDate: end,
-            domain,
-            search,
+            domain: campaignTypeId === 3 ? null : domain, // Set to null if campaignTypeId is 3
+            search: campaignTypeId === 3 ? null : search, // Set to null if campaignTypeId is 3
             campaignTypeId,
             status: campaignStatus, // Use determined status
             isDeleted: false,
@@ -380,7 +393,10 @@ export const createCampaign = async (
               name: keyword.name,
               urls: keyword.urls,
               cost: cost,
-              status: start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE, // Set INACTIVE if future start
+              status:
+                start > currentDate
+                  ? keywordStatus.INACTIVE
+                  : keywordStatus.ACTIVE, // Set INACTIVE if future start
               distribution: keyword.distribution,
               traffic: keyword.traffic || 0,
               isDeleted: false,
@@ -414,7 +430,7 @@ export const createCampaign = async (
             linkTo: link.linkTo,
             distribution: link.distribution,
             traffic: link.traffic || 0,
-            cost: (link.traffic || 0) * 1,
+            cost: (link.traffic || 0) * 5,
             anchorText: link.anchorText,
             status: start > currentDate ? LinkStatus.INACTIVE : link.status, // Set INACTIVE if future start
             url: link.url,
@@ -507,13 +523,13 @@ export const getCampaignById = async (
       });
       return;
     }
-    if (user.role.id ===2 && user.id !== campaign.userId) {
+    if (user.role.id === 2 && user.id !== campaign.userId) {
       res.status(statusCode.FORBIDDEN).json({
         status: false,
         message: "You not have permission",
-        error: "You not have permission"
-      })
-      return
+        error: "You not have permission",
+      });
+      return;
     }
     // Calculate total traffic and cost from links and keywords
     const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
@@ -749,4 +765,3 @@ export const cancelCampaign = async (
     return;
   }
 };
-
