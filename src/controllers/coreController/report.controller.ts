@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ResponseType } from "../../types/Response.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
-import {  getCampaignReport } from "../../repositories/coreRepo/campagin.repository";
+import {  getCampaignReport, isCampaignOwnerRepo } from "../../repositories/coreRepo/campagin.repository";
 import { getKeywordsByDistributionType } from "../../repositories/coreRepo/keyword.repository";
 import { getLinksReport } from "../../repositories/coreRepo/link.repository";
 import {
@@ -140,18 +140,40 @@ export const getCampaignReportAll = async (
 };
 
 export const getOneCampaignReport = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<CampaignReport>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
     const { campaignId } = req.body;
+    const isOwner = await isCampaignOwnerRepo({
+      campaignId, userId: user.id
+    })
+    if (user.role.id===2 && !isOwner) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      })
+      return
+    }
+
     const result = await getOneCampaignReportRepo(
       campaignId
     );
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign report fetched successfully",
-      data: result || undefined, 
+      data: result || undefined,
     });
     return;
   } catch (error: any) {
