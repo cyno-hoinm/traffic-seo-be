@@ -5,6 +5,7 @@ import {
   createLinkRepo,
   getLinkByIdRepo,
   updateLinkRepo,
+  getLinkByCampaignIdRepo,
 } from "../../repositories/coreRepo/link.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { LinkAttributes } from "../../interfaces/Link.interface";
@@ -269,6 +270,39 @@ export const updateLink = async (
       name: err.name || "InternalServerError",
       message: err.message || "An unexpected error occurred",
       code: err.code || statusCode.INTERNAL_SERVER_ERROR,
+    });
+    return;
+  }
+};
+
+export const getLinkByCampaignId = async (
+  req: Request,
+  res: Response<ResponseType<LinkAttributes[]>>
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const links = await getLinkByCampaignIdRepo(Number(id));
+    if (!links) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Link not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Link retrieved successfully",
+      data: links.links,
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error fetching link",
+      error: error.message,
     });
     return;
   }

@@ -171,3 +171,28 @@ export const updateLinkRepo = async (
     );
   }
 };
+
+export const getLinkByCampaignIdRepo = async (
+  campaignId: number
+): Promise<{ links: LinkAttributes[]; total: number }> => {
+  try {
+    const where: any = { isDeleted: false };
+
+    if (campaignId) where.campaignId = campaignId;
+
+    const queryOptions: any = {
+      where,
+      order: [["createdAt", "DESC"]],
+    };
+
+    // Apply pagination only if page and limit are not 0
+
+    const { rows: links, count: total } = await Link.findAndCountAll(
+      queryOptions
+    );
+
+    return { links, total };
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};

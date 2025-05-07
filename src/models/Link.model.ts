@@ -42,11 +42,13 @@ Link.init(
     },
     linkTo: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     distribution: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     traffic: {
       type: DataTypes.INTEGER,
@@ -59,7 +61,8 @@ Link.init(
     },
     anchorText: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     status: {
       type: DataTypes.STRING,
@@ -67,13 +70,15 @@ Link.init(
     },
     url: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     page: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
-     isDeleted: {
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,

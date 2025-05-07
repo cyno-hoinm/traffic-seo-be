@@ -68,6 +68,7 @@ Campaign.init(
     device: {
       type: DataTypes.STRING,
       allowNull: true,
+      defaultValue: "",
     },
     title: {
       type: DataTypes.STRING,
@@ -83,11 +84,13 @@ Campaign.init(
     },
     domain: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     search: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: "",
     },
     status: {
       type: DataTypes.STRING,
