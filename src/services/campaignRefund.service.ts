@@ -128,7 +128,7 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
   try {
     // Get current date without time for comparison
     const currentDate = new Date();
-    currentDate.setHours(8, 0, 0, 0);
+    currentDate.setHours(23, 0, 0, 0);
 
     // Start a transaction for the query
     transaction = await sequelizeSystem.transaction();
