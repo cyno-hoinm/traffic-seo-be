@@ -12,6 +12,5 @@ export const searchLogs = async (
     const result = await baseApiPython("log/search",data )
     return result.data
   } catch (error: any) {
-    console.error("Error: ", error.message)
   }
 }

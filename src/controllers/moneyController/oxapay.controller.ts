@@ -120,7 +120,6 @@ export async function handleOxaPayWebhook(
 ): Promise<void> {
   try {
     const rawBody = (req as any).rawBody;
-    console.log("RawBody: ", rawBody);
     const hmacHeader = req.headers["hmac"] as string;
 
     if (!rawBody || !hmacHeader) {
@@ -137,15 +136,10 @@ export async function handleOxaPayWebhook(
       .digest("hex");
 
     if (calculatedHmac !== hmacHeader) {
-      console.warn("❌ Invalid HMAC signature from OxaPay");
       res.status(statusCode.BAD_REQUEST).send("Invalid HMAC");
       return;
     }
 
-    console.log("✅ Valid OxaPay callback:", data);
-
-    // Process logic
-    console.log("Test oxapay callback!!!", data);
     const orderInfo = decodeAndDecompress(data.order_id);
     await createDepositRepo({
       createdBy: orderInfo.userId,
@@ -159,7 +153,6 @@ export async function handleOxaPayWebhook(
 
     res.status(statusCode.OK).send("ok");
   } catch (err: any) {
-    console.error("❌ Callback error:", err);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
       .send("Callback processing error");

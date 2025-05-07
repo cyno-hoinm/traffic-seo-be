@@ -43,14 +43,13 @@ Keyword.init(
       get() {
         const rawValue = this.getDataValue("urls");
         try {
-          return typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+          const parsedValue = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+          return parsedValue;
         } catch (error) {
-          console.error("Error parsing urls:", error);
-          return []; // Fallback to empty array
+          return [];
         }
       },
       set(value: string[]) {
-        // Ensure the value is stored as a JSON string
         this.setDataValue("urls", JSON.stringify(value));
       },
     },

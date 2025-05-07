@@ -229,7 +229,6 @@ export const getCampaignReport = async (
       count: parseInt(item.count, 10),
     }));
   } catch (error) {
-    console.error("Error fetching campaign report:", error);
     throw error instanceof ErrorType
       ? error
       : new ErrorType("UnknownError", "Failed to fetch campaign report");

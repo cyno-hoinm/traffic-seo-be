@@ -300,7 +300,7 @@ export const registerUser = async (
       isDeleted: false,
       isActive: false,
     };
-    // console.log(userData)
+
     // Create user using repository
     const user = await createUserRepo(userData);
     const type = "confirmUser";

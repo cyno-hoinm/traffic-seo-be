@@ -185,7 +185,17 @@ export const getOneCampaignReportRepo = async (
           dataPython
         );
         return {
-          ...keyword.dataValues, // Convert Sequelize instance to plain object
+          id : keyword.id,
+          campaignId: campaign.id,
+          name: keyword.name,
+          urls: keyword.urls,
+          distribution: keyword.distribution,
+          cost: keyword.cost,
+          isDeleted: keyword.isDeleted,
+          createdAt: keyword.createdAt,
+          updatedAt: keyword.updatedAt,
+          status: keyword.status,
+          traffic: keyword.traffic,
           trafficCompleted: result.success_count, // Corrected typo
         };
       })
@@ -220,7 +230,6 @@ export const getOneCampaignReportRepo = async (
       traffic,
     };
   } catch (error) {
-    console.error("Error fetching campaign details:", error);
     throw error;
   }
 };
@@ -383,10 +392,6 @@ const calculateTraffic = async (
             traffic: Number(result.success_count) || 0,
           };
         } catch (apiError) {
-          console.error(
-            `Failed to fetch traffic for keyword ${keyword.id} on ${date}:`,
-            apiError
-          );
           return { date, traffic: 0 };
         }
       })

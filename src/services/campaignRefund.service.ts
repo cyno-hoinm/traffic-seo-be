@@ -49,8 +49,7 @@ export const processCampaignRefund = async (campaignId: number) => {
 
     const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
     let refundAmount = 0;
-    // console.log(metrics.totalTraffic);
-    // console.log(metrics.totalCost);
+
 
     const completedTrafficPromises = campaign.keywords.map(
       async (keyword: KeywordAttributes) => {
@@ -78,7 +77,7 @@ export const processCampaignRefund = async (campaignId: number) => {
     );
     const cost = KEYWORD_TRAFFIC_COST?.value ? KEYWORD_TRAFFIC_COST.value : 1
     const completedTraffic = await Promise.all(completedTrafficPromises);
-    // console.log(completedTraffic);
+
     refundAmount = (metrics.totalTraffic - completedTraffic[0]) * Number(cost);
     if (refundAmount > 0) {
       // Create a refund transaction

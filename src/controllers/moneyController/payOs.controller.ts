@@ -16,7 +16,6 @@ export async function handlePayOsWebhook(
 
     // Check if signature is provided
     if (!signature) {
-      console.error("Missing webhook signature");
       res
         .status(statusCode.UNAUTHORIZED)
         .json({ status: false, message: "Missing signature" });
@@ -52,7 +51,6 @@ export async function handlePayOsWebhook(
       .status(statusCode.OK)
       .json({ status: true, message: "Webhook processed successfully" });
   } catch (error) {
-    console.error("Error processing webhook:", error);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ status: false, message: "Internal server error" });

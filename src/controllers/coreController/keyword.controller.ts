@@ -354,7 +354,17 @@ export const getKeywordByCampaignId = async (
           keywordId: keyword.id
         })
         return {
-          ...keyword.dataValues, // Convert Sequelize instance to plain object
+          id : keyword.id,
+          campaignId: campaign.id ? campaign.id : null,
+          name: keyword.name,
+          urls: keyword.urls,
+          distribution: keyword.distribution,
+          cost: keyword.cost,
+          isDeleted: keyword.isDeleted,
+          createdAt: keyword.createdAt,
+          updatedAt: keyword.updatedAt,
+          status: keyword.status,
+          traffic: keyword.traffic,
           trafficCompleted: result.success_count, // Corrected typo
           logs: logs
         };

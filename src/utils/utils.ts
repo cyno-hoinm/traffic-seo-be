@@ -140,7 +140,6 @@ export const calculateCampaignMetrics = (
     links.reduce((sum, link) => {
       const cost = Number(link.cost);
       if (isNaN(cost)) {
-        console.warn(`Invalid cost for link ${link.id}: ${link.cost}`);
         return sum;
       }
       return sum + cost;
@@ -148,7 +147,6 @@ export const calculateCampaignMetrics = (
     keywords.reduce((sum, keyword) => {
       const cost = Number(keyword.cost);
       if (isNaN(cost)) {
-        console.warn(`Invalid cost for keyword ${keyword.id}: ${keyword.cost}`);
         return sum;
       }
       return sum + cost;

@@ -6,7 +6,7 @@ const baseUrl = oxapayConfig.url;
 
 export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateInvoiceResult> => {
   try {
-    // console.log(baseUrl)
+
     const res = await axios.post(`${baseUrl}/payment/invoice`, data, {
       headers: {
         'merchant_api_key': oxapayConfig.merchant,
@@ -16,7 +16,6 @@ export const generateInvoice = async (data: CreateInvoiceInput): Promise<CreateI
 
     return res.data.data;
   } catch (error: any) {
-    console.error('Oxapay - createInvoice error:', error.response?.data || error.message);
     throw new Error('Failed to create Oxapay invoice');
 
   }
@@ -36,7 +35,6 @@ export const getCurrenciesService = async (): Promise<{
     return res.data.data;
 
   } catch (error: any) {
-    console.error('Oxapay - getCurencies error:', error.response?.data || error.message);
     throw new Error('Failed to get currencies');
   }
 }
@@ -50,7 +48,6 @@ export const generatePayout = async (data: CreatePayoutInput): Promise<CreatePay
 
     return res.data;
   } catch (error: any) {
-    console.error('Oxapay - createPayout error:', error.response?.data || error.message);
     throw new Error('Failed to create Oxapay payout');
 
   }
@@ -64,7 +61,6 @@ export const getMyIP = async (): Promise<any> => {
 
     return res.data;
   } catch (error: any) {
-    console.error('Oxapay - createPayout error:', error.response?.data || error.message);
     throw new Error('Failed to create Oxapay payout');
 
   }

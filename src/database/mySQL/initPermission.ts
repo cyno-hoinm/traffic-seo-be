@@ -105,12 +105,9 @@ export async function initializePermissions() {
       await sequelizeSystem.query(query);
     }
 
-    // console.log(`${insertedCount} quyền đã được khởi tạo thành công.`);
+
   } catch (error: any) {
-    console.error("Lỗi khi khởi tạo quyền:", error);
-    if (error.message.includes("unique constraint")) {
-      console.error("Lỗi: Mã hoặc tên quyền bị trùng lặp.");
-    }
+    // Remove console.error("Lỗi khi khởi tạo quyền:", error);
   }
 }
 

@@ -57,7 +57,6 @@ export const findUserByIdRepo = async (
 // Helper function to extract permission names
 export const getUserPermissions = async (userId: number): Promise<string[]> => {
   const user = await findUserByIdRepo(userId);
-  // console.log(user);
   if (!user || !user.role || !user.role.rolePermissions) return [];
 
   const permissions = user.role.rolePermissions

@@ -379,7 +379,7 @@ async function manageBackups(): Promise<void> {
       if (isNaN(parsedA.getTime()) || isNaN(parsedB.getTime())) return 0;
       return parsedB.getTime() - parsedA.getTime(); // Newest first
     });
-  // console.log('Backup databases:', backupDbs);
+
 
   // Drop older databases if exceeding MAX_BACKUPS
   if (backupDbs.length > MAX_BACKUPS) {
@@ -389,7 +389,6 @@ async function manageBackups(): Promise<void> {
     // Select the oldest databases (last numToDelete elements, as sorted newest to oldest)
     const dbsToDelete = backupDbs.slice(-numToDelete);
 
-    // console.log('Databases to delete:', dbsToDelete);
 
     // Drop the selected databases
     for (const db of dbsToDelete) {
