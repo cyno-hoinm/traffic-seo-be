@@ -9,9 +9,66 @@ import {
   resendOtp,
 } from "../../../controllers/commonController/auth.controller";
 import { authenticateToken } from "../../../middleware/auth";
+import { getUserImage } from "../../../controllers/commonController/user.controller";
 
 const router = express.Router();
-
+/**
+ * @swagger
+ * /image/{id}:
+ *   get:
+ *     summary: Get a user image by ID
+ *     tags: [Image]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the user to get the image
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: User image retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string 
+ *                   example: User image retrieved successfully
+ *       400:
+ *         description: Invalid user ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid user ID
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:    
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.get("/image/:id", getUserImage);
 /**
  * @swagger
  * /auth:

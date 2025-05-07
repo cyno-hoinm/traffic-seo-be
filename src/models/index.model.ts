@@ -16,6 +16,7 @@ import PaymentMethod from "./PaymentMethod.model";
 import CampaignType from "./CampaignType.model";
 import Config from "./Config.model";
 import Agency from "./Agency.model"
+import Image from "./Image.model"
 
 // Initialize models (this ensures they’re loaded)
 export const models = {
@@ -34,7 +35,8 @@ export const models = {
   TransactionModel,
   PaymentMethod,
   CampaignType,
-  Config
+  Config,
+  Image
 };
 
 
@@ -111,6 +113,9 @@ Agency.hasMany(User, {
   as: 'invitedUsers',
 });
 
+User.belongsTo(Image, { foreignKey: "imageId", as: "image", onDelete: 'SET NULL' });
+Image.hasMany(User, { foreignKey: "imageId", as: "users", onDelete: 'SET NULL' });
+
 // Export models
 export {
   Role,
@@ -129,5 +134,6 @@ export {
   PaymentMethod,
   Config,
   Agency,
+  Image,
   sequelizeSystem,
 };

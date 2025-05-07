@@ -7,6 +7,7 @@ import {
 
 import { NotificationAttributes } from "../../interfaces/Notification.interface";
 import { ResponseType } from "../../types/Response.type";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Create a new notification
 export const createNotification = async (
@@ -31,6 +32,20 @@ export const createNotification = async (
       content,
       type,
     });
+
+    // Emit real-time notification
+    const io = (global as any).io;
+    if (io) {
+      io.to(`user_${userId}`).emit("newNotification", {
+        id: notification.id,
+        userId: notification.userId,
+        name: notification.name,
+        content: notification.content,
+        type: notification.type,
+        createdAt: notification.createdAt,
+      });
+    }
+
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Notification created successfully",
@@ -54,17 +69,18 @@ export const createNotification = async (
 
 // Get notifications by userId and type
 export const getNotificationsByUserIdAndType = async (
-  req: Request,
-  res: Response<ResponseType<{ notifications: NotificationAttributes[]; total: number }>>
+  req: AuthenticatedRequest,
+  res: Response<
+    ResponseType<{ notifications: NotificationAttributes[]; total: number }>
+  >
 ): Promise<void> => {
   try {
     const { userId, type } = req.body;
-
-    if (!userId) {
-      res.status(statusCode.BAD_REQUEST).json({
+    if (req.data?.id != userId) {
+      res.status(statusCode.FORBIDDEN).json({
         status: false,
-        message: "userId is required",
-        error: "Missing required field",
+        message: "You are not authorized to access this resource",
+        error: "Forbidden",
       });
       return;
     }
@@ -79,14 +95,16 @@ export const getNotificationsByUserIdAndType = async (
       status: true,
       message: "Notifications retrieved successfully",
       data: {
-        notifications: notifications.notifications.map((notification: NotificationAttributes) => ({
-          id: notification.id,
-          userId: notification.userId,
-          name: notification.name,
-          content: notification.content,
-          type: notification.type,
-          createdAt: notification.createdAt,
-        })),
+        notifications: notifications.notifications.map(
+          (notification: NotificationAttributes) => ({
+            id: notification.id,
+            userId: notification.userId,
+            name: notification.name,
+            content: notification.content,
+            type: notification.type,
+            createdAt: notification.createdAt,
+          })
+        ),
         total: notifications.total,
       },
     });

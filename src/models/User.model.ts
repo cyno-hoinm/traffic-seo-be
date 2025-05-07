@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { UserAttributes } from "../interfaces/User.interface";
-import { sequelizeSystem, Wallet } from "./index.model";
+import { Image, sequelizeSystem, Wallet } from "./index.model";
 import { RoleAttributes } from "../interfaces/Role.interface";
 
 class User extends Model<UserAttributes> implements UserAttributes {
@@ -8,9 +8,11 @@ class User extends Model<UserAttributes> implements UserAttributes {
   public username!: string;
   public password!: string;
   public email!: string;
+  public phoneNumber!: string;
   public roleId!: number;
   public role!: RoleAttributes;
   public invitedBy!: number;
+  public imageId!: number;
   public isActive!: boolean; // Added
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
@@ -32,6 +34,11 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "",
+    },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -41,6 +48,14 @@ User.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 2, // Customer
+    },
+    imageId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: Image,
+        key: "id",
+      }
     },
     invitedBy: {
       type: DataTypes.INTEGER,

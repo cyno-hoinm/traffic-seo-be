@@ -5,7 +5,6 @@ import {
   findUserByEmailForConfirmRepo,
   findUserByEmailRepo,
   findUserByIdRepo,
-  findUserByUsernameRepo,
   getUserPermissions,
   updateUserOneFieldRepo,
 } from "../../repositories/commonRepo/user.repository";
@@ -81,6 +80,7 @@ export const loginUser = async (
         user: {
           id: user.id,
           username: user.username,
+          userImage : `${process.env.DEV_URL}/api/auth/image/${user.imageId}`,
           email: user.email,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
@@ -293,13 +293,14 @@ export const registerUser = async (
     const userData: UserAttributes = {
       username,
       password: hashedPassword,
+      phoneNumber: "",
       email,
       roleId: 2,
       invitedBy:invitedBy,
       isDeleted: false,
       isActive: false,
     };
-    console.log(userData)
+    // console.log(userData)
     // Create user using repository
     const user = await createUserRepo(userData);
     const type = "confirmUser";
