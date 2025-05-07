@@ -142,11 +142,12 @@ export const createKeyword = async (
       });
       return;
     }
+
     const cost = traffic * 1; //cost per traffic
     const keyword = await createKeywordRepo({
       campaignId,
       name,
-      urls,
+      urls: JSON.stringify(urls),
       traffic,
       status: keywordStatus.ACTIVE,
       distribution,

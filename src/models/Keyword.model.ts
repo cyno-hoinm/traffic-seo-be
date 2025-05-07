@@ -8,7 +8,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public campaignId!: number | null; // Nullable if not always present
   public name!: string;
   public status!: string;
-  public urls!: string[]; // Array stored as JSON
+  public urls!: string; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
   public cost!: number;
@@ -34,11 +34,25 @@ Keyword.init(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
     },
     urls: {
       type: DataTypes.JSON, // Use JSON for MySQL instead of ARRAY
       allowNull: false,
+      get() {
+        const rawValue = this.getDataValue("urls");
+        if (typeof rawValue === "string") {
+          try {
+            return JSON.parse(rawValue);
+          } catch (e) {
+            return [];
+          }
+        }
+        return [];
+      },
+      set(value: any) {
+        this.setDataValue("urls", JSON.stringify(value));
+      }
     },
     distribution: {
       type: DataTypes.STRING, // Enum type

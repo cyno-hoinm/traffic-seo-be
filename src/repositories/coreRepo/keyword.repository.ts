@@ -54,7 +54,7 @@ export const getKeywordListRepo = async (filters: {
 export const createKeywordRepo = async (data: {
   campaignId: number;
   name: string;
-  urls: string[];
+  urls: string;
   traffic: number;
   status: string;
   distribution: DistributionType;

@@ -7,7 +7,7 @@ export interface KeywordAttributes {
   campaigns? : CampaignAttributes
   name: string;
   cost: number;
-  urls?: string[];
+  urls?: string;
   status: string;
   distribution: DistributionType;
   traffic: number;
