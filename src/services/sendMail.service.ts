@@ -1,140 +1,274 @@
-import nodemailer, { SendMailOptions } from "nodemailer";
+import nodemailer, { SendMailOptions, Transporter } from "nodemailer";
 import { redisClient } from "../config/redis.config";
 import { logger } from "../config/logger.config";
 import debug from "debug";
 import { generateEmailTemplate } from "../views/mail.view";
+import { setInterval, clearInterval } from "node:timers";
+// Types
+interface EmailOptions {
+  recipientName?: string;
+  attachments?: SendMailOptions["attachments"];
+  retries?: number;
+  priority?: "high" | "normal" | "low";
+}
 
-const debugEmail = debug("email"); 
-const transporter = nodemailer.createTransport({
-  service: "gmail", 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, 
-  },
-});
+interface EmailTask {
+  to: string;
+  subject: string;
+  body: string;
+  options?: EmailOptions;
+  timestamp: number;
+}
 
-// Redis queue key
+interface EmailResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  attempts: number;
+}
+
+// Constants
 const EMAIL_QUEUE_KEY = "email:queue";
+const EMAIL_RETRY_QUEUE_KEY = "email:retry:queue";
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff delays in ms
+const QUEUE_TIMEOUT = 10; // seconds
+const SERVICE_CHECK_INTERVAL = 5000; // ms
 
-async function sendEmail(
-  to: string,
-  subject: string,
-  body: string,
-  options: {
-    recipientName?: string;
-    attachments?: SendMailOptions["attachments"];
-    retries?: number;
-  } = {}
-): Promise<boolean> {
-  const { recipientName, attachments, retries = 2 } = options;
+// Debug setup
+const debugEmail = debug("email:service");
+const debugQueue = debug("email:queue");
 
-  // Generate beautiful HTML content
-  const html = generateEmailTemplate(subject, body, recipientName);
+// Email service configuration
+class EmailService {
+  private transporter: Transporter;
+  private isRunning: boolean = false;
+  private serviceCheckInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Email options
-  const mailOptions: SendMailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    html,
-    attachments, // Optional attachments (e.g., files, images)
-  };
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      pool: true, // Use pooled connections
+      maxConnections: 5,
+      maxMessages: 100,
+    });
+  }
 
-  let attempt = 0;
-  let lastError: Error | null = null;
-
-  // Retry logic
-  while (attempt <= retries) {
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      logger.info(`Email sent to ${to}: ${info.messageId}`);
-      debugEmail(`Email sent successfully to ${to} on attempt ${attempt + 1}`);
-      return true;
-    } catch (error: any) {
-      lastError = error;
-      attempt++;
-      logger.warn(
-        `Attempt ${attempt} failed for email to ${to}: ${error.message}`
-      );
-      debugEmail(`Email sending failed on attempt ${attempt}: ${error.message}`);
-
-      if (attempt <= retries) {
-        // Wait before retrying (exponential backoff: 1s, 2s, 4s, etc.)
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
+  private async validateConfig(): Promise<void> {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error("Email configuration is incomplete");
     }
   }
 
-  // If all retries fail
-  logger.error(
-    `Failed to send email to ${to} after ${retries + 1} attempts: ${lastError?.message}`
-  );
-  debugEmail(`Email sending failed after all retries: ${lastError?.message}`);
-  return false;
-}
+  private async sendEmail(
+    to: string,
+    subject: string,
+    body: string,
+    options: EmailOptions = {}
+  ): Promise<EmailResult> {
+    const { recipientName, attachments, retries = MAX_RETRIES } = options;
+    const html = generateEmailTemplate(subject, body, recipientName);
+    const mailOptions: SendMailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject,
+      html,
+      attachments,
+    };
 
-// Background email processing service
-async function startEmailService() {
-  logger.info(`Email Service worker ${process.pid} started`);
-  debugEmail(`Starting email service on worker ${process.pid}`);
+    let attempt = 0;
+    let lastError: Error | null = null;
 
-  try {
-    await redisClient.connect(); // Ensure Redis is connected
-    debugEmail("Connected to Redis for email queue");
-    const isRunning = true;
-    while (isRunning) {
+    while (attempt < retries) {
       try {
-        // Pop an email task from the Redis queue (blocking operation)
-        // @redis/client brPop returns [key, value] or null
-        const emailTask = await redisClient.brPop(EMAIL_QUEUE_KEY, 10); // Wait 10s for a task
-        if (emailTask) {
-          const { to, subject, body } = JSON.parse(emailTask.element); // emailTask[1] is the value
-          debugEmail(`Processing email for ${to}`);
-
-          const success = await sendEmail(to, subject, body);
-          if (!success) {
-            logger.warn(`Failed to send email to ${to}`);
-            debugEmail(`Email sending failed for ${to}`);
-            // No re-queueing; email is discarded
-          } else {
-            logger.info(`Email sent successfully to ${to}`);
-            debugEmail(`Email sent to ${to}`);
-          }
-        } else {
-          debugEmail("No emails in queue, waiting...");
-        }
+        const info = await this.transporter.sendMail(mailOptions);
+        logger.info(`Email sent to ${to}: ${info.messageId}`);
+        debugEmail(`Email sent successfully to ${to} on attempt ${attempt + 1}`);
+        return {
+          success: true,
+          messageId: info.messageId,
+          attempts: attempt + 1,
+        };
       } catch (error: any) {
-        logger.error(`Email processing error: ${error.message}`);
-        debugEmail(`Error in email processing loop: ${error.message}`);
-        // No retry; continue to the next task
+        lastError = error;
+        attempt++;
+        logger.warn(
+          `Attempt ${attempt} failed for email to ${to}: ${error.message}`
+        );
+        debugEmail(`Email sending failed on attempt ${attempt}: ${error.message}`);
+
+        if (attempt < retries) {
+          const delay = RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
       }
     }
-  } catch (error: any) {
-    logger.error(`Email Service failed to start: ${error.message}`);
-    debugEmail(`Service startup failed: ${error.message}`);
-    process.exit(1);
+
+    return {
+      success: false,
+      error: lastError?.message || "Unknown error",
+      attempts: attempt,
+    };
+  }
+
+  private async processEmailTask(task: EmailTask): Promise<void> {
+    const { to, subject, body, options } = task;
+    debugQueue(`Processing email for ${to}`);
+
+    const result = await this.sendEmail(to, subject, body, options);
+    
+    if (!result.success) {
+      logger.warn(`Failed to send email to ${to} after ${result.attempts} attempts`);
+      debugQueue(`Email sending failed for ${to}: ${result.error}`);
+      
+      // Move to retry queue if not at max retries
+      if (result.attempts < MAX_RETRIES) {
+        await this.queueEmailForRetry(task);
+      }
+    } else {
+      logger.info(`Email sent successfully to ${to} (${result.messageId})`);
+      debugQueue(`Email sent to ${to}`);
+    }
+  }
+
+  private async queueEmailForRetry(task: EmailTask): Promise<void> {
+    try {
+      await redisClient.lPush(
+        EMAIL_RETRY_QUEUE_KEY,
+        JSON.stringify({ ...task, timestamp: Date.now() })
+      );
+      debugQueue(`Email queued for retry: ${task.to}`);
+    } catch (error: any) {
+      logger.error(`Failed to queue email for retry: ${error.message}`);
+      debugQueue(`Retry queueing failed: ${error.message}`);
+    }
+  }
+
+  private async processQueue(): Promise<void> {
+    try {
+      const emailTask = await redisClient.brPop(EMAIL_QUEUE_KEY, QUEUE_TIMEOUT);
+      if (emailTask) {
+        const task: EmailTask = JSON.parse(emailTask.element);
+        await this.processEmailTask(task);
+      } else {
+        debugQueue("No emails in queue, waiting...");
+      }
+    } catch (error: any) {
+      logger.error(`Email processing error: ${error.message}`);
+      debugQueue(`Error in email processing loop: ${error.message}`);
+    }
+  }
+
+  private async processRetryQueue(): Promise<void> {
+    try {
+      const retryTask = await redisClient.brPop(EMAIL_RETRY_QUEUE_KEY, QUEUE_TIMEOUT);
+      if (retryTask) {
+        const task: EmailTask = JSON.parse(retryTask.element);
+        // Only process if enough time has passed since last attempt
+        if (Date.now() - task.timestamp > RETRY_DELAYS[0]) {
+          await this.processEmailTask(task);
+        } else {
+          // Put back in queue if not enough time has passed
+          await this.queueEmailForRetry(task);
+        }
+      }
+    } catch (error: any) {
+      logger.error(`Retry queue processing error: ${error.message}`);
+      debugQueue(`Error in retry queue processing: ${error.message}`);
+    }
+  }
+
+  private startServiceCheck(): void {
+    this.serviceCheckInterval = setInterval(async () => {
+      try {
+        await this.transporter.verify();
+      } catch (error: any) {
+        logger.error(`Email service health check failed: ${error.message}`);
+        debugEmail(`Service health check failed: ${error.message}`);
+        // Attempt to recreate transporter
+        this.transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+      }
+    }, SERVICE_CHECK_INTERVAL);
+  }
+
+  public async start(): Promise<void> {
+    logger.info(`Email Service worker ${process.pid} starting`);
+    debugEmail(`Starting email service on worker ${process.pid}`);
+
+    try {
+      await this.validateConfig();
+      await redisClient.connect();
+      await this.transporter.verify();
+      
+      this.isRunning = true;
+      this.startServiceCheck();
+      
+      debugEmail("Email service started successfully");
+      logger.info("Email service started successfully");
+
+      while (this.isRunning) {
+        await Promise.all([
+          this.processQueue(),
+          this.processRetryQueue(),
+        ]);
+      }
+    } catch (error: any) {
+      logger.error(`Email Service failed to start: ${error.message}`);
+      debugEmail(`Service startup failed: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  public async stop(): Promise<void> {
+    this.isRunning = false;
+    if (this.serviceCheckInterval) {
+      clearInterval(this.serviceCheckInterval);
+    }
+    await this.transporter.close();
+    await redisClient.disconnect();
+    logger.info("Email service stopped");
+    debugEmail("Email service stopped");
   }
 }
 
-// Function to queue an email (to be used by other parts of the app)
+// Create singleton instance
+const emailService = new EmailService();
+
+// Export public interface
 export async function queueEmail(
   to: string,
   subject: string,
-  body: string
+  body: string,
+  options?: EmailOptions
 ): Promise<void> {
   try {
-    await redisClient.lPush(
-      EMAIL_QUEUE_KEY,
-      JSON.stringify({ to, subject, body })
-    );
+    const task: EmailTask = {
+      to,
+      subject,
+      body,
+      options,
+      timestamp: Date.now(),
+    };
+
+    await redisClient.lPush(EMAIL_QUEUE_KEY, JSON.stringify(task));
     logger.info(`Email queued for ${to}`);
-    debugEmail(`Email queued: ${to}, ${subject}`);
+    debugQueue(`Email queued: ${to}, ${subject}`);
   } catch (error: any) {
     logger.error(`Failed to queue email for ${to}: ${error.message}`);
-    debugEmail(`Queueing failed: ${error.message}`);
+    debugQueue(`Queueing failed: ${error.message}`);
     throw error;
   }
 }
 
-export { startEmailService };
+export const startEmailService = () => emailService.start();
+export const stopEmailService = () => emailService.stop();

@@ -271,6 +271,9 @@ async function createBackup() {
           await backupSequelize.query(indexSQL);
           // logger.info(`Created index ${keyName} for ${tableName} in ${backupDbName}`);
         } catch (error: any) {
+          logger.error(
+            `Failed to create index ${keyName} for ${tableName}: ${error.message}`
+          );
           // logger.warn(`Failed to create index ${keyName} for ${tableName}: ${error.message}`);
           // Continue to avoid stopping the backup process
         }
@@ -342,6 +345,8 @@ async function createBackup() {
       );
       // logger.info(`Cleaned up incomplete backup database ${backupDbName}`);
     } catch (cleanupError: any) {
+      logger.error(`Failed to create Oxapay invoice: ${cleanupError.message}`);
+
       // logger.error(`Failed to clean up backup database ${backupDbName}: ${cleanupError.message}`);
     }
     throw error;
@@ -366,12 +371,22 @@ async function manageBackups(): Promise<void> {
   const backupDbs = result
     .map((row: any) => Object.values(row)[0] as string)
     .sort((a, b) => {
-      const timeA = a.match(/backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/)?.[1];
-      const timeB = b.match(/backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/)?.[1];
+      const timeA = a.match(
+        /backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/
+      )?.[1];
+      const timeB = b.match(
+        /backup_.*_(\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2})/
+      )?.[1];
       if (!timeA || !timeB) return 0;
       // Convert YYYY_MM_DD_HH_MM_SS to YYYY-MM-DDTHH:MM:SS
-      const dateA = timeA.replace(/(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/, '$1-$2-$3T$4:$5:$6');
-      const dateB = timeB.replace(/(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/, '$1-$2-$3T$4:$5:$6');
+      const dateA = timeA.replace(
+        /(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/,
+        "$1-$2-$3T$4:$5:$6"
+      );
+      const dateB = timeB.replace(
+        /(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})_(\d{2})/,
+        "$1-$2-$3T$4:$5:$6"
+      );
       const parsedA = new Date(dateA);
       const parsedB = new Date(dateB);
       // Debug parsed dates
@@ -380,7 +395,6 @@ async function manageBackups(): Promise<void> {
       return parsedB.getTime() - parsedA.getTime(); // Newest first
     });
 
-
   // Drop older databases if exceeding MAX_BACKUPS
   if (backupDbs.length > MAX_BACKUPS) {
     // Calculate how many databases to delete
@@ -388,7 +402,6 @@ async function manageBackups(): Promise<void> {
 
     // Select the oldest databases (last numToDelete elements, as sorted newest to oldest)
     const dbsToDelete = backupDbs.slice(-numToDelete);
-
 
     // Drop the selected databases
     for (const db of dbsToDelete) {
@@ -421,7 +434,6 @@ export async function startBackupService() {
         timezone: "Asia/Ho_Chi_Minh", // Set timezone (adjust as needed, e.g., "Asia/Ho_Chi_Minh")
       }
     );
-
 
     logger.info("Backup service started. Backups will run every 2 hours.");
   } catch (error: any) {
