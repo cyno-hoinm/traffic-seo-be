@@ -2,7 +2,7 @@ import { Deposit, PaymentMethod, User, Wallet } from "../../models/index.model";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import { sequelizeSystem } from "../../models/index.model";
 import { Op, Transaction } from "sequelize";
-import { createTransactionRepo } from "././transaction.repository";
+import { createTransactionRepo } from "./transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { TransactionType } from "../../enums/transactionType.enum";
@@ -85,23 +85,12 @@ export const createDepositRepo = async (data: {
   orderId: string;
   status: DepositStatus;
 }): Promise<DepositAttributes> => {
-  // Start a transaction
   return await sequelizeSystem.transaction(async (t: Transaction) => {
     try {
-      // Check if a deposit with the given orderId already exists
+      // Validate existing deposit
       const existingDeposit = await Deposit.findOne({
         where: { orderId: data.orderId },
         transaction: t,
-        attributes: [
-          "id",
-          "orderId",
-          "userId",
-          "voucherId",
-          "amount",
-          "status",
-          "createdBy",
-          "paymentMethodId",
-        ],
       });
       if (existingDeposit) {
         throw new ErrorType(
@@ -109,9 +98,11 @@ export const createDepositRepo = async (data: {
           `Deposit with orderId ${data.orderId} already exists`
         );
       }
+
+      // Get voucher and wallet
       const voucher = await getVoucherByIdRepo(data.voucherId);
-      const voucherValue = voucher?.value ? voucher.value : 1;
-      // Find wallet for the user
+      const voucherValue = voucher?.value || 1;
+
       const wallet = await Wallet.findOne({
         where: { userId: data.userId },
         transaction: t,
@@ -120,22 +111,22 @@ export const createDepositRepo = async (data: {
         throw new ErrorType("NotFoundError", "Wallet not found for this user");
       }
 
-      // Prepare deposit data
-      const depositData = {
-        userId: data.userId,
-        voucherId: data.voucherId,
-        amount: data.amount,
-        status: data.status,
-        createdBy: data.createdBy,
-        paymentMethodId: data.paymentMethodId,
-        orderId: data.orderId,
-        acceptedBy: "system",
-      };
+      // Create deposit
+      const newDeposit = await Deposit.create(
+        {
+          userId: data.userId,
+          voucherId: data.voucherId,
+          amount: data.amount,
+          status: data.status,
+          createdBy: data.createdBy,
+          paymentMethodId: data.paymentMethodId,
+          orderId: data.orderId,
+          acceptedBy: "system",
+        },
+        { transaction: t }
+      );
 
-      // Create new deposit
-      const newDeposit = await Deposit.create(depositData, { transaction: t });
-
-      // Handle transaction for COMPLETED status
+      // Handle completed deposit
       if (data.status === DepositStatus.COMPLETED) {
         const amount = parseFloat(
           data.amount.toString().replace(/[^0-9.]/g, "")
@@ -147,34 +138,17 @@ export const createDepositRepo = async (data: {
           );
         }
 
-        let exchangeValue = 1;
-        if (depositData.paymentMethodId === 1) {
-          const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
-          if (config) {
-            exchangeValue = parseFloat(config.value);
-          } else {
-            throw new ErrorType(
-              "ConfigError",
-              "Configuration for USD_TO_CREDIT not found"
-            );
-          }
-        } else if (depositData.paymentMethodId === 3) {
-          const config = await getConfigByNameRepo(ConfigApp.VND_TO_CREDIT);
-          if (config) {
-            exchangeValue = parseFloat(config.value);
-          } else {
-            throw new ErrorType(
-              "ConfigError",
-              "Configuration for VND_TO_CREDIT not found"
-            );
-          }
-        }
+        // Get exchange rate
+        const exchangeValue = await getExchangeRate(data.paymentMethodId);
         const transactionAmount = amount / exchangeValue;
+        const finalAmount =
+          transactionAmount + transactionAmount * (voucherValue / 100);
+
+        // Create transaction and notification
         await createTransactionRepo(
           {
             walletId: wallet.id,
-            amount:
-              transactionAmount + transactionAmount * (voucherValue / 100),
+            amount: finalAmount,
             status: TransactionStatus.COMPLETED,
             type: TransactionType.DEPOSIT,
             referenceId: String(newDeposit.id),
@@ -189,6 +163,33 @@ export const createDepositRepo = async (data: {
     }
   });
 };
+
+const getExchangeRate = async (paymentMethodId: number): Promise<number> => {
+  if (paymentMethodId === 1) {
+    const config = await getConfigByNameRepo(ConfigApp.USD_TO_CREDIT);
+    if (!config) {
+      throw new ErrorType(
+        "ConfigError",
+        "Configuration for USD_TO_CREDIT not found"
+      );
+    }
+    return parseFloat(config.value);
+  }
+
+  if (paymentMethodId === 3) {
+    const config = await getConfigByNameRepo(ConfigApp.VND_TO_CREDIT);
+    if (!config) {
+      throw new ErrorType(
+        "ConfigError",
+        "Configuration for VND_TO_CREDIT not found"
+      );
+    }
+    return parseFloat(config.value);
+  }
+
+  return 1;
+};
+
 export const updateDepositRepo = async (
   id: number,
   status: DepositStatus

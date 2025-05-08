@@ -5,6 +5,8 @@ import { Campaign, Keyword, Link, sequelizeSystem } from "../models/index.model"
 import { CampaignStatus } from "../enums/campaign.enum";
 import { keywordStatus } from "../enums/keywordStatus.enum";
 import { LinkStatus } from "../enums/linkStatus.enum";
+import { createNotificationRepo } from "../repositories/commonRepo/notification.repository";
+import { notificationType } from "../enums/notification.enum";
 
 export const checkAndUpdateCampaignStatus = async () => {
   logger.info("Running campaign status check...");
@@ -26,7 +28,7 @@ export const checkAndUpdateCampaignStatus = async () => {
       },
       transaction,
     });
-
+    
     logger.info(`Found ${campaigns.length} campaigns to update`);
 
     for (const campaign of campaigns) {
@@ -60,6 +62,15 @@ export const checkAndUpdateCampaignStatus = async () => {
         }
       );
 
+      // Send notification for campaign status change
+      await createNotificationRepo({
+        userId: [campaign.userId],
+        name: campaign.name,
+        content: `Campaign ${campaign.name} is now running`,
+        type: notificationType.RUNNING_CAMPAIGN,
+      });
+
+
       logger.info(`Updated campaign ${campaign.id} and its keywords/links to ACTIVE`);
     }
 
@@ -79,9 +90,11 @@ export const startCampaignStatusService = async () => {
   cron.schedule("0 0 * * *", async () => {
     try {
       await checkAndUpdateCampaignStatus();
-    } catch (error) {
+    } catch (error: any) {
       // Error is already logged in checkAndUpdateCampaignStatus
       // Additional handling can be added here if needed
+      logger.error("Error during campaign status check:", error.message);
+      throw error; // Re-throw to allow caller to handle
     }
   });
 };

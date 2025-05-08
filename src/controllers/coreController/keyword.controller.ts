@@ -14,7 +14,7 @@ import { ErrorType } from "../../types/Error.type";
 import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { formatDate } from "../../utils/utils";
-import { getCampaignByIdRepo, isCampaignOwnerRepo } from "../../repositories/coreRepo/campagin.repository";
+import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
 import { searchLogs } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 

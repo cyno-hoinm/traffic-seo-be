@@ -12,6 +12,7 @@ socket.on("connect", () => {
 
 // Listen for notifications
 socket.on("newNotification", (notification) => {
+  console.log(notification);
 });
 
 // Handle disconnection

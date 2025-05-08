@@ -20,6 +20,8 @@ import { baseApiPython } from "../config/botAPI.config";
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { getConfigByNameRepo } from "../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../constants/config.constants";
+import { createNotificationRepo } from "../repositories/commonRepo/notification.repository";
+import { notificationType } from "../enums/notification.enum";
 
 const QUEUE_KEY = "campaign:refund:queue";
 const PROCESSED_SET_KEY = "campaign:refund:processed";
@@ -100,6 +102,12 @@ export const processCampaignRefund = async (campaignId: number) => {
           { balance: Number(wallet.balance) + Number(refundAmount) },
           { transaction }
         );
+        await createNotificationRepo({
+          userId: [campaign.userId],
+          name: "Campaign refund",
+          content: `You have been refunded ${refundAmount} credit for campaign ${campaign.name}`,
+          type: notificationType.REFUND_MONEY,
+        });
         logger.info(
           `Refunded ${refundAmount} to wallet ${wallet.id} for campaign ${campaignId}`
         );
@@ -306,10 +314,11 @@ export const startCampaignRefundService = async () => {
   
     // Process jobs from the queue
     const processQueue = async () => {
+      const isRunning = true;
       logger.info("Starting Redis queue processing for campaign refunds...");
       try {
         // Process all campaign IDs in the queue
-        while (true) {
+        while (isRunning) {
           const result = await redisClient.brPop(QUEUE_KEY, 10); // Wait up to 10 seconds
           if (!result || !result.element) {
             logger.debug("No more campaigns in queue, ending processing...");

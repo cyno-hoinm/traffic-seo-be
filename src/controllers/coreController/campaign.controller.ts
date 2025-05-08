@@ -17,7 +17,6 @@ import { sequelizeSystem } from "../../database/mySQL/config.database";
 import { Transaction } from "sequelize";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import { Campaign, Keyword, Link } from "../../models/index.model";
-import { LinkAttributes } from "../../interfaces/Link.interface";
 import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { getConfigByNameRepo } from "../../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
@@ -33,7 +32,8 @@ import { TransactionType } from "../../enums/transactionType.enum";
 import { calculateCampaignMetrics, formatDate } from "../../utils/utils";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
-import CampaignType from "../../models/CampaignType.model";
+import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
+import { notificationType } from "../../enums/notification.enum";
 
 // Get campaign list with filters
 
@@ -187,55 +187,23 @@ export const createCampaign = async (
       domain,
       search,
       campaignTypeId,
-      keywords, // Array of KeywordAttributes, optional
-      links, // Array of LinkAttributes, optional
+      keywords,
+      links,
     } = req.body;
 
-    // Validate required fields based on campaignTypeId
-    if (campaignTypeId !== 3) {
-      if (
-        !userId ||
-        !countryId ||
-        !name ||
-        !device ||
-        !title ||
-        !startDate ||
-        !endDate ||
-        !domain ||
-        !search ||
-        !campaignTypeId
-      ) {
-        res.status(statusCode.BAD_REQUEST).json({
-          status: false,
-          message: "All required fields must be provided",
-          error: "Missing or invalid field",
-        });
-        return;
-      }
-    } else {
-      if (
-        !userId ||
-        !countryId ||
-        !name ||
-        !title ||
-        !startDate ||
-        !endDate ||
-        !campaignTypeId
-      ) {
-        res.status(statusCode.BAD_REQUEST).json({
-          status: false,
-          message: "All required fields must be provided",
-          error: "Missing or invalid field",
-        });
-        return;
-      }
+    // Validate required fields
+    if (!validateRequiredFields(campaignTypeId, req.body)) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "All required fields must be provided",
+        error: "Missing or invalid field",
+      });
+      return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Validate date formats
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    // Validate dates
+    const { start, end, currentDate } = validateDates(startDate, endDate);
+    if (!start || !end) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Invalid date format for startDate or endDate",
@@ -244,11 +212,6 @@ export const createCampaign = async (
       return;
     }
 
-    // Reset time to 00:00:00.000 for both dates
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-
-    // Validate that startDate is before endDate
     if (start >= end) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -258,46 +221,11 @@ export const createCampaign = async (
       return;
     }
 
-    // Determine campaign status based on startDate
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0); // Optional: reset currentDate time for consistency
-    const campaignStatus =
-      start > currentDate ? CampaignStatus.NOT_STARTED : CampaignStatus.ACTIVE;
-
-    let keywordTrafficCost = 1;
-    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
-      ConfigApp.KEYWORD_TRAFFIC_COST
+    // Calculate costs and validate wallet
+    const { totalCost, totalTraffic } = await calculateCampaignCosts(
+      keywords,
+      links
     );
-    if (KEYWORD_TRAFFIC_COST) {
-      keywordTrafficCost = parseFloat(KEYWORD_TRAFFIC_COST.value);
-    } else {
-      throw new ErrorType(
-        "ConfigError",
-        "Configuration for KEYWORD_TRAFFIC_COST not found"
-      );
-    }
-    let linkTrafficCost = 1;
-    const LINK_TRAFFIC_COST = await getConfigByNameRepo(
-      ConfigApp.LINK_TRAFFIC_COST
-    );
-    if (LINK_TRAFFIC_COST) {
-      linkTrafficCost = parseFloat(LINK_TRAFFIC_COST.value);
-    } else {
-      throw new ErrorType(
-        "ConfigError",
-        "Configuration for LINK_TRAFFIC_COST not found"
-      );
-    }
-    const totalKeywordTraffic = keywords
-      ? keywords.reduce((sum: number, item: Keyword) => sum + item.traffic, 0)
-      : 0;
-    const totalLinkTraffic = links
-      ? links.reduce((sum: number, item: Link) => sum + item.traffic, 0)
-      : 0;
-    const totalCost =
-      totalKeywordTraffic * keywordTrafficCost +
-      totalLinkTraffic * linkTrafficCost;
-    const totalTraffic = totalKeywordTraffic + totalLinkTraffic;
     const isValidWallet = await compareWalletAmount(userId, totalCost);
     if (!isValidWallet) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -308,156 +236,30 @@ export const createCampaign = async (
       return;
     }
 
-    // Validate keywords if provided
-    if (keywords) {
-      if (!Array.isArray(keywords)) {
-        res.status(statusCode.BAD_REQUEST).json({
-          status: false,
-          message: "Keywords must be an array",
-          error: "Invalid field",
-        });
-        return;
-      }
-      for (const keyword of keywords) {
-        if (
-          !keyword.name ||
-          !keyword.urls ||
-          !Array.isArray(keyword.urls) ||
-          !keyword.distribution ||
-          !Object.values(DistributionType).includes(keyword.distribution)
-        ) {
-          res.status(statusCode.BAD_REQUEST).json({
-            status: false,
-            message:
-              "Each keyword must have a valid name, urls array, and distribution",
-            error: "Invalid field",
-          });
-          return;
-        }
-      }
+    // Validate keywords and links
+    if (!validateKeywords(keywords, res) || !validateLinks(links, res)) {
+      return;
     }
 
-    // Validate links if provided
-    if (links) {
-      if (!Array.isArray(links)) {
-        res.status(statusCode.BAD_REQUEST).json({
-          status: false,
-          message: "Links must be an array",
-          error: "Invalid field",
-        });
-        return;
-      }
-      for (const link of links) {
-        if (!link.link) {
-          res.status(statusCode.BAD_REQUEST).json({
-            status: false,
-            message:
-              "Each link must have valid link, linkTo, distribution, anchorText, status, url, and page",
-            error: "Invalid field",
-          });
-          return;
-        }
-      }
-    }
+    // Create campaign with transaction
+    const campaign = await createCampaignWithTransaction({
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      start,
+      end,
+      domain,
+      search,
+      campaignTypeId,
+      keywords,
+      links,
+      currentDate,
+      totalCost,
+    });
 
-    // Use a transaction to ensure data consistency
-    const campaign = await sequelizeSystem.transaction(
-      async (transaction: Transaction) => {
-        // Create the campaign
-        const campaign = await createCampaignRepo(
-          {
-            userId,
-            countryId,
-            name,
-            device: campaignTypeId === 3 ? null : device, // Set to null if campaignTypeId is 3
-            title,
-            startDate: start,
-            endDate: end,
-            domain: campaignTypeId === 3 ? null : domain, // Set to null if campaignTypeId is 3
-            search: campaignTypeId === 3 ? null : search, // Set to null if campaignTypeId is 3
-            campaignTypeId,
-            status: campaignStatus, // Use determined status
-            isDeleted: false,
-          },
-          transaction
-        );
-        if (!campaign.id) {
-          throw new Error("Failed to create campaign");
-        }
-        // Insert keywords if provided
-        if (keywords && keywords.length > 0) {
-          for (const keyword of keywords) {
-            const cost = keyword.traffic * 1;
-            const keywordData: KeywordAttributes = {
-              campaignId: campaign.id,
-              name: keyword.name,
-              urls: keyword.urls,
-              cost: cost,
-              status:
-                start > currentDate
-                  ? keywordStatus.INACTIVE
-                  : keywordStatus.ACTIVE, // Set INACTIVE if future start
-              distribution: keyword.distribution,
-              traffic: keyword.traffic || 0,
-              isDeleted: false,
-            };
-            // Call Python API for each keyword
-            const newKeyword = await Keyword.create(keywordData, {
-              transaction,
-            });
-            const dataPython = {
-              keywordId: newKeyword.id,
-              title: campaign.title,
-              keyword: newKeyword.name,
-              urls: newKeyword.urls,
-              distribution: newKeyword.distribution,
-              traffic: newKeyword.traffic || 0,
-              device: campaign.device,
-              domain: campaign.domain,
-              timeStart: campaign.startDate,
-              timeEnd: campaign.endDate,
-              searchTool: campaign.search,
-            };
-            await baseApiPython("keyword/set", dataPython);
-          }
-        }
-
-        // Insert links if provided
-        if (links && links.length > 0) {
-          const linkData = links.map((link: Partial<LinkAttributes>) => ({
-            campaignId: campaign.id,
-            link: link.link,
-            linkTo: link.linkTo,
-            distribution: link.distribution,
-            traffic: link.traffic || 0,
-            cost: (link.traffic || 0) * 5,
-            anchorText: link.anchorText,
-            status: start > currentDate ? LinkStatus.INACTIVE : link.status, // Set INACTIVE if future start
-            url: link.url,
-            page: link.page,
-            isDeleted: false,
-          }));
-          await Link.bulkCreate(linkData, { transaction });
-        }
-
-        const wallet = await getWalletByUserIdRepo(userId);
-        if (wallet) {
-          await createTransactionRepo({
-            walletId: wallet.id || 0,
-            amount: totalCost,
-            referenceId: campaign.id ? campaign.id.toString() : "NULL",
-            status: TransactionStatus.COMPLETED,
-            type: TransactionType.PAY_SERVICE,
-          });
-        } else {
-          throw new Error("Wallet not found!");
-        }
-
-        return campaign;
-      }
-    );
-
-    // Fetch the campaign with associated keywords and links for response
+    // Fetch campaign with associations
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [
         { model: Keyword, as: "keywords" },
@@ -465,29 +267,23 @@ export const createCampaign = async (
       ],
     });
 
+    if (campaignWithAssociations) {
+      await sendCampaignNotifications(
+        campaignWithAssociations,
+        userId,
+        name,
+        totalCost
+      );
+    }
+
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Campaign created successfully",
-      data: {
-        id: campaignWithAssociations?.id,
-        userId: campaignWithAssociations?.userId,
-        countryId: campaignWithAssociations?.countryId,
-        name: campaignWithAssociations?.name,
-        campaignTypeId: campaignWithAssociations?.campaignTypeId,
-        device: campaignWithAssociations?.device,
-        title: campaignWithAssociations?.title,
-        startDate: campaignWithAssociations?.startDate,
-        endDate: campaignWithAssociations?.endDate,
-        totalTraffic: totalTraffic,
-        cost: totalCost,
-        domain: campaignWithAssociations?.domain,
-        search: campaignWithAssociations?.search,
-        status: campaignWithAssociations?.status,
-        keywords: campaignWithAssociations?.keywords || [],
-        links: campaignWithAssociations?.links || [],
-        createdAt: campaignWithAssociations?.createdAt,
-        updatedAt: campaignWithAssociations?.updatedAt,
-      },
+      data: formatCampaignResponse(
+        campaignWithAssociations,
+        totalTraffic,
+        totalCost
+      ),
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -497,6 +293,330 @@ export const createCampaign = async (
     });
   }
 };
+
+// Helper functions
+const validateRequiredFields = (campaignTypeId: number, data: any): boolean => {
+  const requiredFields =
+    campaignTypeId !== 3
+      ? [
+          "userId",
+          "countryId",
+          "name",
+          "device",
+          "title",
+          "startDate",
+          "endDate",
+          "domain",
+          "search",
+          "campaignTypeId",
+        ]
+      : [
+          "userId",
+          "countryId",
+          "name",
+          "title",
+          "startDate",
+          "endDate",
+          "campaignTypeId",
+        ];
+
+  return requiredFields.every((field) => data[field]);
+};
+
+const validateDates = (startDate: string, endDate: string) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const currentDate = new Date();
+
+  [start, end, currentDate].forEach((date) => date.setHours(0, 0, 0, 0));
+
+  return {
+    start: isNaN(start.getTime()) ? null : start,
+    end: isNaN(end.getTime()) ? null : end,
+    currentDate,
+  };
+};
+
+const calculateCampaignCosts = async (keywords: any[], links: any[]) => {
+  const keywordTrafficCost = await getConfigValue(
+    ConfigApp.KEYWORD_TRAFFIC_COST
+  );
+  const linkTrafficCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+
+  const totalKeywordTraffic =
+    keywords?.reduce((sum, item) => sum + item.traffic, 0) || 0;
+  const totalLinkTraffic =
+    links?.reduce((sum, item) => sum + item.traffic, 0) || 0;
+
+  return {
+    totalCost:
+      totalKeywordTraffic * keywordTrafficCost +
+      totalLinkTraffic * linkTrafficCost,
+    totalTraffic: totalKeywordTraffic + totalLinkTraffic,
+  };
+};
+
+const getConfigValue = async (configName: string): Promise<number> => {
+  const config = await getConfigByNameRepo(configName);
+  if (!config) {
+    throw new ErrorType(
+      "ConfigError",
+      `Configuration for ${configName} not found`
+    );
+  }
+  return parseFloat(config.value);
+};
+
+const validateKeywords = (keywords: any[], res: Response): boolean => {
+  if (!keywords) return true;
+  if (!Array.isArray(keywords)) {
+    res.status(statusCode.BAD_REQUEST).json({
+      status: false,
+      message: "Keywords must be an array",
+      error: "Invalid field",
+    });
+    return false;
+  }
+
+  const isValid = keywords.every(
+    (keyword) =>
+      keyword.name &&
+      keyword.urls &&
+      Array.isArray(keyword.urls) &&
+      keyword.distribution &&
+      Object.values(DistributionType).includes(keyword.distribution)
+  );
+
+  if (!isValid) {
+    res.status(statusCode.BAD_REQUEST).json({
+      status: false,
+      message:
+        "Each keyword must have a valid name, urls array, and distribution",
+      error: "Invalid field",
+    });
+    return false;
+  }
+
+  return true;
+};
+
+const validateLinks = (links: any[], res: Response): boolean => {
+  if (!links) return true;
+  if (!Array.isArray(links)) {
+    res.status(statusCode.BAD_REQUEST).json({
+      status: false,
+      message: "Links must be an array",
+      error: "Invalid field",
+    });
+    return false;
+  }
+
+  const isValid = links.every((link) => link.link);
+  if (!isValid) {
+    res.status(statusCode.BAD_REQUEST).json({
+      status: false,
+      message:
+        "Each link must have valid link, linkTo, distribution, anchorText, status, url, and page",
+      error: "Invalid field",
+    });
+    return false;
+  }
+
+  return true;
+};
+
+const createCampaignWithTransaction = async (data: any) => {
+  return await sequelizeSystem.transaction(async (transaction: Transaction) => {
+    const campaign = await createCampaignRepo(
+      {
+        userId: data.userId,
+        countryId: data.countryId,
+        name: data.name,
+        device: data.campaignTypeId === 3 ? null : data.device,
+        title: data.title,
+        startDate: data.start,
+        endDate: data.end,
+        domain: data.campaignTypeId === 3 ? null : data.domain,
+        search: data.campaignTypeId === 3 ? null : data.search,
+        campaignTypeId: data.campaignTypeId,
+        status:
+          data.start > data.currentDate
+            ? CampaignStatus.NOT_STARTED
+            : CampaignStatus.ACTIVE,
+        isDeleted: false,
+      },
+      transaction
+    );
+
+    if (!campaign.id) {
+      throw new Error("Failed to create campaign");
+    }
+
+    await createKeywords(
+      campaign,
+      data.keywords,
+      data.start,
+      data.currentDate,
+      transaction
+    );
+    await createLinks(
+      campaign,
+      data.links,
+      data.start,
+      data.currentDate,
+      transaction
+    );
+    await createTransaction(
+      data.userId,
+      campaign.id,
+      data.totalCost,
+      transaction
+    );
+
+    return campaign;
+  });
+};
+
+const createKeywords = async (
+  campaign: any,
+  keywords: any[],
+  start: Date,
+  currentDate: Date,
+  transaction: Transaction
+) => {
+  if (!keywords?.length) return;
+
+  for (const keyword of keywords) {
+    const keywordData = {
+      campaignId: campaign.id,
+      name: keyword.name,
+      urls: keyword.urls,
+      cost: keyword.traffic * 1,
+      status:
+        start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
+      distribution: keyword.distribution,
+      traffic: keyword.traffic || 0,
+      isDeleted: false,
+    };
+
+    const newKeyword = await Keyword.create(keywordData, { transaction });
+    await baseApiPython("keyword/set", {
+      keywordId: newKeyword.id,
+      title: campaign.title,
+      keyword: newKeyword.name,
+      urls: newKeyword.urls,
+      distribution: newKeyword.distribution,
+      traffic: newKeyword.traffic || 0,
+      device: campaign.device,
+      domain: campaign.domain,
+      timeStart: campaign.startDate,
+      timeEnd: campaign.endDate,
+      searchTool: campaign.search,
+    });
+  }
+};
+
+const createLinks = async (
+  campaign: any,
+  links: any[],
+  start: Date,
+  currentDate: Date,
+  transaction: Transaction
+) => {
+  if (!links?.length) return;
+
+  const linkData = links.map((link) => ({
+    campaignId: campaign.id,
+    link: link.link,
+    linkTo: link.linkTo,
+    distribution: link.distribution,
+    traffic: link.traffic || 0,
+    cost: (link.traffic || 0) * 5,
+    anchorText: link.anchorText,
+    status: start > currentDate ? LinkStatus.INACTIVE : link.status,
+    url: link.url,
+    page: link.page,
+    isDeleted: false,
+  }));
+
+  await Link.bulkCreate(linkData, { transaction });
+};
+
+const createTransaction = async (
+  userId: number,
+  campaignId: number,
+  totalCost: number,
+  transaction: Transaction
+) => {
+  const wallet = await getWalletByUserIdRepo(userId);
+  if (!wallet) {
+    throw new Error("Wallet not found!");
+  }
+
+  await createTransactionRepo(
+    {
+      walletId: wallet.id || 0,
+      amount: totalCost,
+      referenceId: campaignId.toString(),
+      status: TransactionStatus.COMPLETED,
+      type: TransactionType.PAY_SERVICE,
+    },
+    transaction
+  );
+};
+
+const sendCampaignNotifications = async (
+  campaign: any,
+  userId: number,
+  name: string,
+  totalCost: number
+) => {
+  const notificationData = {
+    userId: [userId],
+    name,
+    type: notificationType.CREATE_CAMPAIGN,
+  };
+
+  // Send creation notification
+  await createNotificationRepo({
+    ...notificationData,
+    content: `Campaign ${campaign.name} has been created successfully with cost ${totalCost} credit`,
+  });
+
+  // Send running notification if campaign is active
+  if (campaign.status === CampaignStatus.ACTIVE) {
+    await createNotificationRepo({
+      ...notificationData,
+      content: `Campaign ${campaign.name} is running`,
+      type: notificationType.RUNNING_CAMPAIGN,
+    });
+  }
+};
+
+const formatCampaignResponse = (
+  campaign: any,
+  totalTraffic: number,
+  totalCost: number
+) => ({
+  id: campaign?.id,
+  userId: campaign?.userId,
+  countryId: campaign?.countryId,
+  name: campaign?.name,
+  campaignTypeId: campaign?.campaignTypeId,
+  device: campaign?.device,
+  title: campaign?.title,
+  startDate: campaign?.startDate,
+  endDate: campaign?.endDate,
+  totalTraffic,
+  cost: totalCost,
+  domain: campaign?.domain,
+  search: campaign?.search,
+  status: campaign?.status,
+  keywords: campaign?.keywords || [],
+  links: campaign?.links || [],
+  createdAt: campaign?.createdAt,
+  updatedAt: campaign?.updatedAt,
+});
 
 // Get campaign by ID
 export const getCampaignById = async (

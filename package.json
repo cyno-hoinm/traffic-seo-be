@@ -77,7 +77,10 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "lint-staged": "lint-staged",
-    "database:import": "node migrations/migrate.js"
+    "database:import": "node migrations/migrate.js",
+    "manual:test": "npx ts-node src/tests/manual-test-2.ts",
+    "manual:test:2": "npx ts-node src/tests/manual-test.ts"
+
   },
   "keywords": [],
   "author": "",

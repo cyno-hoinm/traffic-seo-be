@@ -27,7 +27,7 @@ export const createNotification = async (
     }
 
     const notification = await createNotificationRepo({
-      userId,
+      userId: Array.isArray(userId) ? userId : [userId],
       name,
       content,
       type,
@@ -36,27 +36,23 @@ export const createNotification = async (
     // Emit real-time notification
     const io = (global as any).io;
     if (io) {
-      io.to(`user_${userId}`).emit("newNotification", {
+      const notificationData = {
         id: notification.id,
-        userId: notification.userId,
         name: notification.name,
         content: notification.content,
         type: notification.type,
         createdAt: notification.createdAt,
+      };
+
+      notification.userId.forEach((userId: number) => {
+        io.to(`user_${userId}`).emit("newNotification", notificationData);
       });
     }
 
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Notification created successfully",
-      data: {
-        id: notification.id,
-        userId: notification.userId,
-        name: notification.name,
-        content: notification.content,
-        type: notification.type,
-        createdAt: notification.createdAt,
-      },
+      data: notification,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -70,12 +66,11 @@ export const createNotification = async (
 // Get notifications by userId and type
 export const getNotificationsByUserIdAndType = async (
   req: AuthenticatedRequest,
-  res: Response<
-    ResponseType<{ notifications: NotificationAttributes[]; total: number }>
-  >
+  res: Response<ResponseType<{ notifications: NotificationAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
     const { userId, type } = req.body;
+    
     if (req.data?.id != userId) {
       res.status(statusCode.FORBIDDEN).json({
         status: false,
@@ -85,28 +80,17 @@ export const getNotificationsByUserIdAndType = async (
       return;
     }
 
-    const filters: { userId: number; type?: string } = {
+    const filters = {
       userId: Number(userId),
+      type: type as string | undefined,
     };
-    if (type) filters.type = type as string;
 
-    const notifications = await getNotificationsByUserIdAndTypeRepo(filters);
+    const { notifications, total } = await getNotificationsByUserIdAndTypeRepo(filters);
+    
     res.status(statusCode.OK).json({
       status: true,
       message: "Notifications retrieved successfully",
-      data: {
-        notifications: notifications.notifications.map(
-          (notification: NotificationAttributes) => ({
-            id: notification.id,
-            userId: notification.userId,
-            name: notification.name,
-            content: notification.content,
-            type: notification.type,
-            createdAt: notification.createdAt,
-          })
-        ),
-        total: notifications.total,
-      },
+      data: { notifications, total },
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({

@@ -15,6 +15,8 @@ import payOSPaymentMethod from "../../config/payOs.config";
 import { CreateInvoiceInput } from "../../interfaces/Oxapay.interface";
 import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
+import { notificationType } from "../../enums/notification.enum";
+import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -159,7 +161,6 @@ export const createDeposit = async (
           sandbox: oxapayConfig.sandbox,
         };
 
-
         const result = await generateInvoice(data);
         res.status(statusCode.OK).json({
           message: "Create link payment USDT successfully",
@@ -211,13 +212,20 @@ export const createDeposit = async (
             userId: userId,
             voucherId: voucherId,
           });
+          await createNotificationRepo({
+            userId: [userId],
+            name: "Gift",
+            content: `You have received ${amount} credit`,
+            type: notificationType.GIFT,
+          });
+
           res.status(statusCode.OK).json({
             status: true,
             message: "Successfully charge credit for user",
             error: "Successfully charge credit for user",
           });
           return;
-        }else {
+        } else {
           res.status(statusCode.FORBIDDEN).json({
             status: false,
             message: "You not have permission",
@@ -225,7 +233,6 @@ export const createDeposit = async (
           });
           return;
         }
-        
       }
       default: {
         res.status(statusCode.BAD_REQUEST).json({

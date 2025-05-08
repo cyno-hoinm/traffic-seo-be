@@ -13,6 +13,7 @@ socket.on("connect", () => {
 // Listen for notifications
 socket.on("newNotification", (notification) => {
   // Handle disconnection
+  console.log(notification);
   socket.disconnect();
   process.exit();
 });

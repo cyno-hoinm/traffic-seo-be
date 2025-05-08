@@ -1,13 +1,13 @@
 import { DataTypes, Model } from "sequelize";
 import { NotificationAttributes } from "../interfaces/Notification.interface";
-import { sequelizeSystem, User } from "./index.model";
+import { sequelizeSystem } from "./index.model";
 
 class Notification
   extends Model<NotificationAttributes>
   implements NotificationAttributes
 {
   public id!: number;
-  public userId!: number;
+  public userId!: number[];
   public name!: string;
   public content!: string;
   public type!: string;
@@ -23,12 +23,15 @@ Notification.init(
       primaryKey: true,
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.TEXT,
       allowNull: true,
-      references: {
-        model: User,
-        key: "id",
+      get() {
+        const rawValue = this.getDataValue('userId') as unknown as string;
+        return rawValue ? JSON.parse(rawValue) : [];
       },
+      set(value: number[]) {
+        this.setDataValue('userId', JSON.stringify(value) as unknown as number[]);
+      }
     },
     name: {
       type: DataTypes.STRING,

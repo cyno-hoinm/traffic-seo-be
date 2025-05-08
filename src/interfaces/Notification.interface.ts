@@ -1,6 +1,6 @@
 export interface NotificationAttributes {
     id?: number;
-    userId: number;
+    userId: number[];
     name: string;
     content: string;
     type: string;

@@ -1,18 +1,53 @@
+import { Transaction } from "sequelize";
 import { NotificationAttributes } from "../../interfaces/Notification.interface";
 import { Notification } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
+import { logger } from "../../config/logger.config";
 
 // Create a new notification
 export const createNotificationRepo = async (data: {
-  userId: number;
+  userId: number[];
   name: string;
   content: string;
   type: string;
-}): Promise<NotificationAttributes> => {
+}, transaction?: Transaction): Promise<NotificationAttributes> => {
   try {
-    const notification = await Notification.create(data);
+    logger.info(`Creating notification for users: ${data.userId.join(', ')}`);
+    
+    const notification = await Notification.create({
+      ...data,
+      userId: data.userId,
+    }, { transaction });
+
+    // Emit real-time notification
+    try {
+      const io = (global as any).io;
+      if (io) {
+        logger.info('Socket.io instance found, emitting notification');
+        const notificationData = {
+          id: notification.id,
+          name: notification.name,
+          content: notification.content,
+          type: notification.type,
+          createdAt: notification.createdAt,
+        };
+
+        notification.userId.forEach((userId: number) => {
+          const room = `user_${userId}`;
+          logger.info(`Emitting to room: ${room}`);
+          io.to(room).emit("newNotification", notificationData);
+        });
+      } else {
+        logger.warn('Socket.io instance not found, notification saved but not emitted');
+      }
+    } catch (socketError: any) {
+      // Log socket error but don't fail the notification creation
+      logger.error('Error emitting socket notification:', socketError.message);
+    }
+
     return notification;
   } catch (error: any) {
+    logger.error('Error creating notification:', error.message);
     throw new ErrorType(error.name, error.message, error.code);
   }
 };

@@ -1,0 +1,8 @@
+export enum notificationType {
+    CREATE_CAMPAIGN = "CREATE_CAMPAIGN",
+    CHARGE_MONEY = "CHARGE_MONEY",
+    REFUND_MONEY =  "REFUND_MONEY",
+    RUNNING_CAMPAIGN = "RUNNING_CAMPAIGN",
+    GIFT = "GIFT",
+  }
+  

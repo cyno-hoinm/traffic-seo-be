@@ -34,7 +34,6 @@ export async function handlePayOsWebhook(
         .json({ status: false, message: "Invalid value" });
       return;
     }
-
     // Create deposit
     await createDepositRepo({
       createdBy: parseData.createdBy,
@@ -46,13 +45,14 @@ export async function handlePayOsWebhook(
       voucherId: parseData.voucherId,
     });
 
-    // Respond to PayOS
     res
       .status(statusCode.OK)
       .json({ status: true, message: "Webhook processed successfully" });
   } catch (error) {
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({ status: false, message: "Internal server error" });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Internal server error",
+      details: error,
+    });
   }
 }

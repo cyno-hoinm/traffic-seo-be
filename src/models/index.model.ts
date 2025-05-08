@@ -93,9 +93,6 @@ RolePermission.belongsTo(Permission, {
   onDelete: 'SET NULL',
 });
 
-Notification.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
-User.hasMany(Notification, { foreignKey: "userId", as: "notifications", onDelete: 'SET NULL' });
-
 TransactionModel.belongsTo(Wallet, { foreignKey: 'walletId', as: 'wallet', onDelete: 'SET NULL'  });
 
 
