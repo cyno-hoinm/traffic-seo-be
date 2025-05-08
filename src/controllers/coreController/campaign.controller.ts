@@ -327,9 +327,10 @@ const validateDates = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const currentDate = new Date();
-
-  [start, end, currentDate].forEach((date) => date.setHours(0, 0, 0, 0));
-
+  
+  start.setUTCHours(0, 0, 0, 0);
+  end.setUTCHours(0, 0, 0, 0);
+  currentDate.setUTCHours(0, 0, 0, 0);
   return {
     start: isNaN(start.getTime()) ? null : start,
     end: isNaN(end.getTime()) ? null : end,
