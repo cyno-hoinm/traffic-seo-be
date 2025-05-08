@@ -201,7 +201,7 @@ export const updateAgency = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const {  } = req.body;
+    // const { bankName, bankAccount, accountHolder } = req.body;
     const agencyId = parseInt(id, 10);
 
     if (isNaN(agencyId)) {

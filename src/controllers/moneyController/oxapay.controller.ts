@@ -15,6 +15,7 @@ import { decodeAndDecompress } from "../../utils/generate";
 import { createDepositRepo } from "../../repositories/moneyRepo/deposit.repository";
 import crypto from "crypto";
 import { DepositStatus } from "../../enums/depositStatus.enum";
+import { logger } from "../../config/logger.config";
 
 export const createInvoice = async (
   req: Request,
@@ -153,6 +154,7 @@ export async function handleOxaPayWebhook(
 
     res.status(statusCode.OK).send("ok");
   } catch (err: any) {
+    logger.error(err);
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
       .send("Callback processing error");

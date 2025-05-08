@@ -1,3 +1,4 @@
+import { logger } from "../../config/logger.config";
 import { sequelizeSystem } from "./config.database";
 
 // Translation mappings (as defined above)
@@ -107,6 +108,7 @@ export async function initializePermissions() {
 
 
   } catch (error: any) {
+    logger.error(error);
     // Remove console.error("Lỗi khi khởi tạo quyền:", error);
   }
 }
