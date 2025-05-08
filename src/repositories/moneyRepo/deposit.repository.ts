@@ -291,6 +291,13 @@ export const getDepositByOrderIdRepo = async (
         orderId, // Assuming `orderId` is a field in the Deposit model
         userId, // Ensure the deposit belongs to the user
       },
+      include: [
+        {
+          model: PaymentMethod,
+          as: "paymentMethods", // Adjust to match your model association alias (singular if one-to-one)
+          required: true, // Inner join to only return deposits with matching payment methods
+        },
+      ],
     });
 
     return deposit || null;
