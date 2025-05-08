@@ -440,7 +440,7 @@ export const cancelCampaignRepo = async (
 
       // Prepare update data
       const updateData: { status: CampaignStatus; startDate?: Date; endDate: Date } = {
-        status: CampaignStatus.CANCEL,
+        status: CampaignStatus.PROCESSING,
         endDate: new Date(), // Always set endDate to current date/time
       };
 

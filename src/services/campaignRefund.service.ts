@@ -42,8 +42,8 @@ export const processCampaignRefund = async (campaignId: number) => {
       return;
     }
 
-    if (campaign.status !== CampaignStatus.COMPLETED && campaign.status !== CampaignStatus.CANCEL) {
-      logger.warn(`Campaign ${campaignId} is not COMPLETED or CANCEL, skipping refund`);
+    if (campaign.status !== CampaignStatus.COMPLETED && campaign.status !== CampaignStatus.PROCESSING) {
+      logger.warn(`Campaign ${campaignId} is not COMPLETED or PROCESSING, skipping refund`);
       return;
     }
 
@@ -136,7 +136,7 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
     const campaigns = await Campaign.findAll({
       where: {
         status: {
-          [Op.in]: [CampaignStatus.ACTIVE, CampaignStatus.CANCEL],
+          [Op.in]: [CampaignStatus.ACTIVE, CampaignStatus.PROCESSING],
         },
         endDate: {
           [Op.lt]: currentDate,
@@ -214,8 +214,53 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
           );
           continue;
         }
-      } else if (campaign.status === CampaignStatus.CANCEL) {
+      } else if (campaign.status === CampaignStatus.PROCESSING) {
         // Enqueue CANCEL campaigns for refund processing without updating status
+        const updateTransaction = await sequelizeSystem.transaction();
+        try {
+          // Update campaign status to COMPLETED
+          await campaign.update(
+            { status: CampaignStatus.CANCEL },
+            { transaction: updateTransaction }
+          );
+
+          // Update keywords to INACTIVE
+          if (campaign.keywords && campaign.keywords.length > 0) {
+            await Keyword.update(
+              { status: keywordStatus.INACTIVE },
+              {
+                where: { campaignId: campaign.id },
+                transaction: updateTransaction,
+              }
+            );
+            logger.info(
+              `Set ${campaign.keywords.length} keywords to INACTIVE for campaign ${campaign.id}`
+            );
+          }
+
+          // Update links to INACTIVE
+          if (campaign.links && campaign.links.length > 0) {
+            await Link.update(
+              { status: LinkStatus.INACTIVE },
+              {
+                where: { campaignId: campaign.id },
+                transaction: updateTransaction,
+              }
+            );
+            logger.info(
+              `Set ${campaign.links.length} links to INACTIVE for campaign ${campaign.id}`
+            );
+          }
+          campaignIds.push(campaign.id.toString());
+          logger.info(`Completed campaign ${campaign.id}`);
+          await updateTransaction.commit();
+        } catch (error: any) {
+          await updateTransaction.rollback();
+          logger.error(
+            `Error cancelling campaign ${campaign.id}: ${error.message}`
+          );
+          continue;
+        }
         campaignIds.push(campaign.id.toString());
         logger.info(`Prepared campaign ${campaign.id} for refund enqueue`);
       }
