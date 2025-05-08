@@ -34,6 +34,7 @@ import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
 import { notificationType } from "../../enums/notification.enum";
+import { logger } from "../../config/logger.config";
 
 // Get campaign list with filters
 
@@ -327,7 +328,7 @@ const validateDates = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const currentDate = new Date();
-  
+
   start.setUTCHours(0, 0, 0, 0);
   end.setUTCHours(0, 0, 0, 0);
   currentDate.setUTCHours(0, 0, 0, 0);
@@ -540,7 +541,33 @@ const createLinks = async (
     isDeleted: false,
   }));
 
-  await Link.bulkCreate(linkData, { transaction });
+  try {
+    // Create links in database
+    const createdLinks = await Link.bulkCreate(linkData, { transaction });
+
+    // Send links to Python API
+    const pythonApiPromises = createdLinks.map(async (link) => {
+      try {
+        await baseApiPython("link/set", {
+          linkId: link.id,
+          link: link.link,
+          timeStart: campaign.startDate,
+          timeEnd: campaign.endDate,
+        });
+      } catch (error: any) {
+        logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
+        throw error; // Re-throw to trigger rollback
+      }
+    });
+
+    // Wait for all Python API calls to complete
+    await Promise.all(pythonApiPromises);
+
+  } catch (error: any) {
+    // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
+    logger.error(`Error in createLinks: ${error.message}`);
+    throw error;
+  }
 };
 
 const createTransaction = async (
