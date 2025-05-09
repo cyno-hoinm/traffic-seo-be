@@ -34,7 +34,7 @@ if (cluster.isPrimary && !isDev) {
 
   // Fork one worker for each service
   cluster.fork({ WORKER_TYPE: "app" });
-  cluster.fork({ WORKER_TYPE: "email" });
+  // cluster.fork({ WORKER_TYPE: "email" });
   cluster.fork({ WORKER_TYPE: "backup" });
   cluster.fork({ WORKER_TYPE: "campaignStatus" });
   cluster.fork({ WORKER_TYPE: "campaignRefund" }); // New worker for campaign refund
