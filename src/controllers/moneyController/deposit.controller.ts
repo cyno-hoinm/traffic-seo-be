@@ -17,6 +17,7 @@ import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
 import { notificationType } from "../../enums/notification.enum";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
+import { redisClient } from "../../config/redis.config";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -328,6 +329,156 @@ export const getDepositByOrderId = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error fetching deposit",
+      error: error.message,
+    });
+  }
+};
+
+// Create a new deposit
+export const trialUserDeposit = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { userId, voucherId, amount, paymentMethodId } = req.body;
+    const orderId = uuIDv4();
+    const createdBy = req.data?.id || 0;
+    const roleId = req.data?.role.id || 0;
+    if (
+      !userId ||
+      !voucherId ||
+      amount === undefined ||
+      isNaN(amount) ||
+      paymentMethodId === undefined
+    ) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message:
+          "All fields (userId, voucherId, amount, paymentMethodId) are required",
+        error: "Missing or invalid field",
+      });
+      return;
+    }
+    switch (paymentMethodId) {
+      case 4: {
+        // GIFT
+        const orderCodeUnique = uuidToNumber(orderId);
+        if (roleId === 1) {
+          await createDepositRepo({
+            createdBy: createdBy,
+            amount: amount,
+            orderId: orderCodeUnique.toString(),
+            paymentMethodId: 4,
+            status: DepositStatus.COMPLETED,
+            userId: userId,
+            voucherId: voucherId,
+          });
+          await createNotificationRepo({
+            userId: [userId],
+            name: "Gift",
+            content: `You have received ${amount} credit`,
+            type: notificationType.GIFT,
+          });
+
+          res.status(statusCode.OK).json({
+            status: true,
+            message: "Successfully charge credit for user",
+            error: "Successfully charge credit for user",
+          });
+          return;
+        } else {
+          res.status(statusCode.FORBIDDEN).json({
+            status: false,
+            message: "You not have permission",
+            error: "You not have permission",
+          });
+          return;
+        }
+      }
+      default: {
+        res.status(statusCode.BAD_REQUEST).json({
+          status: false,
+          message: "Invalid Payment Method",
+          error: "Invalid Payment Method",
+        });
+        return;
+      }
+    }
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error creating deposit",
+      error: error.message,
+    });
+  }
+};
+
+export const createTrialForUser = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { userId } = req.body;
+    const createdBy = req.data?.id || 0;
+    if (!userId) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "userId is required",
+        error: "Missing userId field",
+      });
+      return;
+    }
+
+    // Check if user has already used trial
+    const trialKey = `trial:${userId}`;
+    const hasUsedTrial = await redisClient.get(trialKey);
+    
+    if (hasUsedTrial) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "User has already used their trial",
+        error: "Trial already used",
+      });
+      return;
+    }
+
+    const orderId = uuIDv4();
+    const orderCodeUnique = uuidToNumber(orderId);
+    const amount = 1000;
+    const voucherId = 1;
+    const paymentMethodId = 4;
+
+    // Create deposit
+    await createDepositRepo({
+      createdBy: createdBy,
+      amount: amount,
+      orderId: orderCodeUnique.toString(),
+      paymentMethodId: paymentMethodId,
+      status: DepositStatus.COMPLETED,
+      userId: userId,
+      voucherId: voucherId,
+    });
+
+    // Create notification
+    await createNotificationRepo({
+      userId: [userId],
+      name: "Trial Credit",
+      content: `You have received ${amount} trial credit`,
+      type: notificationType.GIFT,
+    });
+
+    // Store trial usage in Redis (permanent)
+    await redisClient.set(trialKey, "used");
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Successfully created trial for user",
+      error: "Successfully created trial for user",
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error creating trial",
       error: error.message,
     });
   }

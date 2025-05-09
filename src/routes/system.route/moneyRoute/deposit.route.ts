@@ -4,6 +4,7 @@ import {
   createDeposit,
   getDepositById,
   getDepositByOrderId,
+  createTrialForUser,
 } from "../../../controllers/moneyController/deposit.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -419,5 +420,83 @@ router.get("/:id",authorization(["read-deposit-admin"]), getDepositById);
  *                   example: Internal server error
  */
 router.get("/order/:orderId", authorization(["read-deposit-user"]),getDepositByOrderId);
+
+/**
+ * @swagger
+ * /deposits/trial:
+ *   post:
+ *     summary: Create a trial deposit for a user
+ *     description: Creates a trial deposit with 1000 credits for a user. Each user can only have one trial.
+ *     tags: [Deposits]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user to create trial for
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: Trial created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Successfully created trial for user
+ *       400:
+ *         description: Bad request - User has already used trial or missing userId
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User has already used their trial
+ *       403:
+ *         description: Forbidden - User does not have permission
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: You do not have permission
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error creating trial
+ */
+router.post("/trial", authorization(["create-deposit"]), createTrialForUser);
 
 export default router;

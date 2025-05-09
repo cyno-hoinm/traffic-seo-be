@@ -135,12 +135,19 @@ export const getMe = async (
       });
       return;
     }
+
+    // Check trial status from Redis
+    const trialKey = `trial:${userId}`;
+    const hasUsedTrial = await redisClient.get(trialKey);
+    const trialStatus = hasUsedTrial === "used";
+
     // Return user data
     res.status(statusCode.OK).json({
       status: true,
       message: "User retrieved successfully",
       data: {
         ...user,
+        trialStatus,
         permissions: permissions,
         walletId: wallet?.id,
       },
