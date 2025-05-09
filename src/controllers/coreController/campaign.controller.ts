@@ -525,6 +525,7 @@ const createLinks = async (
   currentDate: Date,
   transaction: Transaction
 ) => {
+  const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
   if (!links?.length) return;
 
   const linkData = links.map((link) => ({
@@ -533,7 +534,7 @@ const createLinks = async (
     linkTo: link.linkTo,
     distribution: link.distribution,
     traffic: link.traffic || 0,
-    cost: (link.traffic || 0) * 5,
+    cost: (link.traffic || 1) * linkCost,
     anchorText: link.anchorText,
     status: start > currentDate ? LinkStatus.INACTIVE : link.status,
     url: link.url,
