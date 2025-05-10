@@ -5,13 +5,13 @@ export interface LinkAttributes {
   id?: number;
   campaignId: number;
   link: string;
-  linkTo: string;
+  linkTo?: string;
   distribution: DistributionType;
-  traffic: number;
-  anchorText: string;
+  traffic?: number;
+  anchorText?: string;
   status: LinkStatus;
-  url: string;
-  page: string;
+  url?: string;
+  page?: string;
   cost: number;
   isDeleted?: boolean;
   createdAt?: Date;
