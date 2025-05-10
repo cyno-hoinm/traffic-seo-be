@@ -75,7 +75,7 @@ class EmailService {
     const { recipientName, attachments, retries = MAX_RETRIES } = options;
     const html = generateEmailTemplate(subject, body, recipientName);
     const mailOptions: SendMailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.SMTP_FROM,
       to,
       subject,
       html,

@@ -108,6 +108,7 @@ if (cluster.isPrimary && !isDev) {
     };
     // startCampaignRefundService();
     startServer();
+    // startEmailService();
     process.on("SIGTERM", async () => {
       logger.info(`App worker ${process.pid} received SIGTERM`);
       await gracefulShutdown(server, "SIGTERM");
