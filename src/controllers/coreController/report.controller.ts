@@ -90,7 +90,7 @@ export const countLinksReport = async (
 };
 
 export const getCampaignReportUser = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
@@ -100,6 +100,22 @@ export const getCampaignReportUser = async (
       start_date,
       end_date
     );
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign report fetched successfully",

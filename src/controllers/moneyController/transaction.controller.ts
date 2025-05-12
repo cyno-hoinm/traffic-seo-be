@@ -11,6 +11,8 @@ import { TransactionStatus } from "../../enums/transactionStatus.enum";
 import { TransactionType } from "../../enums/transactionType.enum";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
 import { calculateCampaignMetrics } from "../../utils/utils";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { getWalletByIdRepo } from "../../repositories/moneyRepo/wallet.repository";
 
 // Create a new transaction
 export const createTransaction = async (
@@ -168,13 +170,37 @@ export const getListTransaction = async (
   }
 };
 export const getOneTransaction = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<TransactionAttributes>>
 ): Promise<void> => {
   try {
     const { transactionId } = req.body;
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const transaction = await getTransactionByIdRepo(transactionId);
-    
+    if (!transaction) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Transaction not found",
+      });
+      return;
+    }
+    const wallet = await getWalletByIdRepo(transaction.walletId);
+    if (user.role.id === 2 && user.id !== Number(wallet?.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
+
     // Base transaction data
     const transactionData: TransactionAttributes = {
       id: transaction.id,

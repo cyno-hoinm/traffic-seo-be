@@ -8,6 +8,7 @@ import {
 } from "../../repositories/moneyRepo/wallet.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { WalletAttributes } from "../../interfaces/Wallet.interface";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Get all wallets
 export const getAllWallets = async (
@@ -38,12 +39,28 @@ export const getAllWallets = async (
 
 // Get wallet by ID
 export const getWalletById = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<WalletAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const wallet = await getWalletByIdRepo(Number(id));
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(wallet?.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
 
     if (!wallet) {
       res.status(statusCode.NOT_FOUND).json({
@@ -76,13 +93,29 @@ export const getWalletById = async (
 
 // Update wallet
 export const updateWallet = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<WalletAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const { balance } = req.body;
-
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const wallet = await getWalletByIdRepo(Number(id));
+    if (user.role.id === 2 && user.id !== Number(wallet?.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     if (balance === undefined || isNaN(balance)) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -91,9 +124,6 @@ export const updateWallet = async (
       });
       return;
     }
-
-    const wallet = await updateWalletRepo(Number(id), { balance });
-
     if (!wallet) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -102,6 +132,9 @@ export const updateWallet = async (
       });
       return;
     }
+    await updateWalletRepo(Number(id), { balance });
+
+ 
 
     res.status(statusCode.OK).json({
       status: true,
@@ -125,14 +158,30 @@ export const updateWallet = async (
 
 // Delete wallet
 export const deleteWallet = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<WalletAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const success = await deleteWalletRepo(Number(id));
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const wallet = await getWalletByIdRepo(Number(id));
+    if (user.role.id === 2 && user.id !== Number(wallet?.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
 
-    if (!success) {
+    if (!wallet) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Wallet not found",
@@ -140,7 +189,7 @@ export const deleteWallet = async (
       });
       return;
     }
-
+    await deleteWalletRepo(Number(id));
     res.status(statusCode.OK).json({
       status: true,
       message: "Wallet deleted successfully",
@@ -153,5 +202,3 @@ export const deleteWallet = async (
     });
   }
 };
-
-

@@ -302,6 +302,14 @@ export const getDepositByOrderId = async (
     const userId = req.data?.id || 0; // Get userId from authenticated user
 
     const deposit = await getDepositByOrderIdRepo(orderId, userId);
+    if (userId != deposit?.userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You do not have permission to access this deposit",
+        error: "Forbidden",
+      });
+      return;
+    }
     if (!deposit) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,

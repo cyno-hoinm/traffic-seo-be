@@ -35,7 +35,7 @@ const router = express.Router();
  *               type: object
  *               properties:
  *                 message:
- *                   type: string 
+ *                   type: string
  *                   example: User image retrieved successfully
  *       400:
  *         description: Invalid user ID
@@ -63,7 +63,7 @@ const router = express.Router();
  *           application/json:
  *             schema:
  *               type: object
- *               properties:    
+ *               properties:
  *                 error:
  *                   type: string
  *                   example: Internal server error

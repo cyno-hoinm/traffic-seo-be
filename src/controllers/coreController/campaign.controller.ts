@@ -715,10 +715,18 @@ export const getCampaignById = async (
 };
 
 export const pauseCampaign = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const campaignId = parseInt(req.params.id, 10);
 
     // Fetch the campaign to get keywords and endDate
@@ -732,7 +740,14 @@ export const pauseCampaign = async (
         statusCode.NOT_FOUND
       );
     }
-
+    if (user.role.id === 2 && user.id !== campaign.userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     // Update Python API for keywords first
     if (campaign.keywords && campaign.keywords.length > 0) {
       const apiPromises = campaign.keywords.map(
@@ -781,10 +796,18 @@ export const pauseCampaign = async (
 };
 
 export const getContinueCampaign = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const campaignId = parseInt(req.params.id, 10);
 
     // Fetch the campaign to get keywords and endDate
@@ -798,7 +821,14 @@ export const getContinueCampaign = async (
         statusCode.NOT_FOUND
       );
     }
-
+    if (user.role.id === 2 && user.id !== campaign.userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     // Update Python API for keywords first
     if (campaign.keywords && campaign.keywords.length > 0) {
       const apiPromises = campaign.keywords.map(
@@ -847,10 +877,18 @@ export const getContinueCampaign = async (
 };
 
 export const cancelCampaign = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const campaignId = parseInt(req.params.id, 10);
 
     // Fetch the campaign to get keywords and endDate
@@ -864,7 +902,14 @@ export const cancelCampaign = async (
         statusCode.NOT_FOUND
       );
     }
-
+    if (user.role.id === 2 && user.id !== campaign.userId) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    } 
     // Update Python API for keywords first
     if (campaign.keywords && campaign.keywords.length > 0) {
       const activeKeywords = campaign.keywords.filter(

@@ -111,17 +111,39 @@ export const getKeywordList = async (
 
 // Create a new keyword
 export const createKeyword = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<KeywordAttributes>>
 ): Promise<void> => {
   try {
     const { campaignId, name, urls, distribution, traffic } = req.body;
-
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(campaignId)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     if (
       !campaignId ||
       !name ||
       !urls ||
-      !Array.isArray(urls) ||
       urls.length === 0 ||
       !distribution
     ) {
@@ -195,13 +217,45 @@ export const createKeyword = async (
 
 // Get keyword by ID
 export const getKeywordById = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<KeywordAttributes>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
-
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const keyword = await getKeywordByIdRepo(Number(id));
+    if (!keyword) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Keyword not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(keyword?.campaignId || 0)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
+
     if (!keyword) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -237,11 +291,19 @@ export const getKeywordById = async (
 };
 
 export const updateKeyword = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const parsedId = parseInt(id, 10);
     if (isNaN(parsedId) || parsedId <= 0) {
       throw new ErrorType(
@@ -262,7 +324,31 @@ export const updateKeyword = async (
       isDeleted: boolean;
       status: keywordStatus;
     }>;
-
+    const keyword = await getKeywordByIdRepo(parsedId)
+    if (!keyword) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Keyword not found",
+        error: "Resource not found",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(keyword?.campaignId || 0)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      }); 
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     const updatedKeyword = await updateKeywordRepo(parsedId, data);
     if (updatedKeyword.status === keywordStatus.INACTIVE) {
       const dataPython = {

@@ -12,6 +12,8 @@ import { LinkAttributes } from "../../interfaces/Link.interface";
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
+import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Get link list with filters
 export const getLinkList = async (
@@ -105,7 +107,7 @@ export const getLinkList = async (
 
 // Create a new link
 export const createLink = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<LinkAttributes>>
 ): Promise<void> => {
   try {
@@ -148,6 +150,31 @@ export const createLink = async (
       });
       return;
     }
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(campaignId)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    } 
+
     const cost = traffic * 1;
     const newLink = await createLinkRepo({
       campaignId,
@@ -192,7 +219,7 @@ export const createLink = async (
 
 // Get link by ID
 export const getLinkById = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<LinkAttributes>>
 ): Promise<void> => {
   try {
@@ -207,7 +234,30 @@ export const getLinkById = async (
       });
       return;
     }
-
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(link?.campaignId || 0)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     res.status(statusCode.OK).json({
       status: true,
       message: "Link retrieved successfully",
@@ -237,7 +287,7 @@ export const getLinkById = async (
 };
 
 export const updateLink = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
@@ -261,6 +311,39 @@ export const updateLink = async (
       page: string;
       isDeleted: boolean;
     }>;
+    const link = await getLinkByIdRepo(parsedId)
+    if (!link) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Link not found",
+        error: "Resource not found",
+      }); 
+      return;
+    } 
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(link?.campaignId || 0)
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
     const updatedLink = await updateLinkRepo(parsedId, data);
     res.status(statusCode.OK).json(updatedLink);
     return;
@@ -276,11 +359,35 @@ export const updateLink = async (
 };
 
 export const getLinkByCampaignId = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response<ResponseType<LinkAttributes[]>>
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+    const campaign = await getCampaignByIdRepo(Number(id))
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+      });
+      return;
+    }
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission",
+      });
+      return;
+    }
 
     const links = await getLinkByCampaignIdRepo(Number(id));
     if (!links) {
