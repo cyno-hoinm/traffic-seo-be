@@ -5,6 +5,7 @@ import {
   getLinkById,
   updateLink,
   getLinkByCampaignId,
+  checkUrlIndexing,
 } from "../../../controllers/coreController/link.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -646,4 +647,86 @@ router.patch("/:id", authorization(["update-link"]),  updateLink);
  *                   example: Database error
  */
 router.get("/campaign/:id", authorization(["read-link"]), getLinkByCampaignId);
+
+/**
+ * @swagger
+ * /links/check-indexing:
+ *   post:
+ *     summary: Check if a URL is indexed by Google
+ *     description: Check if a given URL is indexed in Google search results
+ *     tags: [Links]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: The URL to check for indexing
+ *                 example: "https://example.com/page"
+ *     responses:
+ *       200:
+ *         description: URL indexing status checked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: URL indexing status checked successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isIndexed:
+ *                       type: boolean
+ *                       example: true
+ *                     url:
+ *                       type: string
+ *                       example: "https://example.com/page"
+ *                     lastCrawled:
+ *                       type: string
+ *                       example: "Apr 10, 2025"
+ *       400:
+ *         description: Bad request - Invalid URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid URL format
+ *                 error:
+ *                   type: string
+ *                   example: Invalid field
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error checking URL indexing status
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post("/check-indexing", authorization(["read-link"]), checkUrlIndexing);
+
 export default router;

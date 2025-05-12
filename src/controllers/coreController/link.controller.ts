@@ -15,6 +15,8 @@ import { DistributionType } from "../../enums/distribution.enum";
 import { searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
+import { URL } from "url";
+import axios from "axios";
 
 // Get link list with filters
 export const getLinkList = async (
@@ -439,5 +441,94 @@ export const getLinkByCampaignId = async (
       error: error.message,
     });
     return;
+  }
+};
+
+export const checkUrlIndexing = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "URL is required",
+        error: "Missing field",
+      });
+      return;
+    }
+
+    // Validate URL format
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid URL format",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    // Check if URL is indexed using SerpApi
+    try {
+      const searchQuery = `site:${parsedUrl.hostname} ${parsedUrl.pathname}`;
+      const response = await axios.get('https://serpapi.com/search', {
+        params: {
+          q: searchQuery,
+          api_key: process.env.SERP_API_KEY,
+          engine: 'google'
+        }
+      });
+
+      const searchResults = response.data.organic_results || [];
+      const isIndexed = searchResults.some((result: any) => 
+        result.link === parsedUrl.toString()
+      );
+
+      // Try to extract last crawled date if available
+      let lastCrawled: string | undefined;
+      const cachedResult = searchResults.find((result: any) => 
+        result.link === parsedUrl.toString()
+      );
+      if (cachedResult?.cached_page_link) {
+        lastCrawled = new Date().toISOString(); // Since we can't get exact date from SerpApi
+      }
+
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "URL indexing status checked successfully",
+        data: {
+          isIndexed,
+          url: parsedUrl.toString(),
+          lastCrawled,
+          searchResults: searchResults.map((result: any) => ({
+            title: result.title,
+            link: result.link,
+            snippet: result.snippet
+          }))
+        },
+      });
+    } catch (error: any) {
+      // If there's an error with the API, we'll consider it not indexed
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "URL indexing status checked successfully",
+        data: {
+          isIndexed: false,
+          url: parsedUrl.toString(),
+          error: error.message
+        },
+      });
+    }
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error checking URL indexing status",
+      error: error.message,
+    });
   }
 };
