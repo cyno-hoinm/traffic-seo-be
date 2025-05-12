@@ -41,12 +41,12 @@ export const getCampaignsReportUserRepo = async (
     // Date range filter for campaigns
     if (startDate || endDate) {
       campaignWhere[Op.and] = [];
-      if (startDate) {
-        campaignWhere[Op.and].push({ startDate: { [Op.gte]: startDate } });
-      }
-      if (endDate) {
-        campaignWhere[Op.and].push({ endDate: { [Op.lte]: endDate } });
-      }
+      // if (startDate) {
+      //   campaignWhere[Op.and].push({ startDate: { [Op.gte]: startDate } });
+      // }
+      // if (endDate) {
+      //   campaignWhere[Op.and].push({ endDate: { [Op.lte]: endDate } });
+      // }
     }
 
     const queryOptions: any = {

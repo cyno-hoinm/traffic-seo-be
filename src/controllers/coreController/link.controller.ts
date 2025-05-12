@@ -15,6 +15,9 @@ import { DistributionType } from "../../enums/distribution.enum";
 import { searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
+import { URL } from "url";
+import puppeteer, { Browser, Page } from "puppeteer";
+
 
 // Get link list with filters
 export const getLinkList = async (
@@ -159,7 +162,7 @@ export const createLink = async (
       });
       return;
     }
-    const campaign = await getCampaignByIdRepo(campaignId)
+    const campaign = await getCampaignByIdRepo(campaignId);
     if (!campaign) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -174,7 +177,7 @@ export const createLink = async (
         error: "You not have permission",
       });
       return;
-    } 
+    }
 
     const cost = traffic * 1;
     const newLink = await createLinkRepo({
@@ -243,7 +246,7 @@ export const getLinkById = async (
       });
       return;
     }
-    const campaign = await getCampaignByIdRepo(link?.campaignId || 0)
+    const campaign = await getCampaignByIdRepo(link?.campaignId || 0);
     if (!campaign) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -312,15 +315,15 @@ export const updateLink = async (
       page: string;
       isDeleted: boolean;
     }>;
-    const link = await getLinkByIdRepo(parsedId)
+    const link = await getLinkByIdRepo(parsedId);
     if (!link) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Link not found",
         error: "Resource not found",
-      }); 
+      });
       return;
-    } 
+    }
     const user = req.data;
     if (!user || !user.id) {
       res.status(statusCode.UNAUTHORIZED).json({
@@ -329,7 +332,7 @@ export const updateLink = async (
       });
       return;
     }
-    const campaign = await getCampaignByIdRepo(link?.campaignId || 0)
+    const campaign = await getCampaignByIdRepo(link?.campaignId || 0);
     if (!campaign) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
@@ -379,7 +382,7 @@ export const getLinkByCampaignId = async (
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Campaign Not Found",
-        error: "Campaign Not Found"
+        error: "Campaign Not Found",
       });
       return;
     }
@@ -388,7 +391,7 @@ export const getLinkByCampaignId = async (
       res.status(statusCode.FORBIDDEN).json({
         status: false,
         message: "You not have permission",
-        error: "You not have permission"
+        error: "You not have permission",
       });
       return;
     }
@@ -409,7 +412,7 @@ export const getLinkByCampaignId = async (
           page: 1,
           limit: 3,
           linkId: link.id,
-          type: "DIRECTLOG"
+          type: "DIRECTLOG",
         });
         return {
           id: link.id,
@@ -421,7 +424,7 @@ export const getLinkByCampaignId = async (
           createdAt: link.createdAt,
           updatedAt: link.updatedAt,
           status: link.status,
-          logs: logs
+          logs: logs,
         };
       })
     );
@@ -439,5 +442,156 @@ export const getLinkByCampaignId = async (
       error: error.message,
     });
     return;
+  }
+};
+
+export const checkUrlIndexing = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  let browser: Browser | null = null;
+  try {
+    const { urls } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+       res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "URLs array is required",
+        error: "Missing field",
+      });
+      return;
+    }
+
+    // Validate URL format
+    const parsedUrls: URL[] = [];
+    try {
+      for (const url of urls) {
+        parsedUrls.push(new URL(url));
+      }
+    } catch {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid URL format in array",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-infobars',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-web-security',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      ],
+    });
+
+    const checkUrl = async (parsedUrl: URL) => {
+      const page = await browser!.newPage();
+
+      try {
+        // Override navigator.webdriver
+        await page.evaluateOnNewDocument(() => {
+          Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined,
+          });
+        });
+
+        // Set headers
+        await page.setExtraHTTPHeaders({
+          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'accept-language': 'en-US,en;q=0.9',
+        });
+
+        // Set viewport
+        await page.setViewport({ width: 1280, height: 720 });
+
+        // Navigate to Google and search
+        const searchQuery = `site:${parsedUrl.hostname}${parsedUrl.pathname}${parsedUrl.search}`;
+        await page.goto(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, {
+          waitUntil: 'domcontentloaded',
+          timeout: 10000,
+        });
+
+        // Extract results
+        const searchResults = await page.evaluate(() => {
+          interface SearchResult {
+            title: string;
+            link: string;
+          }
+          const results: SearchResult[] = [];
+          const elements = document.querySelectorAll('div[role="main"] h3');
+          const links = document.querySelectorAll('div[role="main"] a');
+
+          for (let i = 0; i < Math.min(elements.length, links.length); i++) {
+            const title = elements[i]?.textContent?.trim() || '';
+            const link = (links[i] as HTMLAnchorElement)?.href || '';
+            if (title && link) {
+              results.push({ title, link });
+            }
+          }
+          return results;
+        });
+
+        const inputHost = parsedUrl.hostname.replace(/^www\./, '');
+        const isIndexed = searchResults.some(result => {
+          try {
+            const resultHost = new URL(result.link).hostname.replace(/^www\./, '');
+            return resultHost === inputHost;
+          } catch {
+            return false;
+          }
+        });
+
+        return {
+          url: parsedUrl.toString(),
+          isIndexed,
+          searchResults: searchResults.slice(0, 5),
+          lastChecked: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error(`Error checking URL ${parsedUrl.toString()}:`, error);
+        return {
+          url: parsedUrl.toString(),
+          isIndexed: false,
+          error: (error as Error).message,
+          lastChecked: new Date().toISOString(),
+        };
+      } finally {
+        await page.close();
+      }
+    };
+
+    // Process URLs in parallel with limited concurrency
+    const results = await Promise.all(
+      parsedUrls.map(url => checkUrl(url))
+    );
+
+    await browser.close();
+    browser = null;
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "URLs indexing status checked successfully",
+      data: {
+        results,
+        summary: {
+          totalUrls: results.length,
+          indexedUrls: results.filter(r => r.isIndexed).length,
+          notIndexedUrls: results.filter(r => !r.isIndexed).length,
+        },
+      },
+    });
+  } catch (error: any) {
+    if (browser) await browser.close();
+    console.error('Error in checkUrlIndexing:', error);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error checking URLs indexing status",
+      error: error.message,
+    });
   }
 };
