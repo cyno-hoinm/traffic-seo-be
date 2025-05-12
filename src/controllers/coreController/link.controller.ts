@@ -16,7 +16,7 @@ import { searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
 import { URL } from "url";
-import puppeteer, { Browser, Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
 
 // Get link list with filters
@@ -482,11 +482,13 @@ export const checkUrlIndexing = async (
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
         '--disable-infobars',
         '--disable-blink-features=AutomationControlled',
         '--disable-web-security',
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-      ],
+        '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+      ]
     });
 
     const checkUrl = async (parsedUrl: URL) => {
@@ -495,6 +497,7 @@ export const checkUrlIndexing = async (
       try {
         // Override navigator.webdriver
         await page.evaluateOnNewDocument(() => {
+          // @ts-ignore
           Object.defineProperty(navigator, 'webdriver', {
             get: () => undefined,
           });
@@ -523,12 +526,15 @@ export const checkUrlIndexing = async (
             link: string;
           }
           const results: SearchResult[] = [];
+          // @ts-ignore
           const elements = document.querySelectorAll('div[role="main"] h3');
+          // @ts-ignore
           const links = document.querySelectorAll('div[role="main"] a');
 
           for (let i = 0; i < Math.min(elements.length, links.length); i++) {
             const title = elements[i]?.textContent?.trim() || '';
-            const link = (links[i] as HTMLAnchorElement)?.href || '';
+            // @ts-ignore
+            const link = links[i]?.href || '';
             if (title && link) {
               results.push({ title, link });
             }
