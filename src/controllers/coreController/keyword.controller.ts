@@ -15,7 +15,7 @@ import { baseApiPython, baseApiPythonUpdate } from "../../config/botAPI.config";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
 import { formatDate } from "../../utils/utils";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
-import { searchLogs } from "../../services/botService/searchLog.service";
+import { searchLogs, searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 // Get keyword list with filters
@@ -434,10 +434,11 @@ export const getKeywordByCampaignId = async (
           "keyword/success-count-duration",
           dataPython
         );
-        const logs = await searchLogs({
+        const logs = await searchLogsByType({
           page: 1,
           limit: 3,
-          keywordId: keyword.id
+          keywordId: keyword.id,
+          type: "SEARCHLOG"
         })
         return {
           id : keyword.id,

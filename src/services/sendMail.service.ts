@@ -47,10 +47,12 @@ class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: true, // true for 465, false for other ports
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
       pool: true, // Use pooled connections
       maxConnections: 5,
@@ -59,8 +61,8 @@ class EmailService {
   }
 
   private async validateConfig(): Promise<void> {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error("Email configuration is incomplete");
+    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      throw new Error("SMTP configuration is incomplete");
     }
   }
 
@@ -73,7 +75,7 @@ class EmailService {
     const { recipientName, attachments, retries = MAX_RETRIES } = options;
     const html = generateEmailTemplate(subject, body, recipientName);
     const mailOptions: SendMailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.SMTP_FROM,
       to,
       subject,
       html,
@@ -191,10 +193,12 @@ class EmailService {
         debugEmail(`Service health check failed: ${error.message}`);
         // Attempt to recreate transporter
         this.transporter = nodemailer.createTransport({
-          service: "gmail",
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT),
+          secure: true, // true for 465, false for other ports
           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
           },
         });
       }

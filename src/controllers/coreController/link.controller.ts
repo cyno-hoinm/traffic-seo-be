@@ -12,8 +12,9 @@ import { LinkAttributes } from "../../interfaces/Link.interface";
 import { LinkStatus } from "../../enums/linkStatus.enum";
 import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
-import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
+import { searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
 
 // Get link list with filters
 export const getLinkList = async (
@@ -359,10 +360,18 @@ export const updateLink = async (
 };
 
 export const getLinkByCampaignId = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response<ResponseType<LinkAttributes[]>>
 ): Promise<void> => {
   try {
+    const user = req.data;
+    if (!user || !user.id) {
+      res.status(statusCode.UNAUTHORIZED).json({
+        status: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
     const { id } = req.params;
     const user = req.data;
     if (!user || !user.id) {
@@ -389,6 +398,23 @@ export const getLinkByCampaignId = async (
       return;
     }
 
+    const campaign = await getCampaignByIdRepo(Number(id))
+    if (!campaign) {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Campaign Not Found",
+        error: "Campaign Not Found"
+      })
+      return
+    }
+    if (user.role.id===2 && user.id !== Number(campaign.userId)) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You not have permission",
+        error: "You not have permission"
+      })
+      return
+    }
     const links = await getLinkByCampaignIdRepo(Number(id));
     if (!links) {
       res.status(statusCode.NOT_FOUND).json({
@@ -398,11 +424,42 @@ export const getLinkByCampaignId = async (
       });
       return;
     }
-
+    const updateLinks = await Promise.all(
+          links.links.map(async (link: any) => {
+            // const dataPython = {
+            //   linkId: link.id,
+            //   time_start: formatDate(campaign.startDate),
+            //   time_end: formatDate(campaign.endDate),
+            // };
+            // const result = await baseApiPython(
+            //   "keyword/success-count-duration",
+            //   dataPython
+            // );
+            const logs = await searchLogsByType({
+              page: 1,
+              limit: 3,
+              linkId: link.id,
+              type: "DIRECTLOG"
+            })
+            return {
+              id : link.id,
+              campaignId: campaign.id,
+              link: link.link,
+              distribution: link.distribution || null,
+              cost: link.cost,
+              isDeleted: link.isDeleted,
+              createdAt: link.createdAt,
+              updatedAt: link.updatedAt,
+              status: link.status,
+              // trafficCompleted: result.success_count, // Corrected typo
+              logs: logs
+            };
+          })
+        );
     res.status(statusCode.OK).json({
       status: true,
       message: "Link retrieved successfully",
-      data: links.links,
+      data: updateLinks,
     });
     return;
   } catch (error: any) {

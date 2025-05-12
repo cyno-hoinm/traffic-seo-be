@@ -34,7 +34,7 @@ if (cluster.isPrimary && !isDev) {
 
   // Fork one worker for each service
   cluster.fork({ WORKER_TYPE: "app" });
-  // cluster.fork({ WORKER_TYPE: "email" });
+  cluster.fork({ WORKER_TYPE: "email" });
   cluster.fork({ WORKER_TYPE: "backup" });
   cluster.fork({ WORKER_TYPE: "campaignStatus" });
   cluster.fork({ WORKER_TYPE: "campaignRefund" }); // New worker for campaign refund
@@ -108,6 +108,7 @@ if (cluster.isPrimary && !isDev) {
     };
     // startCampaignRefundService();
     startServer();
+    // startEmailService();
     process.on("SIGTERM", async () => {
       logger.info(`App worker ${process.pid} received SIGTERM`);
       await gracefulShutdown(server, "SIGTERM");
