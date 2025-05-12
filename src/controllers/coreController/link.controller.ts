@@ -360,8 +360,8 @@ export const updateLink = async (
 };
 
 export const getLinkByCampaignId = async (
-  req: Request,
-  res: Response<ResponseType<LinkAttributes[]>>
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any[]>>
 ): Promise<void> => {
   try {
     const user = req.data;
@@ -372,49 +372,27 @@ export const getLinkByCampaignId = async (
       });
       return;
     }
-    const { id } = req.params;
-    const user = req.data;
-    if (!user || !user.id) {
-      res.status(statusCode.UNAUTHORIZED).json({
-        status: false,
-        message: "Unauthorized",
-      });
-      return;
-    }
-    const campaign = await getCampaignByIdRepo(Number(id))
-    if (!campaign) {
-      res.status(statusCode.NOT_FOUND).json({
-        status: false,
-        message: "Campaign Not Found",
-      });
-      return;
-    }
-    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
-      res.status(statusCode.FORBIDDEN).json({
-        status: false,
-        message: "You not have permission",
-        error: "You not have permission",
-      });
-      return;
-    }
 
-    const campaign = await getCampaignByIdRepo(Number(id))
+    const { id } = req.params;
+    const campaign = await getCampaignByIdRepo(Number(id));
     if (!campaign) {
       res.status(statusCode.NOT_FOUND).json({
         status: false,
         message: "Campaign Not Found",
         error: "Campaign Not Found"
-      })
-      return
+      });
+      return;
     }
-    if (user.role.id===2 && user.id !== Number(campaign.userId)) {
+
+    if (user.role.id === 2 && user.id !== Number(campaign.userId)) {
       res.status(statusCode.FORBIDDEN).json({
         status: false,
         message: "You not have permission",
         error: "You not have permission"
-      })
-      return
+      });
+      return;
     }
+
     const links = await getLinkByCampaignIdRepo(Number(id));
     if (!links) {
       res.status(statusCode.NOT_FOUND).json({
@@ -424,38 +402,30 @@ export const getLinkByCampaignId = async (
       });
       return;
     }
+
     const updateLinks = await Promise.all(
-          links.links.map(async (link: any) => {
-            // const dataPython = {
-            //   linkId: link.id,
-            //   time_start: formatDate(campaign.startDate),
-            //   time_end: formatDate(campaign.endDate),
-            // };
-            // const result = await baseApiPython(
-            //   "keyword/success-count-duration",
-            //   dataPython
-            // );
-            const logs = await searchLogsByType({
-              page: 1,
-              limit: 3,
-              linkId: link.id,
-              type: "DIRECTLOG"
-            })
-            return {
-              id : link.id,
-              campaignId: campaign.id,
-              link: link.link,
-              distribution: link.distribution || null,
-              cost: link.cost,
-              isDeleted: link.isDeleted,
-              createdAt: link.createdAt,
-              updatedAt: link.updatedAt,
-              status: link.status,
-              // trafficCompleted: result.success_count, // Corrected typo
-              logs: logs
-            };
-          })
-        );
+      links.links.map(async (link: any) => {
+        const logs = await searchLogsByType({
+          page: 1,
+          limit: 3,
+          linkId: link.id,
+          type: "DIRECTLOG"
+        });
+        return {
+          id: link.id,
+          campaignId: campaign.id,
+          link: link.link,
+          distribution: link.distribution || null,
+          cost: link.cost,
+          isDeleted: link.isDeleted,
+          createdAt: link.createdAt,
+          updatedAt: link.updatedAt,
+          status: link.status,
+          logs: logs
+        };
+      })
+    );
+
     res.status(statusCode.OK).json({
       status: true,
       message: "Link retrieved successfully",
