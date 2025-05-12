@@ -537,7 +537,7 @@ export const checkUrlIndexing = async (
         });
 
         const inputHost = parsedUrl.hostname.replace(/^www\./, '');
-        const isIndexed = searchResults.some(result => {
+        const isIndexed = searchResults.some((result: any) => {
           try {
             const resultHost = new URL(result.link).hostname.replace(/^www\./, '');
             return resultHost === inputHost;
