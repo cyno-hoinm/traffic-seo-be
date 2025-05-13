@@ -5,6 +5,7 @@ import {
   getDepositByIdRepo,
   getDepositByOrderIdRepo,
   createDepositRepo,
+  checkUserUsedPaymentMethodGiftRepo
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
@@ -17,7 +18,6 @@ import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
 import { notificationType } from "../../enums/notification.enum";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
-import { redisClient } from "../../config/redis.config";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -437,11 +437,11 @@ export const createTrialForUser = async (
       return;
     }
 
-    // Check if user has already used trial
-    const trialKey = `trial:${userId}`;
-    const hasUsedTrial = await redisClient.get(trialKey);
-    
-    if (hasUsedTrial) {
+    const checkUserUsedPaymentMethodGift = await checkUserUsedPaymentMethodGiftRepo(
+      userId
+    );
+
+    if (checkUserUsedPaymentMethodGift) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "User has already used their trial",
@@ -452,7 +452,7 @@ export const createTrialForUser = async (
 
     const orderId = uuIDv4();
     const orderCodeUnique = uuidToNumber(orderId);
-    const amount = 1000;
+    const amount = 10;
     const voucherId = 1;
     const paymentMethodId = 4;
 
@@ -475,8 +475,6 @@ export const createTrialForUser = async (
       type: notificationType.GIFT,
     });
 
-    // Store trial usage in Redis (permanent)
-    await redisClient.set(trialKey, "used", 2592000 * 12);
 
     res.status(statusCode.OK).json({
       status: true,

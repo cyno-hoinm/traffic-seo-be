@@ -310,3 +310,25 @@ export const getDepositByOrderIdRepo = async (
     );
   }
 };
+
+export const checkUserUsedPaymentMethodGift = async (
+  userId: number
+): Promise<boolean> => {
+  try {
+    const deposit = await Deposit.findOne({
+      where: {
+        userId,
+        paymentMethodId: 4,
+        isDeleted: false, // nếu có trường này để loại bỏ bản ghi đã xóa mềm
+      },
+    });
+
+    if (deposit) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+};

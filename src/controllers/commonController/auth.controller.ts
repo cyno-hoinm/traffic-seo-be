@@ -27,6 +27,7 @@ import { queueEmail } from "../../services/sendMail.service";
 import { redisClient } from "../../config/redis.config";
 import { generateOtp } from "../../utils/generate";
 import { checkInviteCodeExistsRepo, getAgencyByInviteCodeRepo } from "../../repositories/coreRepo/agency.repository";
+import { checkUserUsedPaymentMethodGiftRepo } from "../../repositories/moneyRepo/deposit.repository";
 
 export const loginUser = async (
   req: Request,
@@ -114,6 +115,9 @@ export const getMe = async (
       });
       return;
     }
+    const checkUserUsedPaymentMethodGift = await checkUserUsedPaymentMethodGiftRepo(
+      user.id
+    );
     // Parse user ID safely
     const userId =
       typeof user.id === "string" ? parseInt(user.id, 10) : user.id;
@@ -136,10 +140,10 @@ export const getMe = async (
       return;
     }
 
-    // Check trial status from Redis
-    const trialKey = `trial:${userId}`;
-    const hasUsedTrial = await redisClient.get(trialKey);
-    const trialStatus = hasUsedTrial === "used";
+    let trialStatus = false;
+    if(checkUserUsedPaymentMethodGift) {
+      trialStatus = true;
+    }
 
     // Return user data
     res.status(statusCode.OK).json({
