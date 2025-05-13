@@ -476,7 +476,7 @@ export const createTrialForUser = async (
     });
 
     // Store trial usage in Redis (permanent)
-    await redisClient.set(trialKey, "used");
+    await redisClient.set(trialKey, "used", 2592000 * 12);
 
     res.status(statusCode.OK).json({
       status: true,
