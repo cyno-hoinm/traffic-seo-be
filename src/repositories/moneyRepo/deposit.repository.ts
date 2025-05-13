@@ -311,7 +311,7 @@ export const getDepositByOrderIdRepo = async (
   }
 };
 
-export const checkUserUsedPaymentMethodGift = async (
+export const checkUserUsedPaymentMethodGiftRepo = async (
   userId: number
 ): Promise<boolean> => {
   try {
