@@ -461,13 +461,22 @@ const createCampaignWithTransaction = async (data: any) => {
       data.currentDate,
       transaction
     );
-    await createLinks(
-      campaign,
-      data.links,
-      data.start,
-      data.currentDate,
-      transaction
-    );
+
+    // Split links into batches of 50
+    const BATCH_SIZE = 50;
+    if (data.links && data.links.length > 0) {
+      for (let i = 0; i < data.links.length; i += BATCH_SIZE) {
+        const linkBatch = data.links.slice(i, i + BATCH_SIZE);
+        await createLinks(
+          campaign,
+          linkBatch,
+          data.start,
+          data.currentDate,
+          transaction
+        );
+      }
+    }
+
     await createTransaction(
       data.userId,
       campaign.id,
@@ -488,47 +497,33 @@ const createKeywords = async (
 ) => {
   if (!keywords?.length) return;
 
-  const BATCH_SIZE = 50;
-  const batches = [];
-  
-  // Split keywords into batches
-  for (let i = 0; i < keywords.length; i += BATCH_SIZE) {
-    batches.push(keywords.slice(i, i + BATCH_SIZE));
-  }
+  for (const keyword of keywords) {
+    const keywordData = {
+      campaignId: campaign.id,
+      name: keyword.name,
+      urls: keyword.urls,
+      cost: keyword.traffic * 1,
+      status:
+        start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
+      distribution: keyword.distribution,
+      traffic: keyword.traffic || 0,
+      isDeleted: false,
+    };
 
-  // Process each batch
-  for (const batch of batches) {
-    const batchPromises = batch.map(async (keyword) => {
-      const keywordData = {
-        campaignId: campaign.id,
-        name: keyword.name,
-        urls: keyword.urls,
-        cost: keyword.traffic * 1,
-        status:
-          start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
-        distribution: keyword.distribution,
-        traffic: keyword.traffic || 0,
-        isDeleted: false,
-      };
-
-      const newKeyword = await Keyword.create(keywordData, { transaction });
-      await baseApiPython("keyword/set", {
-        keywordId: newKeyword.id,
-        title: campaign.title,
-        keyword: newKeyword.name,
-        urls: newKeyword.urls,
-        distribution: newKeyword.distribution,
-        traffic: newKeyword.traffic || 0,
-        device: campaign.device,
-        domain: campaign.domain,
-        timeStart: campaign.startDate,
-        timeEnd: campaign.endDate,
-        searchTool: campaign.search,
-      });
+    const newKeyword = await Keyword.create(keywordData, { transaction });
+    await baseApiPython("keyword/set", {
+      keywordId: newKeyword.id,
+      title: campaign.title,
+      keyword: newKeyword.name,
+      urls: newKeyword.urls,
+      distribution: newKeyword.distribution,
+      traffic: newKeyword.traffic || 0,
+      device: campaign.device,
+      domain: campaign.domain,
+      timeStart: campaign.startDate,
+      timeEnd: campaign.endDate,
+      searchTool: campaign.search,
     });
-
-    // Wait for current batch to complete before moving to next batch
-    await Promise.all(batchPromises);
   }
 };
 
@@ -545,7 +540,7 @@ const createLinks = async (
   const BATCH_SIZE = 50;
   const batches = [];
   
-  // Split links into batches
+  // Split links into batches of 50
   for (let i = 0; i < links.length; i += BATCH_SIZE) {
     batches.push(links.slice(i, i + BATCH_SIZE));
   }
@@ -570,7 +565,7 @@ const createLinks = async (
       // Create links in database for current batch
       const createdLinks = await Link.bulkCreate(linkData, { transaction });
 
-      // Send links to Python API in parallel for current batch
+      // Send links to Python API
       const pythonApiPromises = createdLinks.map(async (link) => {
         try {
           await baseApiPython("link/set", {
@@ -581,14 +576,15 @@ const createLinks = async (
           });
         } catch (error: any) {
           logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
-          throw error;
+          throw error; // Re-throw to trigger rollback
         }
       });
 
-      // Wait for all Python API calls in current batch to complete
+      // Wait for all Python API calls to complete
       await Promise.all(pythonApiPromises);
 
     } catch (error: any) {
+      // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
       logger.error(`Error in createLinks batch: ${error.message}`);
       throw error;
     }
