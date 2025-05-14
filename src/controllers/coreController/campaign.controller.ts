@@ -488,33 +488,47 @@ const createKeywords = async (
 ) => {
   if (!keywords?.length) return;
 
-  for (const keyword of keywords) {
-    const keywordData = {
-      campaignId: campaign.id,
-      name: keyword.name,
-      urls: keyword.urls,
-      cost: keyword.traffic * 1,
-      status:
-        start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
-      distribution: keyword.distribution,
-      traffic: keyword.traffic || 0,
-      isDeleted: false,
-    };
+  const BATCH_SIZE = 50;
+  const batches = [];
+  
+  // Split keywords into batches
+  for (let i = 0; i < keywords.length; i += BATCH_SIZE) {
+    batches.push(keywords.slice(i, i + BATCH_SIZE));
+  }
 
-    const newKeyword = await Keyword.create(keywordData, { transaction });
-    await baseApiPython("keyword/set", {
-      keywordId: newKeyword.id,
-      title: campaign.title,
-      keyword: newKeyword.name,
-      urls: newKeyword.urls,
-      distribution: newKeyword.distribution,
-      traffic: newKeyword.traffic || 0,
-      device: campaign.device,
-      domain: campaign.domain,
-      timeStart: campaign.startDate,
-      timeEnd: campaign.endDate,
-      searchTool: campaign.search,
+  // Process each batch
+  for (const batch of batches) {
+    const batchPromises = batch.map(async (keyword) => {
+      const keywordData = {
+        campaignId: campaign.id,
+        name: keyword.name,
+        urls: keyword.urls,
+        cost: keyword.traffic * 1,
+        status:
+          start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
+        distribution: keyword.distribution,
+        traffic: keyword.traffic || 0,
+        isDeleted: false,
+      };
+
+      const newKeyword = await Keyword.create(keywordData, { transaction });
+      await baseApiPython("keyword/set", {
+        keywordId: newKeyword.id,
+        title: campaign.title,
+        keyword: newKeyword.name,
+        urls: newKeyword.urls,
+        distribution: newKeyword.distribution,
+        traffic: newKeyword.traffic || 0,
+        device: campaign.device,
+        domain: campaign.domain,
+        timeStart: campaign.startDate,
+        timeEnd: campaign.endDate,
+        searchTool: campaign.search,
+      });
     });
+
+    // Wait for current batch to complete before moving to next batch
+    await Promise.all(batchPromises);
   }
 };
 
@@ -528,46 +542,56 @@ const createLinks = async (
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
   if (!links?.length) return;
 
-  const linkData = links.map((link) => ({
-    campaignId: campaign.id,
-    link: link.link,
-    linkTo: link.linkTo,
-    distribution: link.distribution,
-    traffic: link.traffic || 0,
-    cost: (link.traffic || 1) * linkCost,
-    anchorText: link.anchorText,
-    status: start > currentDate ? LinkStatus.INACTIVE : link.status,
-    url: link.url,
-    page: link.page,
-    isDeleted: false,
-  }));
+  const BATCH_SIZE = 50;
+  const batches = [];
+  
+  // Split links into batches
+  for (let i = 0; i < links.length; i += BATCH_SIZE) {
+    batches.push(links.slice(i, i + BATCH_SIZE));
+  }
 
-  try {
-    // Create links in database
-    const createdLinks = await Link.bulkCreate(linkData, { transaction });
+  // Process each batch
+  for (const batch of batches) {
+    const linkData = batch.map((link) => ({
+      campaignId: campaign.id,
+      link: link.link,
+      linkTo: link.linkTo,
+      distribution: link.distribution,
+      traffic: link.traffic || 0,
+      cost: (link.traffic || 1) * linkCost,
+      anchorText: link.anchorText,
+      status: start > currentDate ? LinkStatus.INACTIVE : link.status,
+      url: link.url,
+      page: link.page,
+      isDeleted: false,
+    }));
 
-    // Send links to Python API
-    const pythonApiPromises = createdLinks.map(async (link) => {
-      try {
-        await baseApiPython("link/set", {
-          linkId: link.id,
-          link: link.link,
-          timeStart: campaign.startDate,
-          timeEnd: campaign.endDate,
-        });
-      } catch (error: any) {
-        logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
-        throw error; // Re-throw to trigger rollback
-      }
-    });
+    try {
+      // Create links in database for current batch
+      const createdLinks = await Link.bulkCreate(linkData, { transaction });
 
-    // Wait for all Python API calls to complete
-    await Promise.all(pythonApiPromises);
+      // Send links to Python API in parallel for current batch
+      const pythonApiPromises = createdLinks.map(async (link) => {
+        try {
+          await baseApiPython("link/set", {
+            linkId: link.id,
+            link: link.link,
+            timeStart: campaign.startDate,
+            timeEnd: campaign.endDate,
+          });
+        } catch (error: any) {
+          logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
+          throw error;
+        }
+      });
 
-  } catch (error: any) {
-    // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
-    logger.error(`Error in createLinks: ${error.message}`);
-    throw error;
+      // Wait for all Python API calls in current batch to complete
+      await Promise.all(pythonApiPromises);
+
+    } catch (error: any) {
+      logger.error(`Error in createLinks batch: ${error.message}`);
+      throw error;
+    }
   }
 };
 
