@@ -36,6 +36,7 @@ export const getCampaignsReportUserRepo = async (
     const campaignWhere: any = {
       userId,
       isDeleted: false,
+      campaignTypeId : 1
     };
 
     // Date range filter for campaigns
