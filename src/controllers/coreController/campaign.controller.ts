@@ -461,22 +461,13 @@ const createCampaignWithTransaction = async (data: any) => {
       data.currentDate,
       transaction
     );
-
-    // Split links into batches of 50
-    const BATCH_SIZE = 50;
-    if (data.links && data.links.length > 0) {
-      for (let i = 0; i < data.links.length; i += BATCH_SIZE) {
-        const linkBatch = data.links.slice(i, i + BATCH_SIZE);
-        await createLinks(
-          campaign,
-          linkBatch,
-          data.start,
-          data.currentDate,
-          transaction
-        );
-      }
-    }
-
+    await createLinks(
+      campaign,
+      data.links,
+      data.start,
+      data.currentDate,
+      transaction
+    );
     await createTransaction(
       data.userId,
       campaign.id,
@@ -537,57 +528,46 @@ const createLinks = async (
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
   if (!links?.length) return;
 
-  const BATCH_SIZE = 50;
-  const batches = [];
-  
-  // Split links into batches of 50
-  for (let i = 0; i < links.length; i += BATCH_SIZE) {
-    batches.push(links.slice(i, i + BATCH_SIZE));
-  }
+  const linkData = links.map((link) => ({
+    campaignId: campaign.id,
+    link: link.link,
+    linkTo: link.linkTo,
+    distribution: link.distribution,
+    traffic: link.traffic || 0,
+    cost: (link.traffic || 1) * linkCost,
+    anchorText: link.anchorText,
+    status: start > currentDate ? LinkStatus.INACTIVE : link.status,
+    url: link.url,
+    page: link.page,
+    isDeleted: false,
+  }));
 
-  // Process each batch
-  for (const batch of batches) {
-    const linkData = batch.map((link) => ({
-      campaignId: campaign.id,
-      link: link.link,
-      linkTo: link.linkTo,
-      distribution: link.distribution,
-      traffic: link.traffic || 0,
-      cost: (link.traffic || 1) * linkCost,
-      anchorText: link.anchorText,
-      status: start > currentDate ? LinkStatus.INACTIVE : link.status,
-      url: link.url,
-      page: link.page,
-      isDeleted: false,
-    }));
+  try {
+    // Create links in database
+    const createdLinks = await Link.bulkCreate(linkData, { transaction });
 
-    try {
-      // Create links in database for current batch
-      const createdLinks = await Link.bulkCreate(linkData, { transaction });
+    // Send links to Python API
+    const pythonApiPromises = createdLinks.map(async (link) => {
+      try {
+        await baseApiPython("link/set", {
+          linkId: link.id,
+          link: link.link,
+          timeStart: campaign.startDate,
+          timeEnd: campaign.endDate,
+        });
+      } catch (error: any) {
+        logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
+        throw error; // Re-throw to trigger rollback
+      }
+    });
 
-      // Send links to Python API
-      const pythonApiPromises = createdLinks.map(async (link) => {
-        try {
-          await baseApiPython("link/set", {
-            linkId: link.id,
-            link: link.link,
-            timeStart: campaign.startDate,
-            timeEnd: campaign.endDate,
-          });
-        } catch (error: any) {
-          logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
-          throw error; // Re-throw to trigger rollback
-        }
-      });
+    // Wait for all Python API calls to complete
+    await Promise.all(pythonApiPromises);
 
-      // Wait for all Python API calls to complete
-      await Promise.all(pythonApiPromises);
-
-    } catch (error: any) {
-      // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
-      logger.error(`Error in createLinks batch: ${error.message}`);
-      throw error;
-    }
+  } catch (error: any) {
+    // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
+    logger.error(`Error in createLinks: ${error.message}`);
+    throw error;
   }
 };
 
