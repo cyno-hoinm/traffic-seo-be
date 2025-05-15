@@ -216,6 +216,10 @@ router.post(
  *                 type: string
  *                 description: Unique identifier of the user to filter campaigns
  *                 example: "user456"
+ *               campaignTypeId:
+ *                 type: number
+ *                 description: Unique identifier of the campaign type to filter campaigns
+ *                 example: 1
  *               start_date:
  *                 type: string
  *                 format: date

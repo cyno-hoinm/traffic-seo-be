@@ -14,6 +14,7 @@ import {
 
 export const getCampaignsReportUserRepo = async (
   userId: string,
+  campaignTypeId? : number,
   startDate?: string,
   endDate?: string
 ): Promise<
@@ -35,10 +36,11 @@ export const getCampaignsReportUserRepo = async (
     // Campaign filter
     const campaignWhere: any = {
       userId,
-      isDeleted: false,
-      campaignTypeId : 1
+      isDeleted: false
     };
-
+    if (campaignTypeId) {
+      campaignWhere.campaignTypeId = campaignTypeId;
+    }
     // Date range filter for campaigns
     if (startDate || endDate) {
       campaignWhere[Op.and] = [];

@@ -94,9 +94,10 @@ export const getCampaignReportUser = async (
   res: Response<ResponseType<any>>
 ): Promise<void> => {
   try {
-    const { userId, start_date, end_date } = req.body;
+    const { userId, start_date, end_date, campaignTypeId } = req.body;
     const result = await getCampaignsReportUserRepo(
       userId,
+      campaignTypeId,
       start_date,
       end_date
     );
