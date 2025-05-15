@@ -6,6 +6,8 @@ import {
   getLinkByIdRepo,
   updateLinkRepo,
   getLinkByCampaignIdRepo,
+  updateIndexStatusByUrlRepo,
+  // updateIndexStatusByUrlRepo,
 } from "../../repositories/coreRepo/link.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { LinkAttributes } from "../../interfaces/Link.interface";
@@ -15,8 +17,8 @@ import { DistributionType } from "../../enums/distribution.enum";
 import { searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
-import { URL } from "url";
-import puppeteer, { Browser } from "puppeteer";
+// import { URL } from "url";
+// import puppeteer, { Browser } from "puppeteer";
 
 
 // Get link list with filters
@@ -449,154 +451,188 @@ export const checkUrlIndexing = async (
   req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
-  let browser: Browser | null = null;
+  // let browser: Browser | null = null;
   try {
-    const { urls } = req.body;
+    // const { urls } = req.body;
 
-    if (!urls || !Array.isArray(urls) || urls.length === 0) {
-       res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "URLs array is required",
-        error: "Missing field",
-      });
-      return;
-    }
+    // if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    //    res.status(statusCode.BAD_REQUEST).json({
+    //     status: false,
+    //     message: "URLs array is required",
+    //     error: "Missing field",
+    //   });
+    //   return;
+    // }
 
-    // Validate URL format
-    const parsedUrls: URL[] = [];
-    try {
-      for (const url of urls) {
-        parsedUrls.push(new URL(url));
-      }
-    } catch {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Invalid URL format in array",
-        error: "Invalid field",
-      });
-      return;
-    }
+    // // Validate URL format
+    // const parsedUrls: URL[] = [];
+    // try {
+    //   for (const url of urls) {
+    //     parsedUrls.push(new URL(url));
+    //   }
+    // } catch {
+    //   res.status(statusCode.BAD_REQUEST).json({
+    //     status: false,
+    //     message: "Invalid URL format in array",
+    //     error: "Invalid field",
+    //   });
+    //   return;
+    // }
 
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-infobars',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-web-security',
-        '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-      ]
-    });
+    // browser = await puppeteer.launch({
+    //   headless: true,
+    //   args: [
+    //     '--no-sandbox',
+    //     '--disable-setuid-sandbox',
+    //     '--disable-dev-shm-usage',
+    //     '--disable-gpu',
+    //     '--disable-infobars',
+    //     '--disable-blink-features=AutomationControlled',
+    //     '--disable-web-security',
+    //     '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    //   ]
+    // });
 
-    const checkUrl = async (parsedUrl: URL) => {
-      const page = await browser!.newPage();
+    // const checkUrl = async (parsedUrl: URL) => {
+    //   const page = await browser!.newPage();
 
-      try {
-        // Override navigator.webdriver
-        await page.evaluateOnNewDocument(() => {
-          // @ts-ignore
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-          });
-        });
+    //   try {
+    //     // Override navigator.webdriver
+    //     await page.evaluateOnNewDocument(() => {
+    //       // @ts-ignore
+    //       Object.defineProperty(navigator, 'webdriver', {
+    //         get: () => undefined,
+    //       });
+    //     });
 
-        // Set headers
-        await page.setExtraHTTPHeaders({
-          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'accept-language': 'en-US,en;q=0.9',
-        });
+    //     // Set headers
+    //     await page.setExtraHTTPHeaders({
+    //       accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    //       'accept-language': 'en-US,en;q=0.9',
+    //     });
 
-        // Set viewport
-        await page.setViewport({ width: 1280, height: 720 });
+    //     // Set viewport
+    //     await page.setViewport({ width: 1280, height: 720 });
 
-        // Navigate to Google and search
-        const searchQuery = `site:${parsedUrl.hostname}${parsedUrl.pathname}${parsedUrl.search}`;
-        await page.goto(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, {
-          waitUntil: 'domcontentloaded',
-          timeout: 10000,
-        });
+    //     // Navigate to Google and search
+    //     const searchQuery = `site:${parsedUrl.hostname}${parsedUrl.pathname}${parsedUrl.search}`;
+    //     await page.goto(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, {
+    //       waitUntil: 'domcontentloaded',
+    //       timeout: 10000,
+    //     });
 
-        // Extract results
-        const searchResults = await page.evaluate(() => {
-          interface SearchResult {
-            title: string;
-            link: string;
-          }
-          const results: SearchResult[] = [];
-          // @ts-ignore
-          const elements = document.querySelectorAll('div[role="main"] h3');
-          // @ts-ignore
-          const links = document.querySelectorAll('div[role="main"] a');
+    //     // Extract results
+    //     const searchResults = await page.evaluate(() => {
+    //       interface SearchResult {
+    //         title: string;
+    //         link: string;
+    //       }
+    //       const results: SearchResult[] = [];
+    //       // @ts-ignore
+    //       const elements = document.querySelectorAll('div[role="main"] h3');
+    //       // @ts-ignore
+    //       const links = document.querySelectorAll('div[role="main"] a');
 
-          for (let i = 0; i < Math.min(elements.length, links.length); i++) {
-            const title = elements[i]?.textContent?.trim() || '';
-            // @ts-ignore
-            const link = links[i]?.href || '';
-            if (title && link) {
-              results.push({ title, link });
-            }
-          }
-          return results;
-        });
+    //       for (let i = 0; i < Math.min(elements.length, links.length); i++) {
+    //         const title = elements[i]?.textContent?.trim() || '';
+    //         // @ts-ignore
+    //         const link = links[i]?.href || '';
+    //         if (title && link) {
+    //           results.push({ title, link });
+    //         }
+    //       }
+    //       return results;
+    //     });
 
-        const inputHost = parsedUrl.hostname.replace(/^www\./, '');
-        const isIndexed = searchResults.some((result: any) => {
-          try {
-            const resultHost = new URL(result.link).hostname.replace(/^www\./, '');
-            return resultHost === inputHost;
-          } catch {
-            return false;
-          }
-        });
+    //     const inputHost = parsedUrl.hostname.replace(/^www\./, '');
+    //     const isIndexed = searchResults.some((result: any) => {
+    //       try {
+    //         const resultHost = new URL(result.link).hostname.replace(/^www\./, '');
+    //         return resultHost === inputHost;
+    //       } catch {
+    //         return false;
+    //       }
+    //     });
 
-        return {
-          url: parsedUrl.toString(),
-          isIndexed,
-          searchResults: searchResults.slice(0, 5),
-          lastChecked: new Date().toISOString(),
-        };
-      } catch (error) {
-        console.error(`Error checking URL ${parsedUrl.toString()}:`, error);
-        return {
-          url: parsedUrl.toString(),
-          isIndexed: false,
-          error: (error as Error).message,
-          lastChecked: new Date().toISOString(),
-        };
-      } finally {
-        await page.close();
-      }
-    };
+    //     return {
+    //       url: parsedUrl.toString(),
+    //       isIndexed,
+    //       searchResults: searchResults.slice(0, 5),
+    //       lastChecked: new Date().toISOString(),
+    //     };
+    //   } catch (error) {
+    //     console.error(`Error checking URL ${parsedUrl.toString()}:`, error);
+    //     return {
+    //       url: parsedUrl.toString(),
+    //       isIndexed: false,
+    //       error: (error as Error).message,
+    //       lastChecked: new Date().toISOString(),
+    //     };
+    //   } finally {
+    //     await page.close();
+    //   }
+    // };
 
-    // Process URLs in parallel with limited concurrency
-    const results = await Promise.all(
-      parsedUrls.map(url => checkUrl(url))
-    );
+    // // Process URLs in parallel with limited concurrency
+    // const results = await Promise.all(
+    //   parsedUrls.map(url => checkUrl(url))
+    // );
 
-    await browser.close();
-    browser = null;
+    // await browser.close();
+    // browser = null;
 
     res.status(statusCode.OK).json({
       status: true,
       message: "URLs indexing status checked successfully",
       data: {
-        results,
-        summary: {
-          totalUrls: results.length,
-          indexedUrls: results.filter(r => r.isIndexed).length,
-          notIndexedUrls: results.filter(r => !r.isIndexed).length,
-        },
+        // results,
+        // summary: {
+        //   totalUrls: results.length,
+        //   indexedUrls: results.filter(r => r.isIndexed).length,
+        //   notIndexedUrls: results.filter(r => !r.isIndexed).length,
+        // },
       },
     });
   } catch (error: any) {
-    if (browser) await browser.close();
+    // if (browser) await browser.close();
     console.error('Error in checkUrlIndexing:', error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error checking URLs indexing status",
+      error: error.message,
+    });
+  }
+};  
+
+export const updateIndexStatusByUrl = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { updates } = req.body;
+    
+    if (!Array.isArray(updates)) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Updates must be an array of {url, indexStatus} objects",
+      });
+      return;
+    }
+
+    const results = await updateIndexStatusByUrlRepo(updates);
+    
+    const allSuccessful = results.every(result => result.success);
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: allSuccessful ? "All index statuses updated successfully" : "Some updates failed",
+      data: results,
+    });
+    return;
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error updating index status",
       error: error.message,
     });
   }

@@ -11,7 +11,7 @@ import {
   formatInTheEndDate,
   getDateRange,
 } from "../../utils/utils";
-
+import { logger } from "../../config/logger.config";
 export const getCampaignsReportUserRepo = async (
   userId: string,
   campaignTypeId? : number,
@@ -147,94 +147,94 @@ export interface CampaignReport {
 export const getOneCampaignReportRepo = async (
   campaignId: number
 ): Promise<CampaignReport | null> => {
-  try {
-    const campaign = await Campaign.findOne({
-      where: {
-        id: campaignId,
-        isDeleted: false,
+  const campaign = await Campaign.findOne({
+    where: {
+      id: campaignId,
+      isDeleted: false,
+    },
+    attributes: ["id", "title", "name", "startDate", "endDate", "domain"],
+    include: [
+      {
+        model: Link,
+        as: "links",
+        where: { isDeleted: false },
+        required: false, // Include even if no links
       },
-      attributes: ["id", "title", "name", "startDate", "endDate", "domain"],
-      include: [
-        {
-          model: Link,
-          as: "links",
-          where: { isDeleted: false },
-          required: false, // Include even if no links
-        },
-        {
-          model: Keyword,
-          as: "keywords",
-          where: { isDeleted: false },
-          required: false, // Include even if no keywords
-        },
-      ],
-    });
+      {
+        model: Keyword,
+        as: "keywords",
+        where: { isDeleted: false },
+        required: false, // Include even if no keywords
+      },
+    ],
+  });
 
-    if (!campaign) {
-      return null; // Campaign not found or is deleted
-    }
-    const keywordsCampaign = campaign.keywords || [];
-    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
-    // Post data to Python API for each keyword and collect trafficCompleted
-    const updatedKeywords = await Promise.all(
-      keywordsCampaign.map(async (keyword: any) => {
-        const dataPython = {
-          keywordId: keyword.id,
-          time_start: formatDate(campaign.startDate),
-          time_end: formatDate(campaign.endDate),
-        };
-        const result = await baseApiPython(
-          "keyword/success-count-duration",
-          dataPython
-        );
-        return {
-          id : keyword.id,
-          campaignId: campaign.id,
-          name: keyword.name,
-          urls: keyword.urls,
-          distribution: keyword.distribution,
-          cost: keyword.cost,
-          isDeleted: keyword.isDeleted,
-          createdAt: keyword.createdAt,
-          updatedAt: keyword.updatedAt,
-          status: keyword.status,
-          traffic: keyword.traffic,
-          trafficCompleted: result.success_count, // Corrected typo
-        };
-      })
-    );
-    const keywordIds: { id: string }[] = keywordsCampaign.map(
-      (keyword: any) => ({
-        id: keyword.id,
-      })
-    );
-    let traffic: { date: string; traffic: number }[] = [];
-
-    if (campaign.startDate && campaign.endDate && keywordsCampaign.length > 0) {
-      traffic = await calculateTraffic(
-        keywordIds,
-        formatDate(campaign.startDate.toISOString()),
-        formatInTheEndDate(campaign.endDate.toISOString())
-      );
-    }
-    return {
-      campaignId: campaign.id,
-      campaignName: campaign.name,
-      campaignTitle: campaign.title,
-      campaignDomain: campaign.domain || "",
-      startDate: campaign.startDate || "",
-      endDate: campaign.endDate || "",
-      totalCost: metrics.totalCost || 0,
-      totalTraffic: metrics.totalTraffic || 0,
-      linkCount: campaign.links.length,
-      keywordCount: campaign.keywords.length,
-      links: campaign.links || [],
-      keywords: updatedKeywords, // Use updated keywords with trafficCompleted
-      traffic,
-    };
-  } catch (error) {
-    throw error;
+  if (!campaign) {
+    return null; // Campaign not found or is deleted
   }
+
+  const keywordsCampaign = campaign.keywords || [];
+  const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
+  
+  // Post data to Python API for each keyword and collect trafficCompleted
+  const updatedKeywords = await Promise.all(
+    keywordsCampaign.map(async (keyword: any) => {
+      const dataPython = {
+        keywordId: keyword.id,
+        time_start: formatDate(campaign.startDate),
+        time_end: formatDate(campaign.endDate),
+      };
+      const result = await baseApiPython(
+        "keyword/success-count-duration",
+        dataPython
+      );
+      return {
+        id: keyword.id,
+        campaignId: campaign.id,
+        name: keyword.name,
+        urls: keyword.urls,
+        distribution: keyword.distribution,
+        cost: keyword.cost,
+        isDeleted: keyword.isDeleted,
+        createdAt: keyword.createdAt,
+        updatedAt: keyword.updatedAt,
+        status: keyword.status,
+        traffic: keyword.traffic,
+        trafficCompleted: result.success_count,
+      };
+    })
+  );
+
+  const keywordIds: { id: string }[] = keywordsCampaign.map(
+    (keyword: any) => ({
+      id: keyword.id,
+    })
+  );
+  let traffic: { date: string; traffic: number }[] = [];
+
+  if (campaign.startDate && campaign.endDate && keywordsCampaign.length > 0) {
+    traffic = await calculateTraffic(
+      keywordIds,
+      formatDate(campaign.startDate.toISOString()),
+      formatInTheEndDate(campaign.endDate.toISOString())
+    );
+  }
+
+  return {
+    campaignId: campaign.id,
+    campaignName: campaign.name,
+    campaignTitle: campaign.title,
+    campaignDomain: campaign.domain || "",
+    startDate: campaign.startDate || "",
+    endDate: campaign.endDate || "",
+    totalCost: metrics.totalCost || 0,
+    totalTraffic: metrics.totalTraffic || 0,
+    linkCount: campaign.links.length,
+    keywordCount: campaign.keywords.length,
+    links: campaign.links || [],
+    keywords: updatedKeywords,
+    traffic,
+  };
 };
 
 export const getCampaignsReportAllRepo = async (
@@ -395,6 +395,7 @@ const calculateTraffic = async (
             traffic: Number(result.success_count) || 0,
           };
         } catch (apiError) {
+          logger.error("Error fetching traffic data:", apiError);
           return { date, traffic: 0 };
         }
       })

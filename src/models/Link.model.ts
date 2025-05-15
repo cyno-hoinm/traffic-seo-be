@@ -3,7 +3,7 @@ import { Campaign, sequelizeSystem } from "./index.model";
 import { LinkStatus } from "../enums/linkStatus.enum";
 import { LinkAttributes } from "../interfaces/Link.interface";
 import { DistributionType } from "../enums/distribution.enum";
-
+import { IndexStatus } from "../enums/indexStatus.enum";
 class Link extends Model<LinkAttributes> implements LinkAttributes {
   public id!: number;
   public campaignId!: number;
@@ -13,6 +13,7 @@ class Link extends Model<LinkAttributes> implements LinkAttributes {
   public traffic!: number;
   public anchorText!: string;
   public status!: LinkStatus;
+  public indexStatus!: IndexStatus;
   public cost!: number;
   public url!: string;
   public page!: string;
@@ -49,6 +50,11 @@ Link.init(
       type: DataTypes.STRING,
       allowNull: true,
       defaultValue: "",
+    },
+    indexStatus: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: IndexStatus.NOT_INDEXED,
     },
     traffic: {
       type: DataTypes.INTEGER,

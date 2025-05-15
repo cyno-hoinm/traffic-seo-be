@@ -6,6 +6,8 @@ import {
   updateLink,
   getLinkByCampaignId,
   checkUrlIndexing,
+  updateIndexStatusByUrl,
+
 } from "../../../controllers/coreController/link.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -729,4 +731,97 @@ router.get("/campaign/:id", authorization(["read-link"]), getLinkByCampaignId);
  */
 router.post("/check-indexing", authorization(["read-link"]), checkUrlIndexing);
 
+//use patch to update index status by url
+/**
+ * @swagger
+ * /links/update-index-status:
+ *   post:
+ *     summary: Update index status by URL
+ *     description: Update the index status of a link by its URL
+ *     tags: [Links]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               updates: 
+ *                 type: array
+ *                 description: The URLs to update and their new index status
+ *                 example: [
+ *                   {
+ *                     url: "https://example.com/page",
+ *                     indexStatus: "INDEXED"
+ *                   }
+ *                 ]
+ *     responses:
+ *       200:
+ *         description: Index status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Index status updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     url:
+ *                       type: string
+ *                       example: "https://example.com/page"
+ *                     indexStatus:
+ *                       type: string
+ *                       example: "INDEXED"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T07:00:00
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T07:00:00
+ *
+ *       400:
+ *         description: Bad request - Invalid URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid URL format
+ *                 error:
+ *                   type: string
+ *                   example: Invalid field
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error updating index status
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post("/update-index-status", authorization(["update-link"]), updateIndexStatusByUrl);
 export default router;

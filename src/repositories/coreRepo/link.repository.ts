@@ -5,6 +5,7 @@ import { ErrorType } from "../../types/Error.type";
 import { DistributionType } from "../../enums/distribution.enum";
 import statusCode from "../../constants/statusCode";
 import { LinkAttributes } from "../../interfaces/Link.interface";
+import { IndexStatus } from "../../enums/indexStatus.enum";
 
 export const getLinkListRepo = async (filters: {
   campaignId?: number;
@@ -192,6 +193,31 @@ export const getLinkByCampaignIdRepo = async (
     );
 
     return { links, total };
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};
+
+export const updateIndexStatusByUrlRepo = async (
+  updates: Array<{ url: string; indexStatus: IndexStatus }>
+) => {
+  try {
+    const results = [];
+    
+    for (const { url, indexStatus } of updates) {
+      const [affectedCount] = await Link.update(
+        { indexStatus },
+        { where: { link: url } }
+      );
+
+      results.push({
+        url,
+        success: affectedCount > 0,
+        message: affectedCount > 0 ? "Updated successfully" : `Link with url ${url} not found`
+      });
+    }
+
+    return results;
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
