@@ -18,7 +18,7 @@ import { ResponseType } from "../../types/Response.type";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { ImageType } from "../../enums/imageType.enum";
 import { createNewImage } from "../../repositories/commonRepo/image.repository";
-import { uuidToNumber, uuIDv4 } from "../../utils/generate";
+
 import Image from "../../models/Image.model";
 
 // Create a new user
@@ -440,7 +440,6 @@ export const uploadUserImage = async (
       "base64"
     )}`;
     const newImage = await createNewImage({
-      id: uuidToNumber(uuIDv4()),
       imageBase64: base64Image,
       type: ImageType.USER,
     });

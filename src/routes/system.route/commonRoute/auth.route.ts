@@ -14,7 +14,7 @@ import { getUserImage } from "../../../controllers/commonController/user.control
 const router = express.Router();
 /**
  * @swagger
- * /image/{id}:
+ * /auth/image/{id}:
  *   get:
  *     summary: Get a user image by ID
  *     tags: [Image]
