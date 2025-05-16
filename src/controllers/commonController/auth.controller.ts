@@ -119,6 +119,7 @@ export const getMe = async (
     const checkUserUsedPaymentMethodGift = await checkUserUsedPaymentMethodGiftRepo(
       user.id
     );
+    const getUser = await findUserByIdRepo(user.id)
     // Parse user ID safely
     const userId =
       typeof user.id === "string" ? parseInt(user.id, 10) : user.id;
@@ -151,7 +152,13 @@ export const getMe = async (
       status: true,
       message: "User retrieved successfully",
       data: {
-        ...user,
+        id: getUser?.id,
+        username: getUser?.username,
+        userImage : `${process.env.DEV_URL}/api/auth/image/${getUser?.imageId}`,  
+        email: getUser?.email,
+        createdAt: getUser?.createdAt,
+        updatedAt: getUser?.updatedAt,
+        isDeleted: getUser?.isDeleted,
         trialStatus,
         permissions: permissions,
         walletId: wallet?.id,
