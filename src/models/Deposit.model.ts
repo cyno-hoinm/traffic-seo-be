@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem, User, Voucher, PaymentMethod } from "./index.model";
+import { sequelizeSystem, User, Voucher, PaymentMethod, Package } from "./index.model";
 import { DepositStatus } from "../enums/depositStatus.enum";
 import { DepositAttributes } from "../interfaces/Deposit.interface";
 
@@ -63,10 +63,13 @@ Deposit.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    packageName: {
-      type: DataTypes.STRING,
+    packageId: {
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "NOT_PROVIDED",
+      references: {
+        model: Package,
+        key: "id",
+      },
     },
     acceptedBy: {
       type: DataTypes.STRING,

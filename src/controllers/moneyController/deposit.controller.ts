@@ -18,7 +18,7 @@ import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
 import { notificationType } from "../../enums/notification.enum";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
-import { getPackageByNameRepo } from "../../repositories/moneyRepo/packge.deposit";
+import { getPackageByIdRepo, getPackageByNameRepo } from "../../repositories/moneyRepo/packge.deposit";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -82,11 +82,10 @@ export const getDepositList = async (
     }
 
     const { deposits, total } = await getDepositListRepo(filters);
-    res.status(statusCode.OK).json({
-      status: true,
-      message: "Deposits retrieved successfully",
-      data: {
-        deposits: deposits.map((deposit: DepositAttributes) => ({
+    const depositsWithPackages = await Promise.all(
+      deposits.map(async (deposit: DepositAttributes) => {
+        const packages = deposit.packageId ? await getPackageByIdRepo(deposit.packageId) : null;  
+        return {
           id: deposit.id,
           userId: deposit.userId,
           username: deposit.users?.username,
@@ -95,12 +94,21 @@ export const getDepositList = async (
           transactions: deposit.transactions,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
-          packageName: deposit.packageName,
+          packageId: deposit.packageId,
+          packageName: packages?.name,
           status: deposit.status,
           acceptedBy: deposit.acceptedBy,
           createdAt: deposit.createdAt,
           updatedAt: deposit.updatedAt,
-        })),
+        };
+      })
+    );
+
+    res.status(statusCode.OK).json({
+      status: true,
+      message: "Deposits retrieved successfully",
+      data: {
+        deposits: depositsWithPackages,
         total,
       },
     });

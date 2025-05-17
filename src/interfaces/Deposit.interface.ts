@@ -1,4 +1,5 @@
 import { DepositStatus } from "../enums/depositStatus.enum";
+import { PackageAttributes } from "./Package.interface";
 import { PaymentMethodAttributes } from "./PaymentMethod.interface";
 import { TransactionAttributes } from "./Transaction.interface";
 import { UserAttributes } from "./User.interface";
@@ -14,7 +15,8 @@ export interface DepositAttributes {
   voucherId: number | null;
   amount: number;
   status: DepositStatus;
-  packageName: string;
+  packageId?: number;
+  packages?: PackageAttributes;
   acceptedBy?: string;
   createdBy?: number;
   isDeleted?: boolean;

@@ -43,7 +43,7 @@ export async function handlePayOsWebhook(
       await createDepositByPackageRepo({
         createdBy: parseData.createdBy,
         userId: parseData.userId,
-        packageName: pkg.name,
+        packageId: parseData.packageId,
         orderId: returnData.orderCode.toString(),
         status: DepositStatus.COMPLETED,
       });

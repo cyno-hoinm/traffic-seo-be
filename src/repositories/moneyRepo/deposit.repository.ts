@@ -10,7 +10,7 @@ import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { getConfigByNameRepo } from "../commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
 import { getVoucherByIdRepo } from "./voucher.repository";
-import { getPackageByNameRepo } from "./packge.deposit";
+import { getPackageByIdRepo } from "./packge.deposit";
 export const getDepositListRepo = async (filters: {
   userId?: number;
   start_date?: Date;
@@ -122,7 +122,7 @@ export const createDepositRepo = async (data: {
           paymentMethodId: data.paymentMethodId,
           orderId: data.orderId,
           acceptedBy: "system",
-          packageName: "NOT_PROVIDED",
+          packageId: undefined,
         },
         { transaction: t }
       );
@@ -337,7 +337,7 @@ export const checkUserUsedPaymentMethodGiftRepo = async (
 export const createDepositByPackageRepo = async (data: {
   createdBy: number;
   userId: number;
-  packageName: string;
+  packageId: number;
   orderId: string;
   status: DepositStatus;
 }): Promise<DepositAttributes> => {
@@ -355,11 +355,6 @@ export const createDepositByPackageRepo = async (data: {
         );
       }
 
-      // Get voucher and wallet
-      const pkg = await getPackageByNameRepo(data.packageName);
-      if (!pkg) {
-        throw new ErrorType("NotFoundError", "Package not found");
-      }
       const wallet = await Wallet.findOne({
         where: { userId: data.userId },
         transaction: t,
@@ -367,7 +362,10 @@ export const createDepositByPackageRepo = async (data: {
       if (!wallet) {
         throw new ErrorType("NotFoundError", "Wallet not found for this user");
       }
-
+      const pkg = await getPackageByIdRepo(data.packageId);
+      if (!pkg) {
+        throw new ErrorType("NotFoundError", "Package not found");
+      }
       // Create deposit
       const newDeposit = await Deposit.create(
         {
@@ -379,12 +377,12 @@ export const createDepositByPackageRepo = async (data: {
           paymentMethodId: 4,
           orderId: data.orderId,
           acceptedBy: "system",
-          packageName: pkg?.name || "NOT_PROVIDED",
+          packageId: data.packageId,
         },
         { transaction: t }
       );
 
-      const transactionAmount = (pkg?.bonus || 0);
+      const transactionAmount = pkg?.bonus || 0;
 
       // Create transaction and notification
       await createTransactionRepo(
