@@ -5,6 +5,7 @@ import {
   getDepositById,
   getDepositByOrderId,
   createTrialForUser,
+  createDepositByPackage,
 } from "../../../controllers/moneyController/deposit.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -256,9 +257,7 @@ router.post("/search", authorization(["search-deposits"]), getDepositList);
  *                   type: string
  *                   example: Wallet not found for this user
  */
-router.post("/",
-  authorization(["create-deposit"]),
-  createDeposit);
+router.post("/", authorization(["create-deposit"]), createDeposit);
 
 /**
  * @swagger
@@ -339,7 +338,7 @@ router.post("/",
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/:id",authorization(["read-deposit-admin"]), getDepositById);
+router.get("/:id", authorization(["read-deposit-admin"]), getDepositById);
 /**
  * @swagger
  * /deposits/order/{orderId}:
@@ -419,7 +418,11 @@ router.get("/:id",authorization(["read-deposit-admin"]), getDepositById);
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/order/:orderId", authorization(["read-deposit-user"]),getDepositByOrderId);
+router.get(
+  "/order/:orderId",
+  authorization(["read-deposit-user"]),
+  getDepositByOrderId
+);
 
 /**
  * @swagger
@@ -498,5 +501,91 @@ router.get("/order/:orderId", authorization(["read-deposit-user"]),getDepositByO
  *                   example: Error creating trial
  */
 router.post("/trial", authorization(["create-deposit"]), createTrialForUser);
+
+/**
+ * @swagger
+ * /deposits/package:
+ *   post:
+ *     summary: Create a deposit by package
+ *     description: Creates a deposit by package with PENDING status, requires package existence.
+ *     tags: [Deposits]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - packageName
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user
+ *                 example: 1
+ *               packageName:
+ *                 type: string
+ *                 description: Name of the package
+ *                 example: "Package 1"
+ *     responses:
+ *       200:
+ *         description: Deposit created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Deposit created successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     checkoutUrl:
+ *                       type: string
+ *                       example: "https://example.com/checkout"
+ *       400:
+ *         description: Bad request - Missing or invalid fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Missing or invalid field
+ *                 error:
+ *                   type: string
+ *                   example: Invalid field
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Error creating deposit
+ *                 error:
+ *                   type: string
+ *                   example: Internal server error
+ */
+router.post(
+  "/package",
+  authorization(["create-deposit"]),
+  createDepositByPackage
+);
 
 export default router;

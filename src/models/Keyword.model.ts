@@ -2,7 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { Campaign, sequelizeSystem } from "./index.model"; // Assuming this points to models/index.ts
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { DistributionType } from "../enums/distribution.enum";
-import { parseUrlsStringToArray } from "../utils/utils";
+import { logger } from "../config/logger.config";
 
 class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
@@ -46,6 +46,7 @@ Keyword.init(
           const parsedValue = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
           return parsedValue;
         } catch (error) {
+          logger.error(error);
           return [];
         }
       },

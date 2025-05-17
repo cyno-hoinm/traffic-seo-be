@@ -5,7 +5,7 @@ import {
   getDepositByIdRepo,
   getDepositByOrderIdRepo,
   createDepositRepo,
-  checkUserUsedPaymentMethodGiftRepo
+  checkUserUsedPaymentMethodGiftRepo,
 } from "../../repositories/moneyRepo/deposit.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { DepositAttributes } from "../../interfaces/Deposit.interface";
@@ -18,6 +18,7 @@ import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
 import { notificationType } from "../../enums/notification.enum";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
+import { getPackageByNameRepo } from "../../repositories/moneyRepo/packge.deposit";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -94,6 +95,7 @@ export const getDepositList = async (
           transactions: deposit.transactions,
           voucherId: deposit.voucherId,
           amount: deposit.amount,
+          packageName: deposit.packageName,
           status: deposit.status,
           acceptedBy: deposit.acceptedBy,
           createdAt: deposit.createdAt,
@@ -437,9 +439,8 @@ export const createTrialForUser = async (
       return;
     }
 
-    const checkUserUsedPaymentMethodGift = await checkUserUsedPaymentMethodGiftRepo(
-      userId
-    );
+    const checkUserUsedPaymentMethodGift =
+      await checkUserUsedPaymentMethodGiftRepo(userId);
 
     if (checkUserUsedPaymentMethodGift) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -475,7 +476,6 @@ export const createTrialForUser = async (
       type: notificationType.GIFT,
     });
 
-
     res.status(statusCode.OK).json({
       status: true,
       message: "Successfully created trial for user",
@@ -488,4 +488,45 @@ export const createTrialForUser = async (
       error: error.message,
     });
   }
+};
+
+export const createDepositByPackage = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  const { userId, packageName } = req.body;
+  const orderId = uuIDv4();
+  const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
+  const orderCodeUnique = uuidToNumber(orderId);
+  const pkg = await getPackageByNameRepo(packageName);
+  if (!pkg) {
+    res.status(statusCode.BAD_REQUEST).json({
+      status: false,
+      message: "Package not found",
+      error: "Package not found",
+    });
+  }
+  const body: any = {
+    orderCode: orderCodeUnique, // Use deposit ID as orderCode
+    amount: Math.floor(pkg?.price || 0),
+    description: `u${userId}c${createdBy}p${pkg?.id}`,
+    items: [
+      {
+        name: "Charge money",
+        quantity: 1,
+        price: Math.floor(pkg?.price || 0),
+      },
+    ],
+    cancelUrl: `${process.env.FRONT_END_URL}/en/deposit/failed`,
+    returnUrl: `${process.env.FRONT_END_URL}/en/deposit/${orderCodeUnique}`,
+  };
+  const response = await payOSPaymentMethod.createPaymentLink(body);
+  res.status(statusCode.CREATED).json({
+    status: true,
+    message: "Create link payment VietQR successfully",
+    data: {
+      checkoutUrl: response.checkoutUrl,
+    },
+  });
+  return;
 };

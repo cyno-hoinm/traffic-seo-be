@@ -10,7 +10,7 @@ import { DepositAttributes } from "../../interfaces/Deposit.interface";
 import { getConfigByNameRepo } from "../commonRepo/config.repository";
 import { ConfigApp } from "../../constants/config.constants";
 import { getVoucherByIdRepo } from "./voucher.repository";
-
+import { getPackageByNameRepo } from "./packge.deposit";
 export const getDepositListRepo = async (filters: {
   userId?: number;
   start_date?: Date;
@@ -122,6 +122,7 @@ export const createDepositRepo = async (data: {
           paymentMethodId: data.paymentMethodId,
           orderId: data.orderId,
           acceptedBy: "system",
+          packageName: "NOT_PROVIDED",
         },
         { transaction: t }
       );
@@ -331,4 +332,75 @@ export const checkUserUsedPaymentMethodGiftRepo = async (
   } catch {
     return false;
   }
+};
+
+export const createDepositByPackageRepo = async (data: {
+  createdBy: number;
+  userId: number;
+  packageName: string;
+  orderId: string;
+  status: DepositStatus;
+}): Promise<DepositAttributes> => {
+  return await sequelizeSystem.transaction(async (t: Transaction) => {
+    try {
+      // Validate existing deposit
+      const existingDeposit = await Deposit.findOne({
+        where: { orderId: data.orderId },
+        transaction: t,
+      });
+      if (existingDeposit) {
+        throw new ErrorType(
+          "DuplicateOrderIdError",
+          `Deposit with orderId ${data.orderId} already exists`
+        );
+      }
+
+      // Get voucher and wallet
+      const pkg = await getPackageByNameRepo(data.packageName);
+      if (!pkg) {
+        throw new ErrorType("NotFoundError", "Package not found");
+      }
+      const wallet = await Wallet.findOne({
+        where: { userId: data.userId },
+        transaction: t,
+      });
+      if (!wallet) {
+        throw new ErrorType("NotFoundError", "Wallet not found for this user");
+      }
+
+      // Create deposit
+      const newDeposit = await Deposit.create(
+        {
+          userId: data.userId,
+          voucherId: null,
+          amount: pkg?.price || 0,
+          status: data.status,
+          createdBy: data.createdBy,
+          paymentMethodId: 4,
+          orderId: data.orderId,
+          acceptedBy: "system",
+          packageName: pkg?.name || "NOT_PROVIDED",
+        },
+        { transaction: t }
+      );
+
+      const transactionAmount = (pkg?.bonus || 0);
+
+      // Create transaction and notification
+      await createTransactionRepo(
+        {
+          walletId: wallet.id,
+          amount: transactionAmount,
+          status: TransactionStatus.COMPLETED,
+          type: TransactionType.DEPOSIT,
+          referenceId: String(newDeposit.id),
+        },
+        t
+      );
+
+      return newDeposit;
+    } catch (error: any) {
+      throw new ErrorType(error.name, error.message, error.code);
+    }
+  });
 };

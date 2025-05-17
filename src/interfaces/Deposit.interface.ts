@@ -11,9 +11,10 @@ export interface DepositAttributes {
   paymentMethodId?: number;
   paymentMethods?: PaymentMethodAttributes;
   transactions?: TransactionAttributes;
-  voucherId: number;
+  voucherId: number | null;
   amount: number;
   status: DepositStatus;
+  packageName: string;
   acceptedBy?: string;
   createdBy?: number;
   isDeleted?: boolean;

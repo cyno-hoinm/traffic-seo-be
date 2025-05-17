@@ -1,82 +1,49 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelizeSystem, User, Voucher, PaymentMethod } from "./index.model";
-import { DepositStatus } from "../enums/depositStatus.enum";
-import { DepositAttributes } from "../interfaces/Deposit.interface";
+import { sequelizeSystem } from "./index.model";
+import { PackageAttributes } from "../interfaces/Package.interface";
+import { PackageType } from "../enums/packageType.enum";
 
-class Deposit extends Model<DepositAttributes> implements DepositAttributes {
+class Package extends Model<PackageAttributes> implements PackageAttributes {
   public id!: number;
-  public orderId!: string;
-  public userId!: number;
-  public voucherId!: number;
-  public paymentMethodId!: number;
-  public amount!: number;
-  public status!: DepositStatus;
-  public acceptedBy?: string;
-  public createdBy?: number;
+  public name!: string;
+  public description!: string;
+  public type!: PackageType;
+  public price!: number;
+  public bonus!: number;
   public isDeleted!: boolean;
-  public packageName!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-Deposit.init(
+Package.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    orderId: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true, 
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: User,
-        key: "id",
-      },
-    },
-    voucherId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: Voucher,
-        key: "id",
-      },
-    },
-    paymentMethodId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: PaymentMethod,
-        key: "id",
-      },
-    },
-    amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    status: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    packageName: {
+    description: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    type: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: "NOT_PROVIDED",
+      defaultValue: PackageType.CHARGE,
     },
-    acceptedBy: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    createdBy: {
+    price: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
-     isDeleted: {
+    bonus: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    isDeleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
@@ -106,10 +73,10 @@ Deposit.init(
   },
   {
     sequelize: sequelizeSystem,
-    modelName: "Deposit",
-    tableName: "deposits",
+    modelName: "Package",
+    tableName: "packages",
     timestamps: true,
   }
 );
 
-export default Deposit;
+export default Package;

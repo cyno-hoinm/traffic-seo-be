@@ -161,3 +161,27 @@ export const isOwn = async (
     });
   }
 };
+export const isAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response<ResponseType<null>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const roleId = req.data?.role.id;
+    if (roleId !== 1) {
+      res.status(statusCode.FORBIDDEN).json({
+        status: false,
+        message: "You are not authorized to access this resource",
+      });
+      return;
+    }else{  
+      next();
+    }
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error checking admin status",
+      error: error.message,
+    });
+  }
+}

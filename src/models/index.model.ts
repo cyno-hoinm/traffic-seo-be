@@ -17,7 +17,7 @@ import CampaignType from "./CampaignType.model";
 import Config from "./Config.model";
 import Agency from "./Agency.model"
 import Image from "./Image.model"
-
+import Package from "./Package.model"
 // Initialize models (this ensures they’re loaded)
 export const models = {
   Role,
@@ -36,7 +36,8 @@ export const models = {
   PaymentMethod,
   CampaignType,
   Config,
-  Image
+  Image,
+  Package
 };
 
 
@@ -132,5 +133,6 @@ export {
   Config,
   Agency,
   Image,
+  Package,
   sequelizeSystem,
 };

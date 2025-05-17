@@ -15,6 +15,7 @@ import botRoute from "./botRoute/bot.route";
 import oxapayRoute from "./moneyRoute/oxapay.route"
 import configRoute from "./commonRoute/config.route"
 import agencyRoute from "./coreRoute/agency.route"
+import packageRoute from "./moneyRoute/package.route"
 // Common routes
 import authRoute from "./commonRoute/auth.route";
 import notificationRoute from "./commonRoute/notification.route";
@@ -42,5 +43,6 @@ export const protectedRoutes = {
   "/bot" : botRoute,
   "/oxapay": oxapayRoute,
   "/configs": configRoute,
-  "/agencies": agencyRoute
+  "/agencies": agencyRoute,
+  "/packages": packageRoute
 };
