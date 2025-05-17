@@ -519,16 +519,16 @@ router.post("/trial", authorization(["create-deposit"]), createTrialForUser);
  *             type: object
  *             required:
  *               - userId
- *               - packageName
+ *               - packageId
  *             properties:
  *               userId:
  *                 type: integer
  *                 description: ID of the user
  *                 example: 1
- *               packageName:
- *                 type: string
- *                 description: Name of the package
- *                 example: "Package 1"
+ *               packageId:
+ *                 type: integer
+ *                 description: ID of the package
+ *                 example: 1 
  *     responses:
  *       200:
  *         description: Deposit created successfully

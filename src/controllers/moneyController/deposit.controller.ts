@@ -18,7 +18,7 @@ import { oxapayConfig } from "../../config/oxapay.config";
 import { generateInvoice } from "../../services/oxapay.service";
 import { notificationType } from "../../enums/notification.enum";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
-import { getPackageByIdRepo, getPackageByNameRepo } from "../../repositories/moneyRepo/packge.deposit";
+import { getPackageByIdRepo } from "../../repositories/moneyRepo/packge.deposit";
 
 // Get deposit list with filters and pagination
 export const getDepositList = async (
@@ -502,11 +502,11 @@ export const createDepositByPackage = async (
   req: AuthenticatedRequest,
   res: Response<ResponseType<any>>
 ): Promise<void> => {
-  const { userId, packageName } = req.body;
+  const { userId, packageId } = req.body;
   const orderId = uuIDv4();
   const createdBy = req.data?.id || 0; // Get createdBy from authenticated user
   const orderCodeUnique = uuidToNumber(orderId);
-  const pkg = await getPackageByNameRepo(packageName);
+  const pkg = await getPackageByIdRepo(packageId);
   if (!pkg) {
     res.status(statusCode.BAD_REQUEST).json({
       status: false,
