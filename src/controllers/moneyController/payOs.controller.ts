@@ -44,23 +44,21 @@ export async function handlePayOsWebhook(
           .status(statusCode.OK)
           .json({ status: true, message: "Webhook processed successfully" });
         return;
-      } else {
-        // Create deposit
-        await createDepositRepo({
-          createdBy: parseData.createdBy,
-          amount: returnData.amount,
-          orderId: returnData.orderCode.toString(),
-          paymentMethodId: 3,
-          status: DepositStatus.COMPLETED,
-          userId: parseData.userId,
-          voucherId: parseData.voucherId,
-        });
-
-        res
-          .status(statusCode.OK)
-          .json({ status: true, message: "Webhook processed successfully" });
-        return;
       }
+    } else {
+      await createDepositRepo({
+        createdBy: parseData.createdBy,
+        amount: returnData.amount,
+        orderId: returnData.orderCode.toString(),
+        paymentMethodId: 3,
+        status: DepositStatus.COMPLETED,
+        userId: parseData.userId,
+        voucherId: parseData.voucherId,
+      });
+      res
+        .status(statusCode.OK)
+        .json({ status: true, message: "Webhook processed successfully" });
+      return;
     }
   } catch (error) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
