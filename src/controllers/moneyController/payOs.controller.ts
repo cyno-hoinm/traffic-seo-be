@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import { PayOsType } from "../../types/PayOs.type";
 import { parseChargeMoneyString } from "../../utils/utils";
 import {
-  createDepositByPackageRepo,
+  // createDepositByPackageRepo,
   createDepositRepo,
 } from "../../repositories/moneyRepo/deposit.repository";
 import { DepositStatus } from "../../enums/depositStatus.enum";
 import statusCode from "../../constants/statusCode";
-import { getPackageByIdRepo } from "../../repositories/moneyRepo/packge.deposit";
+// import { getPackageByIdRepo } from "../../repositories/moneyRepo/packge.deposit";
 export async function handlePayOsWebhook(
   req: Request,
   res: Response
@@ -27,31 +27,22 @@ export async function handlePayOsWebhook(
 
     // Parse description
     const parseData = parseChargeMoneyString(returnData.description);
-    if (
-      parseData.createdBy == null ||
-      parseData.userId == null ||
-      parseData.voucherId == null ||
-      parseData.packageId == null
-    ) {
-      res
-        .status(statusCode.UNAUTHORIZED)
-        .json({ status: false, message: "Invalid value" });
-      return;
-    }
-    const pkg = await getPackageByIdRepo(parseData.packageId);
-    if (pkg) {
-      await createDepositByPackageRepo({
-        createdBy: parseData.createdBy,
-        userId: parseData.userId,
-        packageId: parseData.packageId,
-        orderId: returnData.orderCode.toString(),
-        status: DepositStatus.COMPLETED,
-      });
-      res
-        .status(statusCode.OK)
-        .json({ status: true, message: "Webhook processed successfully" });
-      return;
-    } else {
+    console.log(parseData);
+    // const pkg = await getPackageByIdRepo(parseData.packageId);
+    // if (pkg) {
+    //   await createDepositByPackageRepo({
+    //     createdBy: parseData.createdBy,
+    //     userId: parseData.userId,
+    //     packageId: pkg.id,
+    //     orderId: returnData.orderCode.toString(),
+    //     status: DepositStatus.COMPLETED,
+    //   });
+    //   res
+    //     .status(statusCode.OK)
+    //     .json({ status: true, message: "Webhook processed successfully" });
+    //   return;
+    // } else 
+    {
       // Create deposit
       await createDepositRepo({
         createdBy: parseData.createdBy,
@@ -62,6 +53,7 @@ export async function handlePayOsWebhook(
         userId: parseData.userId,
         voucherId: parseData.voucherId,
       });
+
       res
         .status(statusCode.OK)
         .json({ status: true, message: "Webhook processed successfully" });
