@@ -46,7 +46,7 @@ export const loginUser = async (
 
     // Fetch user with role using the repository
     const user = await findUserByEmailRepo(email);
-    console.log(user);
+    // console.log(user);
     if (user?.isActive === false) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,

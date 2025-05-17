@@ -9,6 +9,7 @@ class Image extends Model<ImageAttributes> implements ImageAttributes {
   public type!: ImageType;
   public imageUrl!: string;
   public imageBase64!: string;
+  public createdBy!: number;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
@@ -33,6 +34,11 @@ Image.init(
       type: DataTypes.TEXT,
       allowNull: false,
       defaultValue: "",
+    },
+    createdBy: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     createdAt: {
       type: DataTypes.DATE,

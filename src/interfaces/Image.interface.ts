@@ -5,6 +5,7 @@ export interface ImageAttributes {
   type: ImageType;
   imageUrl?: string;
   imageBase64: string;
+  createdBy?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

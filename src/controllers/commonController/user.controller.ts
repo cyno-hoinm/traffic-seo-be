@@ -17,7 +17,10 @@ import statusCode from "../../constants/statusCode";
 import { ResponseType } from "../../types/Response.type";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { ImageType } from "../../enums/imageType.enum";
-import { createNewImage } from "../../repositories/commonRepo/image.repository";
+import {
+  createNewImage,
+  getAllReportImages,
+} from "../../repositories/commonRepo/image.repository";
 
 import Image from "../../models/Image.model";
 
@@ -419,11 +422,12 @@ export const deleteUser = async (
 };
 
 export const uploadUserImage = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const userId = req.data?.id;
     const file = req.file;
 
     if (!file) {
@@ -442,6 +446,7 @@ export const uploadUserImage = async (
     const newImage = await createNewImage({
       imageBase64: base64Image,
       type: ImageType.USER,
+      createdBy: Number(userId),
     });
     // Update user with new image
     const updatedUser = await updateUserRepo(Number(id), {
@@ -487,7 +492,9 @@ export const getUserImage = async (
     }
 
     // Extract base64 string from data URI
-    const base64Match = record.imageBase64.match(/^data:image\/[a-z]+;base64,(.+)$/);
+    const base64Match = record.imageBase64.match(
+      /^data:image\/[a-z]+;base64,(.+)$/
+    );
     if (!base64Match) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -512,4 +519,30 @@ export const getUserImage = async (
       error: error.message,
     });
   }
+};
+
+export const getUserReportImage = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const userId = req.data?.id;
+  const roleId = req.data?.role.id;
+  let images;
+  if (roleId === 1) {
+    images = await getAllReportImages();
+  } else {
+    images = await getAllReportImages(userId);
+  }
+  const imageData = images.map((image: any) => {
+    return {
+      id: image.id,
+      imageUrl: `${process.env.DEV_URL}/api/auth/image/${image.id}`,
+      type: image.type,
+    };
+  });
+  res.status(statusCode.OK).json({
+    status: true,
+    message: "Report images retrieved successfully",
+    data: imageData,
+  });
 };

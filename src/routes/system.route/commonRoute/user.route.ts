@@ -4,6 +4,7 @@ import {
   deleteUser,
   getAllUsers,
   getUserById,
+  getUserReportImage,
   searchUserList,
   updateUser,
   updateUserOneField,
@@ -11,7 +12,7 @@ import {
 } from "../../../controllers/commonController/user.controller";
 import { authorization } from "../../../middleware/auth";
 import { upload } from "../../../middleware/upload.middleware";
-
+import { createImageController } from "../../../controllers/commonController/image.controller";
 const router = express.Router();
 
 /**
@@ -153,7 +154,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/search", authorization(["search-users"]),searchUserList);
+router.post("/search", authorization(["search-users"]), searchUserList);
 
 /**
  * @swagger
@@ -245,7 +246,7 @@ router.post("/search", authorization(["search-users"]),searchUserList);
  *                   type: string
  *                   example: Internal server error
  */
-router.post("/",authorization(["create-user"]), createUser);
+router.post("/", authorization(["create-user"]), createUser);
 
 /**
  * @swagger
@@ -321,7 +322,7 @@ router.post("/",authorization(["create-user"]), createUser);
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/:id", authorization(["read-user"]),getUserById);
+router.get("/:id", authorization(["read-user"]), getUserById);
 
 /**
  * @swagger
@@ -370,7 +371,7 @@ router.get("/:id", authorization(["read-user"]),getUserById);
  *                   type: string
  *                   example: Internal server error
  */
-router.get("/", authorization(["read-users"]),getAllUsers);
+router.get("/", authorization(["read-users"]), getAllUsers);
 
 /**
  * @swagger
@@ -480,7 +481,7 @@ router.get("/", authorization(["read-users"]),getAllUsers);
  *                   type: string
  *                   example: Internal server error
  */
-router.put("/:id",authorization(["update-user"]), updateUser);
+router.put("/:id", authorization(["update-user"]), updateUser);
 
 /**
  * @swagger
@@ -581,7 +582,7 @@ router.put("/:id",authorization(["update-user"]), updateUser);
  *                   type: string
  *                   example: Internal server error
  */
-router.patch("/:id",authorization(["update-user"]), updateUserOneField);
+router.patch("/:id", authorization(["update-user"]), updateUserOneField);
 
 /**
  * @swagger
@@ -640,7 +641,7 @@ router.patch("/:id",authorization(["update-user"]), updateUserOneField);
  *                   type: string
  *                   example: Internal server error
  */
-router.delete("/:id",authorization(["delete-user"]), deleteUser);
+router.delete("/:id", authorization(["delete-user"]), deleteUser);
 
 /**
  * @swagger
@@ -671,15 +672,84 @@ router.delete("/:id",authorization(["delete-user"]), deleteUser);
  *       200:
  *         description: User image uploaded successfully
  *         content:
- *           application/json:    
+ *           application/json:
  *             schema:
  *               type: object
  *               properties:
  *                 message:
  *                   type: string
  *                   example: User image uploaded successfully
- */       
-router.post("/image/:id", authorization(["update-user"]), upload.single('image'), uploadUserImage);
+ */
+router.post(
+  "/image/:id",
+  authorization(["update-user"]),
+  upload.single("image"),
+  uploadUserImage
+);
+
+/**
+ * @swagger
+ * /users/upload-report:
+ *   post:
+ *     summary: Upload a user image by ID
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The user's profile image (JPEG, PNG, or GIF)
+ *     responses:
+ *       200:
+ *         description: User image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User image uploaded successfully
+ */
+router.post(
+  "/upload-report",
+  authorization(["update-user"]),
+  upload.single("image"),
+  createImageController
+);
+
+/**
+ * @swagger
+ * /users/get/report-images:
+ *   get:
+ *     summary: Get all report images
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: List of all report images
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   imageUrl:
+ *                     type: string
+ *                     example: https://example.com/image.jpg
+ *                   type:
+ *                     type: string
+ *                     example: report
+ */
+router.get("/get/report-images", getUserReportImage);
 
 
 
