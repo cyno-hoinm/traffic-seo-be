@@ -13,8 +13,8 @@ export const configureMiddleware = (app: Application) => {
   // Body parsing middleware
 
   app.use(compression());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Security middleware
   app.use(helmet());
