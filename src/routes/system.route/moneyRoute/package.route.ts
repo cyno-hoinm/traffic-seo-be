@@ -7,7 +7,7 @@ import {
   deletePackage,
   searchPackage,
 } from "../../../controllers/moneyController/package.controller";
-import { isAdmin } from "../../../middleware/auth";
+import { authorization } from "../../../middleware/auth";
 
 const router = express.Router();
 
@@ -107,7 +107,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.get("/", isAdmin, getAllPackageList);
+router.get("/", authorization(["read-package"]), getAllPackageList);
 
 /**
  * @swagger
@@ -145,7 +145,7 @@ router.get("/", isAdmin, getAllPackageList);
  *       500:
  *         description: Internal server error
  */
-router.get("/:id", isAdmin, getPackageById);
+router.get("/:id", authorization(["read-package"]), getPackageById);
 
 /**
  * @swagger
@@ -182,7 +182,7 @@ router.get("/:id", isAdmin, getPackageById);
  *       500:
  *         description: Internal server error
  */
-router.post("/", isAdmin, createPackage);
+router.post("/", authorization(["create-package"]), createPackage);
 
 /**
  * @swagger
@@ -226,7 +226,7 @@ router.post("/", isAdmin, createPackage);
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", isAdmin, updatePackage);
+router.put("/:id", authorization(["update-package"]), updatePackage);
 
 /**
  * @swagger
@@ -262,7 +262,7 @@ router.put("/:id", isAdmin, updatePackage);
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", isAdmin, deletePackage);
+router.delete("/:id", authorization(["delete-package"]), deletePackage);
 
 /**
  * @swagger
@@ -317,6 +317,6 @@ router.delete("/:id", isAdmin, deletePackage);
  *       500:
  *         description: Internal server error
  */
-router.get("/search", isAdmin, searchPackage);
+router.get("/search", authorization(["search-package"]), searchPackage);
 
 export default router;
