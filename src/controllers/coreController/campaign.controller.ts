@@ -204,6 +204,7 @@ export const createCampaign = async (
 
     // Validate dates
     const { start, end, currentDate } = validateDates(startDate, endDate);
+    // console.log(start, end, currentDate);
     if (!start || !end) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
@@ -223,10 +224,9 @@ export const createCampaign = async (
     }
 
     // Calculate costs and validate wallet
-    const { totalCost, totalTraffic } = await calculateCampaignCosts(
-      keywords,
-      links
-    );
+    const { totalCost, totalTraffic, campaignDurationInDays } =
+      await calculateCampaignCosts(keywords, links, start, end);
+    // console.log(totalCost, totalTraffic, keywordTotalCost, totalLinkCost);
     const isValidWallet = await compareWalletAmount(userId, totalCost);
     if (!isValidWallet) {
       res.status(statusCode.BAD_REQUEST).json({
@@ -258,6 +258,7 @@ export const createCampaign = async (
       links,
       currentDate,
       totalCost,
+      campaignDurationInDays,
     });
 
     // Fetch campaign with associations
@@ -339,22 +340,40 @@ const validateDates = (startDate: string, endDate: string) => {
   };
 };
 
-const calculateCampaignCosts = async (keywords: any[], links: any[]) => {
-  const keywordTrafficCost = await getConfigValue(
-    ConfigApp.KEYWORD_TRAFFIC_COST
-  );
-  const linkTrafficCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+export const calculateCampaignCosts = async (
+  keywords: any[],
+  links: any[],
+  startDate: Date,
+  endDate: Date
+) => {
+  const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
+  const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
 
+  const keywordCostlist = keywords.map((keyword) => {
+    return keyword.traffic * keywordCost * keyword.timeOnSite;
+  });
+  // Calculate keyword costs based on traffic
   const totalKeywordTraffic =
     keywords?.reduce((sum, item) => sum + item.traffic, 0) || 0;
-  const totalLinkTraffic =
-    links?.reduce((sum, item) => sum + item.traffic, 0) || 0;
+  const keywordTotalCost = keywordCostlist.reduce((sum, item) => sum + item, 0);
+
+  // Calculate link costs based on duration
+  const campaignDurationInDays = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  console.log("duration", campaignDurationInDays);
+  const totalLinkCost =
+    links?.reduce((sum) => {
+      const linkTotalCost = linkCost * campaignDurationInDays;
+      return sum + linkTotalCost;
+    }, 0) || 0;
 
   return {
-    totalCost:
-      totalKeywordTraffic * keywordTrafficCost +
-      totalLinkTraffic * linkTrafficCost,
-    totalTraffic: totalKeywordTraffic + totalLinkTraffic,
+    totalCost: keywordTotalCost + totalLinkCost,
+    totalTraffic: totalKeywordTraffic,
+    keywordTotalCost,
+    totalLinkCost,
+    campaignDurationInDays,
   };
 };
 
@@ -465,6 +484,7 @@ const createCampaignWithTransaction = async (data: any) => {
       campaign,
       data.links,
       data.start,
+      data.campaignDurationInDays,
       data.currentDate,
       transaction
     );
@@ -486,6 +506,8 @@ const createKeywords = async (
   currentDate: Date,
   transaction: Transaction
 ) => {
+  const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
+
   if (!keywords?.length) return;
 
   for (const keyword of keywords) {
@@ -493,10 +515,11 @@ const createKeywords = async (
       campaignId: campaign.id,
       name: keyword.name,
       urls: keyword.urls,
-      cost: keyword.traffic * 1,
+      cost: keyword.traffic * keywordCost * keyword.timeOnSite,
       status:
         start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
       distribution: keyword.distribution,
+      timeOnSite: keyword.timeOnSite,
       traffic: keyword.traffic || 0,
       isDeleted: false,
     };
@@ -511,6 +534,7 @@ const createKeywords = async (
       traffic: newKeyword.traffic || 0,
       device: campaign.device,
       domain: campaign.domain,
+      timeOnSite: newKeyword.timeOnSite,
       timeStart: campaign.startDate,
       timeEnd: campaign.endDate,
       searchTool: campaign.search,
@@ -522,23 +546,25 @@ const createLinks = async (
   campaign: any,
   links: any[],
   start: Date,
+  campaignDurationInDays: number,
   currentDate: Date,
   transaction: Transaction
 ) => {
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+
   if (!links?.length) return;
 
   const linkData = links.map((link) => ({
     campaignId: campaign.id,
     link: link.link,
-    linkTo: link.linkTo,
+    linkTo: "",
     distribution: link.distribution,
-    traffic: link.traffic || 0,
-    cost: (link.traffic || 1) * linkCost,
-    anchorText: link.anchorText,
+    traffic: 0,
+    cost: (linkCost || 1) * (campaignDurationInDays || 1),
+    anchorText: "",
     status: start > currentDate ? LinkStatus.INACTIVE : link.status,
-    url: link.url,
-    page: link.page,
+    url: "",
+    page: "",
     isDeleted: false,
   }));
 
@@ -556,14 +582,15 @@ const createLinks = async (
           timeEnd: campaign.endDate,
         });
       } catch (error: any) {
-        logger.error(`Failed to sync link ${link.id} with Python API: ${error.message}`);
+        logger.error(
+          `Failed to sync link ${link.id} with Python API: ${error.message}`
+        );
         throw error; // Re-throw to trigger rollback
       }
     });
 
     // Wait for all Python API calls to complete
     await Promise.all(pythonApiPromises);
-
   } catch (error: any) {
     // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
     logger.error(`Error in createLinks: ${error.message}`);
@@ -909,7 +936,7 @@ export const cancelCampaign = async (
         error: "You not have permission",
       });
       return;
-    } 
+    }
     // Update Python API for keywords first
     if (campaign.keywords && campaign.keywords.length > 0) {
       const activeKeywords = campaign.keywords.filter(

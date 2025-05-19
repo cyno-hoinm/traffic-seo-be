@@ -285,6 +285,10 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                       type: integer
  *                       description: Traffic for the keyword (optional)
  *                       example: 100
+ *                     timeOnSite:
+ *                       type: integer
+ *                       description: Time on site for the keyword (optional)
+ *                       example: 1
  *               links:
  *                 type: array
  *                 description: Optional array of links
@@ -292,47 +296,11 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                   type: object
  *                   required:
  *                     - link
- *                     - linkTo
- *                     - distribution
- *                     - anchorText
- *                     - status
- *                     - url
- *                     - page
  *                   properties:
  *                     link:
  *                       type: string
  *                       description: Link URL
  *                       example: "https://example.com/link"
- *                     linkTo:
- *                       type: string
- *                       description: Target URL for the link
- *                       example: "https://example.com/target"
- *                     distribution:
- *                       type: string
- *                       enum: [DAY, MONTH, YEAR]
- *                       description: Distribution type for the link
- *                       example: "DAY"
- *                     anchorText:
- *                       type: string
- *                       description: Anchor text for the link
- *                       example: "Click here"
- *                     status:
- *                       type: string
- *                       enum: [ACTIVE, PENDING, COMPLETED]
- *                       description: Status of the link
- *                       example: "ACTIVE"
- *                     url:
- *                       type: string
- *                       description: URL associated with the link
- *                       example: "https://example.com"
- *                     page:
- *                       type: string
- *                       description: Page associated with the link
- *                       example: "/page1"
- *                     traffic:
- *                       type: integer
- *                       description: Traffic for the link (optional)
- *                       example: 50
  *     responses:
  *       201:
  *         description: Campaign created successfully

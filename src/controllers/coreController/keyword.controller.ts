@@ -92,6 +92,7 @@ export const getKeywordList = async (
           urls: keyword.url,
           status: keyword.status,
           cost: keyword.cost,
+          timeOnSite: keyword.timeOnSite,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
           createdAt: keyword.createdAt,
@@ -174,6 +175,7 @@ export const createKeyword = async (
       status: keywordStatus.ACTIVE,
       distribution,
       cost,
+      timeOnSite: 1,
     });
     const dataPython = {
       keywordId: keyword.id,
@@ -182,6 +184,7 @@ export const createKeyword = async (
       urls: keyword.urls,
       distribution: keyword.distribution,
       traffic: keyword.traffic || 0,
+      timeOnSite: keyword.timeOnSite,
       device: keyword.device,
       domain: keyword.domain,
       timeStart: keyword.startDate,
@@ -201,6 +204,7 @@ export const createKeyword = async (
         distribution: keyword.distribution,
         status: keyword.status,
         traffic: keyword.traffic,
+        timeOnSite: keyword.timeOnSite,
         createdAt: keyword.createdAt,
         cost: keyword.cost,
         updatedAt: keyword.updatedAt,
@@ -276,6 +280,7 @@ export const getKeywordById = async (
         status: keyword.status,
         distribution: keyword.distribution,
         traffic: keyword.traffic,
+        timeOnSite: keyword.timeOnSite,
         cost: keyword.cost,
         createdAt: keyword.createdAt,
         updatedAt: keyword.updatedAt,
@@ -451,6 +456,7 @@ export const getKeywordByCampaignId = async (
           createdAt: keyword.createdAt,
           updatedAt: keyword.updatedAt,
           status: keyword.status,
+          timeOnSite: keyword.timeOnSite,
           traffic: keyword.traffic,
           trafficCompleted: result.success_count, // Corrected typo
           logs: logs

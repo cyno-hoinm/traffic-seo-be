@@ -9,6 +9,7 @@ export interface KeywordAttributes {
   cost: number;
   urls?: string;
   status: string;
+  timeOnSite: number;
   distribution: DistributionType;
   traffic: number;
   isDeleted?: boolean;

@@ -15,13 +15,14 @@ import { LinkStatus } from "../enums/linkStatus.enum";
 import { redisClient } from "../config/redis.config";
 import { TransactionStatus } from "../enums/transactionStatus.enum";
 import { TransactionType } from "../enums/transactionType.enum";
-import { calculateCampaignMetrics, formatDate } from "../utils/utils";
+import { formatDate } from "../utils/utils";
 import { baseApiPython } from "../config/botAPI.config";
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { getConfigByNameRepo } from "../repositories/commonRepo/config.repository";
 import { ConfigApp } from "../constants/config.constants";
 import { createNotificationRepo } from "../repositories/commonRepo/notification.repository";
 import { notificationType } from "../enums/notification.enum";
+import { calculateCampaignCosts } from "../controllers/coreController/campaign.controller";
 
 const QUEUE_KEY = "campaign:refund:queue";
 const PROCESSED_SET_KEY = "campaign:refund:processed";
@@ -44,15 +45,28 @@ export const processCampaignRefund = async (campaignId: number) => {
       return;
     }
 
-    if (campaign.status !== CampaignStatus.COMPLETED && campaign.status !== CampaignStatus.PROCESSING) {
-      logger.warn(`Campaign ${campaignId} is not COMPLETED or PROCESSING, skipping refund`);
+    if (
+      campaign.status !== CampaignStatus.COMPLETED &&
+      campaign.status !== CampaignStatus.PROCESSING
+    ) {
+      logger.warn(
+        `Campaign ${campaignId} is not COMPLETED or PROCESSING, skipping refund`
+      );
       return;
     }
 
-    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
+    // const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
+    const { totalCost } =
+      await calculateCampaignCosts(
+        campaign.keywords,
+        campaign.links,
+        campaign.startDate,
+        campaign.endDate
+      );
     let refundAmount = 0;
-
-
+    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
+      ConfigApp.KEYWORD_TRAFFIC_COST
+    );
     const completedTrafficPromises = campaign.keywords.map(
       async (keyword: KeywordAttributes) => {
         try {
@@ -65,7 +79,7 @@ export const processCampaignRefund = async (campaignId: number) => {
             "keyword/traffic-count-duration",
             dataPython
           );
-          return result.traffic_count;
+          return result.traffic_count * keyword.timeOnSite * Number(KEYWORD_TRAFFIC_COST?.value || 1);
         } catch (error: any) {
           logger.error(
             `Error fetching traffic for keyword ${keyword.id}: ${error.message}`
@@ -74,13 +88,9 @@ export const processCampaignRefund = async (campaignId: number) => {
         }
       }
     );
-    const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
-      ConfigApp.KEYWORD_TRAFFIC_COST
-    );
-    const cost = KEYWORD_TRAFFIC_COST?.value ? KEYWORD_TRAFFIC_COST.value : 1
-    const completedTraffic = await Promise.all(completedTrafficPromises);
 
-    refundAmount = (metrics.totalTraffic - completedTraffic[0]) * Number(cost);
+    const completedTraffic = await Promise.all(completedTrafficPromises);
+    refundAmount = (totalCost - completedTraffic[0]);
     if (refundAmount > 0) {
       // Create a refund transaction
       const wallet = await Wallet.findOne({
@@ -148,6 +158,9 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
         },
         endDate: {
           [Op.lt]: currentDate,
+        },
+        campaignTypeId: {
+          [Op.eq]: 1,
         },
       },
       include: [
@@ -301,85 +314,89 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
 };
 
 export const startCampaignRefundService = async () => {
-    logger.info("Starting campaign refund service...");
-  
-    // Attempt to connect to Redis once
+  logger.info("Starting campaign refund service...");
+
+  // Attempt to connect to Redis once
+  try {
+    await redisClient.connect();
+    logger.info("Successfully connected to Redis");
+  } catch (error: any) {
+    logger.error(`Failed to connect to Redis: ${error.message}`);
+    process.exit(1); // Exit if connection fails
+  }
+
+  // Process jobs from the queue
+  const processQueue = async () => {
+    const isRunning = true;
+    logger.info("Starting Redis queue processing for campaign refunds...");
     try {
-      await redisClient.connect();
-      logger.info("Successfully connected to Redis");
+      // Process all campaign IDs in the queue
+      while (isRunning) {
+        const result = await redisClient.brPop(QUEUE_KEY, 10); // Wait up to 10 seconds
+        if (!result || !result.element) {
+          logger.debug("No more campaigns in queue, ending processing...");
+          break; // Exit loop when queue is empty
+        }
+
+        const campaignId = parseInt(result.element, 10);
+        if (!isNaN(campaignId)) {
+          logger.info(`Processing campaign ID ${campaignId} from queue`);
+          await processCampaignRefund(campaignId);
+          logger.info(`Completed processing campaign ID ${campaignId}`);
+        } else {
+          logger.warn(`Invalid campaign ID in queue: ${result.element}`);
+        }
+      }
     } catch (error: any) {
-      logger.error(`Failed to connect to Redis: ${error.message}`);
-      process.exit(1); // Exit if connection fails
+      logger.error(`Error processing queue item: ${error.message}`);
+      throw error; // Rethrow to handle in cron job
     }
-  
-    // Process jobs from the queue
-    const processQueue = async () => {
-      const isRunning = true;
-      logger.info("Starting Redis queue processing for campaign refunds...");
-      try {
-        // Process all campaign IDs in the queue
-        while (isRunning) {
-          const result = await redisClient.brPop(QUEUE_KEY, 10); // Wait up to 10 seconds
-          if (!result || !result.element) {
-            logger.debug("No more campaigns in queue, ending processing...");
-            break; // Exit loop when queue is empty
-          }
-  
-          const campaignId = parseInt(result.element, 10);
-          if (!isNaN(campaignId)) {
-            logger.info(`Processing campaign ID ${campaignId} from queue`);
-            await processCampaignRefund(campaignId);
-            logger.info(`Completed processing campaign ID ${campaignId}`);
-          } else {
-            logger.warn(`Invalid campaign ID in queue: ${result.element}`);
-          }
-        }
-      } catch (error: any) {
-        logger.error(`Error processing queue item: ${error.message}`);
-        throw error; // Rethrow to handle in cron job
-      }
-    };
-    await enqueueCampaignsForRefund();
-    await processQueue();
-    // Schedule task to enqueue and process campaigns daily at midnight
-    cron.schedule("0 1 * * *", async () => {
-      logger.info("Running daily campaign refund check...");
-      try {
-        // Ensure Redis is connected
-        if (!redisClient.isConnectedStatus()) {
-          logger.warn("Redis client is not connected. Attempting to reconnect...");
-          await redisClient.connect();
-          logger.info("Redis client reconnected successfully");
-        }
-  
-        // Enqueue campaigns
-        const enqueuedCount = await enqueueCampaignsForRefund();
-        logger.info(`Enqueued ${enqueuedCount} campaigns for refund processing`);
-  
-        // Process the queue immediately after enqueuing
-        await processQueue();
-        logger.info("Completed daily refund processing");
-      } catch (error: any) {
-        logger.error(`Error in daily campaign refund check: ${error.message}`);
-      }
-    });
-  
-    // Handle graceful shutdown
-    const handleShutdown = async () => {
-      logger.info("Shutting down campaign refund service...");
-      try {
-        if (redisClient.isConnectedStatus()) {
-          await redisClient.disconnect();
-          logger.info("Redis client disconnected successfully");
-        }
-      } catch (error: any) {
-        logger.error(`Error during Redis disconnection: ${error.message}`);
-      }
-      process.exit(0);
-    };
-  
-    process.on("SIGINT", handleShutdown);
-    process.on("SIGTERM", handleShutdown);
-  
-    logger.info("Campaign refund service initialized, waiting for daily cron job...");
   };
+  await enqueueCampaignsForRefund();
+  await processQueue();
+  // Schedule task to enqueue and process campaigns daily at midnight
+  cron.schedule("0 1 * * *", async () => {
+    logger.info("Running daily campaign refund check...");
+    try {
+      // Ensure Redis is connected
+      if (!redisClient.isConnectedStatus()) {
+        logger.warn(
+          "Redis client is not connected. Attempting to reconnect..."
+        );
+        await redisClient.connect();
+        logger.info("Redis client reconnected successfully");
+      }
+
+      // Enqueue campaigns
+      const enqueuedCount = await enqueueCampaignsForRefund();
+      logger.info(`Enqueued ${enqueuedCount} campaigns for refund processing`);
+
+      // Process the queue immediately after enqueuing
+      await processQueue();
+      logger.info("Completed daily refund processing");
+    } catch (error: any) {
+      logger.error(`Error in daily campaign refund check: ${error.message}`);
+    }
+  });
+
+  // Handle graceful shutdown
+  const handleShutdown = async () => {
+    logger.info("Shutting down campaign refund service...");
+    try {
+      if (redisClient.isConnectedStatus()) {
+        await redisClient.disconnect();
+        logger.info("Redis client disconnected successfully");
+      }
+    } catch (error: any) {
+      logger.error(`Error during Redis disconnection: ${error.message}`);
+    }
+    process.exit(0);
+  };
+
+  process.on("SIGINT", handleShutdown);
+  process.on("SIGTERM", handleShutdown);
+
+  logger.info(
+    "Campaign refund service initialized, waiting for daily cron job..."
+  );
+};

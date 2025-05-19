@@ -198,6 +198,7 @@ export const getOneCampaignReportRepo = async (
         isDeleted: keyword.isDeleted,
         createdAt: keyword.createdAt,
         updatedAt: keyword.updatedAt,
+        timeOnSite: keyword.timeOnSite,
         status: keyword.status,
         traffic: keyword.traffic,
         trafficCompleted: result.success_count,

@@ -12,6 +12,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public urls!: string; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public timeOnSite!: number;
   public cost!: number;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
@@ -57,6 +58,11 @@ Keyword.init(
     distribution: {
       type: DataTypes.STRING, // Enum type
       allowNull: true,
+    },
+    timeOnSite: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
     },
     cost: {
       type: DataTypes.DECIMAL(10, 2),
