@@ -687,6 +687,29 @@ const createDirectLinks = async (
     const createdDirectLinks = await DirectLink.bulkCreate(directLinkData, {
       transaction,
     });
+    const pythonApiPromises = createdDirectLinks.map(async (directLink) => {
+      try {
+        await baseApiPython("direct-link/set", {
+          directLinkId: directLink.id,
+          link: directLink.link,
+          traffic: directLink.traffic,
+          distribution: directLink.distribution,
+          device: campaign.device,
+          searchTool: campaign.search,
+          timeOnSite: directLink.timeOnSite,
+          timeStart: campaign.startDate,
+          timeEnd: campaign.endDate,
+        });
+      } catch (error: any) {
+        logger.error(
+          `Failed to sync direct link ${directLink.id} with Python API: ${error.message}`
+        );
+        throw error; // Re-throw to trigger rollback
+      }
+    });
+
+    // Wait for all Python API calls to complete
+    await Promise.all(pythonApiPromises);
     return createdDirectLinks;
   } catch (error: any) {
     logger.error(`Error in createDirectLinks: ${error.message}`);
