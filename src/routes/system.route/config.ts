@@ -16,6 +16,7 @@ import oxapayRoute from "./moneyRoute/oxapay.route"
 import configRoute from "./commonRoute/config.route"
 import agencyRoute from "./coreRoute/agency.route"
 import packageRoute from "./moneyRoute/package.route"
+import reportUserRoute from "./commonRoute/reportUser.route"
 // Common routes
 import authRoute from "./commonRoute/auth.route";
 import notificationRoute from "./commonRoute/notification.route";
@@ -44,5 +45,6 @@ export const protectedRoutes = {
   "/oxapay": oxapayRoute,
   "/configs": configRoute,
   "/agencies": agencyRoute,
-  "/packages": packageRoute
+  "/packages": packageRoute,
+  "/report-user": reportUserRoute,
 };

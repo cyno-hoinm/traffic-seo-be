@@ -18,7 +18,8 @@ import Config from "./Config.model";
 import Agency from "./Agency.model"
 import Image from "./Image.model"
 import Package from "./Package.model"
-// Initialize models (this ensures they’re loaded)
+import Report from "./Report.model"
+// Initialize models (this ensures they're loaded)
 export const models = {
   Role,
   Permission,
@@ -37,7 +38,8 @@ export const models = {
   CampaignType,
   Config,
   Image,
-  Package
+  Package,
+  Report
 };
 
 
@@ -114,6 +116,8 @@ Agency.hasMany(User, {
 User.belongsTo(Image, { foreignKey: "imageId", as: "image", onDelete: 'SET NULL' });
 Image.hasMany(User, { foreignKey: "imageId", as: "users", onDelete: 'SET NULL' });
 
+User.hasMany(Report, { foreignKey: "userId", as: "reports", onDelete: 'SET NULL' });
+Report.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
 // Export models
 export {
   Role,
@@ -134,5 +138,6 @@ export {
   Agency,
   Image,
   Package,
+  Report,
   sequelizeSystem,
 };
