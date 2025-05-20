@@ -7,6 +7,7 @@ import {
 } from "../../repositories/commonRepo/report.repository";
 import { createNewImage } from "../../repositories/commonRepo/image.repository";
 import { ImageType } from "../../enums/imageType.enum";
+import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 export const createReportController = async (
   req: Request,
@@ -55,13 +56,22 @@ export const createReportController = async (
 };
 
 export const getReportUserController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { userId, status, page, limit } = req.body;
-    const reports = await getReportListRepository(userId, status, page, limit);
+    const { status, page, limit } = req.body;
+    const userIdToken = req.data?.id;
+    const roleIdToken = req.data?.role.id;
 
+    // If user is not admin (roleId = 2), they can only view their own reports
+    const userId = roleIdToken === 1 ? req.body.userId : userIdToken;
+
+    const reports = await getReportListRepository(userId, status, page, limit);
+    if (!reports) {
+      res.status(statusCode.NOT_FOUND).json({ message: "No reports found" });
+      return;
+    }
     if ("total" in reports) {
       // Paginated response
       const response = {
