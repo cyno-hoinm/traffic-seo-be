@@ -88,7 +88,7 @@ router.post(
  */
 router.post(
   "/search",
-//   authorization(["search-report-user"]),
+  authorization(["search-report-user"]),
   getReportUserController
 );
 
@@ -126,7 +126,7 @@ router.post(
  */
 router.patch(
   "/:id",
-//   authorization(["update-report-user"]),
+  authorization(["update-report-user"]),
   updateReportController
 );
 export default router;
