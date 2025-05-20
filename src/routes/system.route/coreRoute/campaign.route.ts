@@ -1177,4 +1177,5 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                   example: "Internal server error"
  */
 router.post("/direct-links", authorization(["create-campaign"]), createDirectLinkCampaign);
+
 export default router;

@@ -539,3 +539,46 @@ export const isCampaignOwnerRepo = async (
         );
   }
 };
+
+
+export const getCampaignListForLLMRepo = async (): Promise<{ campaigns: CampaignAttributes[]; total: number }> => {
+  try {
+    const where: any = { isDeleted: false };
+    const defaultStatus = "ACTIVE";
+    const defaultCampaignType = 3;
+    where.status = defaultStatus;
+    where.campaignTypeId = defaultCampaignType;
+
+    const queryOptions: any = {
+      where,
+      order: [["createdAt", "DESC"]],
+      attributes: ['id', 'name', 'title', 'status', 'createdAt'],
+      include: [
+        {
+          model: Link,
+          as: "links",
+          where: { isDeleted: false },
+          required: true,
+          attributes: ['link'],
+        }
+      ],
+    };
+
+    const { rows: campaigns, count: total } = await Campaign.findAndCountAll(
+      queryOptions
+    );
+
+    // Transform the data to get links.link in an array
+    const transformedCampaigns = campaigns.map(campaign => {
+      const campaignData = campaign.toJSON();
+      return {
+        ...campaignData,
+        links: campaignData.links?.map((link: any) => link.link) || []
+      };
+    });
+
+    return { campaigns: transformedCampaigns, total };
+  } catch (error: any) {
+    throw new ErrorType(error.name, error.message, error.code);
+  }
+};

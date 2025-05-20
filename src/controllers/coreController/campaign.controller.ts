@@ -7,6 +7,7 @@ import {
   continueCampaignRepo,
   pauseCampaignRepo,
   cancelCampaignRepo,
+  getCampaignListForLLMRepo,
 } from "../../repositories/coreRepo/campagin.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
@@ -1178,3 +1179,34 @@ export const createDirectLinkCampaign = async (
     });
   }
 };
+
+export async function getCampaignListForLLMController(req: Request, res: Response): Promise<void> {
+  try {
+    const result = await getCampaignListForLLMRepo();
+     res.status(statusCode.OK).json({
+      success: true,
+      data: result,
+    });
+    return;
+  } catch (error: any) {
+    if (error instanceof ErrorType) {
+      res.status(error.code || statusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: {
+          name: error.name,
+          message: error.message,
+        },
+      });
+      return;
+    }
+
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: {
+        name: "InternalServerError",
+        message: "An unexpected error occurred",
+      },
+    });
+    return;
+  }
+}
