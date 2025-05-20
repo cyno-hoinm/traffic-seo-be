@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { logger } from "../config/logger.config";
 import cron from "node-cron";
-import { Campaign, Keyword, Link, sequelizeSystem } from "../models/index.model";
+import { Campaign, DirectLink, Keyword, Link, sequelizeSystem } from "../models/index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
 import { keywordStatus } from "../enums/keywordStatus.enum";
 import { LinkStatus } from "../enums/linkStatus.enum";
@@ -61,7 +61,16 @@ export const checkAndUpdateCampaignStatus = async () => {
           transaction,
         }
       );
-
+      await DirectLink.update(
+        { status: LinkStatus.ACTIVE },
+        {
+          where: {
+            campaignId: campaign.id,
+            status: LinkStatus.INACTIVE, // Only update INACTIVE links
+          },
+          transaction,
+        }
+      );
       // Send notification for campaign status change
       await createNotificationRepo({
         userId: [campaign.userId],

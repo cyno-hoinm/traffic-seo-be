@@ -35,6 +35,8 @@ import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
 import { notificationType } from "../../enums/notification.enum";
 import { logger } from "../../config/logger.config";
+import DirectLink from "../../models/DirectLink.model";
+import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 
 // Get campaign list with filters
 
@@ -361,7 +363,6 @@ export const calculateCampaignCosts = async (
   const campaignDurationInDays = Math.ceil(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
-  console.log("duration", campaignDurationInDays);
   const totalLinkCost =
     links?.reduce((sum) => {
       const linkTotalCost = linkCost * campaignDurationInDays;
@@ -473,21 +474,34 @@ const createCampaignWithTransaction = async (data: any) => {
       throw new Error("Failed to create campaign");
     }
 
-    await createKeywords(
-      campaign,
-      data.keywords,
-      data.start,
-      data.currentDate,
-      transaction
-    );
-    await createLinks(
-      campaign,
-      data.links,
-      data.start,
-      data.campaignDurationInDays,
-      data.currentDate,
-      transaction
-    );
+    if (data.keywords) {
+      await createKeywords(
+        campaign,
+        data.keywords,
+        data.start,
+        data.currentDate,
+        transaction
+      );
+    }
+    if (data.links) {
+      await createLinks(
+        campaign,
+        data.links,
+        data.start,
+        data.campaignDurationInDays,
+        data.currentDate,
+        transaction
+      );
+    }
+    if (data.directLinks) {
+      await createDirectLinks(
+        campaign,
+        data.directLinks,
+        data.start,
+        data.end,
+        transaction
+      );
+    }
     await createTransaction(
       data.userId,
       campaign.id,
@@ -648,6 +662,37 @@ const sendCampaignNotifications = async (
     });
   }
 };
+const createDirectLinks = async (
+  campaign: any,
+  directLinks: any[],
+  start: Date,
+  end: Date,
+  transaction: Transaction
+) => {
+  const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const currentDate = new Date();
+  const directLinkData = directLinks.map(
+    (directLink: DirectLinkAttributes) => ({
+      campaignId: campaign.id,
+      link: directLink.link,
+      distribution: directLink.distribution,
+      traffic: directLink.traffic,
+      cost: directLink.traffic * directLinkCost * directLink.timeOnSite,
+      status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
+      timeOnSite: directLink.timeOnSite,
+      isDeleted: false,
+    })
+  );
+  try {
+    const createdDirectLinks = await DirectLink.bulkCreate(directLinkData, {
+      transaction,
+    });
+    return createdDirectLinks;
+  } catch (error: any) {
+    logger.error(`Error in createDirectLinks: ${error.message}`);
+    throw error;
+  }
+};
 
 const formatCampaignResponse = (
   campaign: any,
@@ -670,10 +715,31 @@ const formatCampaignResponse = (
   status: campaign?.status,
   keywords: campaign?.keywords || [],
   links: campaign?.links || [],
+  directLinks: campaign?.directLinks || [],
   createdAt: campaign?.createdAt,
   updatedAt: campaign?.updatedAt,
 });
+const calculateDirectLinkCampaignCosts = async (
+  directLinks: any[],
+  start: Date,
+  end: Date
+) => {
+  const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const campaignDurationInDays = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const totalDirectLinkTraffic =
+    directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
+  const totalCost = directLinks.reduce((sum, directLink) => {
+    return sum + directLink.traffic * directLinkCost * directLink.timeOnSite;
+  }, 0);
+  return {
+    totalCost,
+    totalTraffic: totalDirectLinkTraffic,
+    campaignDurationInDays,
+  };
+};
 // Get campaign by ID
 export const getCampaignById = async (
   req: AuthenticatedRequest,
@@ -984,5 +1050,108 @@ export const cancelCampaign = async (
       message: errorResponse.message,
     });
     return;
+  }
+};
+
+export const createDirectLinkCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const {
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      startDate,
+      endDate,
+      domain,
+      search,
+      directLinks,
+    } = req.body;
+
+    // Validate dates
+    const { start, end, currentDate } = validateDates(startDate, endDate);
+    // console.log(start, end, currentDate);
+    if (!start || !end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid date format for startDate or endDate",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (start >= end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "startDate must be before endDate",
+        error: "Invalid date range",
+      });
+      return;
+    }
+
+    // Calculate costs and validate wallet
+    const { totalCost, totalTraffic, campaignDurationInDays } =
+      await calculateDirectLinkCampaignCosts(directLinks, start, end);
+    // console.log(totalCost, totalTraffic, keywordTotalCost, totalLinkCost);
+    const isValidWallet = await compareWalletAmount(userId, totalCost);
+    if (!isValidWallet) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Insufficient balance",
+        error: "Invalid wallet",
+      });
+      return;
+    }
+
+    // Create campaign with transaction
+    const campaign = await createCampaignWithTransaction({
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      start,
+      end,
+      domain,
+      search,
+      campaignTypeId: 4,
+      directLinks,
+      currentDate,
+      totalCost,
+      campaignDurationInDays,
+    });
+
+    // Fetch campaign with associations
+    const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
+      include: [{ model: DirectLink, as: "directLinks" }],
+    });
+
+    if (campaignWithAssociations) {
+      await sendCampaignNotifications(
+        campaignWithAssociations,
+        userId,
+        name,
+        totalCost
+      );
+    }
+
+    res.status(statusCode.CREATED).json({
+      status: true,
+      message: "Campaign created successfully",
+      data: formatCampaignResponse(
+        campaignWithAssociations,
+        totalTraffic,
+        totalCost
+      ),
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error creating campaign",
+      error: error.message,
+    });
   }
 };

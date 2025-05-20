@@ -6,6 +6,7 @@ import {
   getContinueCampaign,
   pauseCampaign,
   cancelCampaign,
+  createDirectLinkCampaign,
 } from "../../../controllers/coreController/campaign.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -978,4 +979,202 @@ router.put("/continue/:id", authorization(["read-campaign"]), getContinueCampaig
  *                   example: 500
  */
 router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
+
+/**
+ * @swagger
+ * /campaigns/direct-links:
+ *   post:
+ *     summary: Create a new direct link
+ *     description: Create a new direct link with required fields
+ *     tags: [Campaigns]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - countryId
+ *               - name
+ *               - device
+ *               - title
+ *               - startDate
+ *               - endDate
+ *               - domain
+ *               - search
+ *               - campaignTypeId
+ *               - status
+ *               - directLinks    
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: The ID of the user
+ *                 example: 1
+ *               countryId:   
+ *                 type: integer
+ *                 description: The ID of the country
+ *                 example: 1
+ *               name:
+ *                 type: string
+ *                 description: The name of the campaign
+ *                 example: "Summer Sale"
+ *               campaignTypeId:
+ *                 type: integer
+ *                 description: The ID of the campaign type
+ *                 example: 4
+ *               device:
+ *                 type: string 
+ *                 description: The device of the campaign
+ *                 example: "Mobile"
+ *               title:
+ *                 type: string
+ *                 description: The title of the campaign
+ *                 example: "UTC"
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The start date of the campaign
+ *                 example: "2025-04-10T00:00:00Z"
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: The end date of the campaign
+ *                 example: "2025-04-20T23:59:59Z"
+ *               domain:
+ *                 type: string
+ *                 description: The domain of the campaign
+ *                 example: "example.com"
+ *               search:
+ *                 type: string
+ *                 description: The search of the campaign
+ *                 example: "Google"
+ *               status:
+ *                 type: string
+ *                 description: The status of the campaign
+ *                 example: "ACTIVE"
+ *               directLinks:
+ *                 type: array
+ *                 description: The direct links of the campaign
+ *                 items: 
+ *                   type: object
+ *                   properties:
+ *                     link:
+ *                       type: string
+ *                       description: The link of the direct link
+ *                       example: "https://example.com"
+ *                     distribution:
+ *                       type: string
+ *                       description: The distribution of the direct link
+ *                       example: "DAY"
+ *                     timeOnSite:
+ *                       type: integer
+ *                       description: The time on site of the direct link
+ *                     traffic: 
+ *                       type: integer
+ *                       description: The traffic of the direct link
+ *     responses:
+ *       201:
+ *         description: Direct link created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Direct link created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     userId:
+ *                       type: integer
+ *                       example: 1
+ *                     countryId:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Summer Sale"
+ *                     campaignTypeId:
+ *                       type: integer
+ *                       example: 4
+ *                     device:
+ *                       type: string
+ *                       example: "Mobile"
+ *                     title:
+ *                       type: string
+ *                       example: "UTC"
+ *                     startDate:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-10T00:00:00Z"
+ *                     endDate:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-20T23:59:59Z"
+ *                     domain:
+ *                       type: string
+ *                       example: "example.com"
+ *                     search:
+ *                       type: string
+ *                       example: "Google"
+ *                     status:
+ *                       type: string
+ *                       example: "ACTIVE"
+ *                     directLinks:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           link:
+ *                             type: string
+ *                           distribution:
+ *                             type: string
+ *                           timeOnSite:
+ *                             type: integer
+ *                           traffic:
+ *                             type: integer
+ *       400:
+ *         description: Bad request due to invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid input"
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid input"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.post("/direct-links", authorization(["create-campaign"]), createDirectLinkCampaign);
 export default router;

@@ -19,6 +19,7 @@ import Agency from "./Agency.model"
 import Image from "./Image.model"
 import Package from "./Package.model"
 import Report from "./Report.model"
+import DirectLink from "./DirectLink.model";
 // Initialize models (this ensures they're loaded)
 export const models = {
   Role,
@@ -39,7 +40,8 @@ export const models = {
   Config,
   Image,
   Package,
-  Report
+  Report,
+  DirectLink
 };
 
 
@@ -82,6 +84,9 @@ Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keywords", onDelete: 
 
 Link.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
 Campaign.hasMany(Link, { foreignKey: "campaignId", as: "links", onDelete: 'SET NULL' });
+
+DirectLink.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
+Campaign.hasMany(DirectLink, { foreignKey: "campaignId", as: "directLinks", onDelete: 'SET NULL' });
 
 Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermissions", onDelete: 'SET NULL' });
 Permission.hasMany(RolePermission, {
@@ -139,5 +144,6 @@ export {
   Image,
   Package,
   Report,
+  DirectLink,
   sequelizeSystem,
 };
