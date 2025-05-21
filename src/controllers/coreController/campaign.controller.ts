@@ -267,8 +267,8 @@ export const createCampaign = async (
     // Fetch campaign with associations
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [
-        { model: Keyword, as: "keywords" },
-        { model: Link, as: "links" },
+        { model: Keyword, as: "keywords", required: true },
+        { model: Link, as: "links", required: true },
       ],
     });
 
@@ -351,14 +351,20 @@ export const calculateCampaignCosts = async (
 ) => {
   const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+  let keywordCostlist: number[] = [];
+  if (keywords) {
+    keywordCostlist = keywords.map((keyword) => {
+      return keyword.traffic * keywordCost * keyword.timeOnSite;
+    });
+  }
 
-  const keywordCostlist = keywords.map((keyword) => {
-    return keyword.traffic * keywordCost * keyword.timeOnSite;
-  });
   // Calculate keyword costs based on traffic
   const totalKeywordTraffic =
     keywords?.reduce((sum, item) => sum + item.traffic, 0) || 0;
-  const keywordTotalCost = keywordCostlist.reduce((sum, item) => sum + item, 0);
+  const keywordTotalCost =
+    keywordCostlist.length > 0
+      ? keywordCostlist.reduce((sum, item) => sum + item, 0)
+      : 0;
 
   // Calculate link costs based on duration
   const campaignDurationInDays = Math.ceil(
@@ -577,7 +583,7 @@ const createLinks = async (
     traffic: 0,
     cost: (linkCost || 1) * (campaignDurationInDays || 1),
     anchorText: "",
-    status: start > currentDate ? LinkStatus.INACTIVE : link.status,
+    status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
     url: "",
     page: "",
     isDeleted: false,
@@ -1180,10 +1186,13 @@ export const createDirectLinkCampaign = async (
   }
 };
 
-export async function getCampaignListForLLMController(req: Request, res: Response): Promise<void> {
+export async function getCampaignListForLLMController(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     const result = await getCampaignListForLLMRepo();
-     res.status(statusCode.OK).json({
+    res.status(statusCode.OK).json({
       success: true,
       data: result,
     });
