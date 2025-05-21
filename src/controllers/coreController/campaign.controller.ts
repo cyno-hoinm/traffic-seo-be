@@ -38,6 +38,7 @@ import { notificationType } from "../../enums/notification.enum";
 import { logger } from "../../config/logger.config";
 import DirectLink from "../../models/DirectLink.model";
 import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
+import { IndexStatus } from "../../enums/indexStatus.enum";
 
 // Get campaign list with filters
 
@@ -136,35 +137,40 @@ export const getCampaignList = async (
       status: true,
       message: "Campaigns retrieved successfully",
       data: {
-        campaigns: await Promise.all(campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
-          // Calculate metrics for each campaign
-          let { totalTraffic, totalCost } = calculateCampaignMetrics(
-            campaign.links,
-            campaign.keywords
-          );
-          if (campaign.campaignTypeId === 4) {
-            const directLink =  await calculateDirectLinkCampaignCosts(campaign.directLinks || [], campaign.startDate, campaign.endDate);
-            totalCost += directLink.totalCost;
-            totalTraffic += directLink.totalTraffic;
-          }
-          return {
-            id: campaign.id,
-            userId: campaign.userId,
-            username: campaign.users?.username,
-            countryId: campaign.countryId,
-            name: campaign.name,
-            campaignTypeId: campaign.campaignTypeId,
-            device: campaign.device,
-            title: campaign.title,
-            startDate: campaign.startDate,
-            endDate: campaign.endDate,
-            totalTraffic, // Calculated from links and keywords
-            totalCost: totalCost, // Calculated from links and keywords
-            domain: campaign.domain,
-            search: campaign.search,
-            status: campaign.status,
-            createdAt: campaign.createdAt,
-            updatedAt: campaign.updatedAt,
+        campaigns: await Promise.all(
+          campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
+            // Calculate metrics for each campaign
+            let { totalTraffic, totalCost } = calculateCampaignMetrics(
+              campaign.links,
+              campaign.keywords
+            );
+            if (campaign.campaignTypeId === 4) {
+              const directLink = await calculateDirectLinkCampaignCosts(
+                campaign.directLinks || [],
+                campaign.startDate,
+                campaign.endDate
+              );
+              totalCost += directLink.totalCost;
+              totalTraffic += directLink.totalTraffic;
+            }
+            return {
+              id: campaign.id,
+              userId: campaign.userId,
+              username: campaign.users?.username,
+              countryId: campaign.countryId,
+              name: campaign.name,
+              campaignTypeId: campaign.campaignTypeId,
+              device: campaign.device,
+              title: campaign.title,
+              startDate: campaign.startDate,
+              endDate: campaign.endDate,
+              totalTraffic, // Calculated from links and keywords
+              totalCost: totalCost, // Calculated from links and keywords
+              domain: campaign.domain,
+              search: campaign.search,
+              status: campaign.status,
+              createdAt: campaign.createdAt,
+              updatedAt: campaign.updatedAt,
             };
           })
         ),
@@ -590,6 +596,7 @@ const createLinks = async (
     cost: (linkCost || 1) * (campaignDurationInDays || 1),
     anchorText: "",
     status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
+    indexStatus: IndexStatus.NOT_INDEXED,
     url: "",
     page: "",
     isDeleted: false,
@@ -599,25 +606,20 @@ const createLinks = async (
     // Create links in database
     const createdLinks = await Link.bulkCreate(linkData, { transaction });
 
-    // Send links to Python API
-    const pythonApiPromises = createdLinks.map(async (link) => {
-      try {
-        await baseApiPython("link/set", {
-          linkId: link.id,
-          link: link.link,
-          timeStart: campaign.startDate,
-          timeEnd: campaign.endDate,
-        });
-      } catch (error: any) {
-        logger.error(
-          `Failed to sync link ${link.id} with Python API: ${error.message}`
-        );
-        throw error; // Re-throw to trigger rollback
-      }
-    });
-
-    // Wait for all Python API calls to complete
-    await Promise.all(pythonApiPromises);
+    // Format links data for Python API
+    const linksForPython = createdLinks.map((link) => ({
+      linkId: link.id,
+      link: link.link,
+      timeStart: campaign.startDate,
+      timeEnd: campaign.endDate,
+    }));
+    // Send all links to Python API in a single call
+    try {
+      await baseApiPython("link/set-multiple", linksForPython);
+    } catch (error: any) {
+      logger.error(`Failed to sync links with Python API: ${error.message}`);
+      throw error; // Re-throw to trigger rollback
+    }
   } catch (error: any) {
     // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
     logger.error(`Error in createLinks: ${error.message}`);
@@ -768,7 +770,9 @@ const calculateDirectLinkCampaignCosts = async (
     directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
   const totalCost = directLinks.reduce((sum, directLink) => {
-    return sum + directLink.traffic * directLinkCost * (directLink.timeOnSite || 1);
+    return (
+      sum + directLink.traffic * directLinkCost * (directLink.timeOnSite || 1)
+    );
   }, 0);
   return {
     totalCost,
