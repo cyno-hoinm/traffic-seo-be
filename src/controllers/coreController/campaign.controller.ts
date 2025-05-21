@@ -272,8 +272,9 @@ export const createCampaign = async (
     // Fetch campaign with associations
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [
-        { model: Keyword, as: "keywords", required: true },
-        { model: Link, as: "links", required: true },
+        { model: Keyword, as: "keywords", required: false },
+        { model: Link, as: "links", required: false },
+        // { model: DirectLink, as: "directLinks", required: false },
       ],
     });
 
