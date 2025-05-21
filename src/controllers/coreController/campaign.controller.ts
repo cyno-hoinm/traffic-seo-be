@@ -809,8 +809,14 @@ export const getCampaignById = async (
       return;
     }
     // Calculate total traffic and cost from links and keywords
-    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
-
+    let metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
+    if (campaign.campaignTypeId === 4) {
+      metrics = await calculateDirectLinkCampaignCosts(
+        campaign.directLinks || [],
+        campaign.startDate,
+        campaign.endDate
+      );
+    }
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign retrieved successfully",

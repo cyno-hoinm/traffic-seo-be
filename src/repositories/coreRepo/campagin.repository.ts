@@ -140,6 +140,7 @@ export const getCampaignByIdRepo = async (
         "userId",
         "createdAt",
         "updatedAt",
+        "campaignTypeId",
       ],
       include: [
         {
@@ -153,6 +154,12 @@ export const getCampaignByIdRepo = async (
           as: "keywords",
           where: { isDeleted: false },
           required: false, // Include campaign even if no keywords
+        },
+        {
+          model: DirectLink,
+          as: "directLinks",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no direct links
         },
       ],
       order: [["createdAt", "DESC"]],
