@@ -350,7 +350,7 @@ export const calculateCampaignCosts = async (
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
 
   const keywordCostlist = keywords.map((keyword) => {
-    return keyword.traffic * keywordCost * keyword.timeOnSite;
+    return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
   });
   // Calculate keyword costs based on traffic
   const totalKeywordTraffic =
@@ -515,11 +515,11 @@ const createKeywords = async (
       campaignId: campaign.id,
       name: keyword.name,
       urls: keyword.urls,
-      cost: keyword.traffic * keywordCost * keyword.timeOnSite,
+      cost: keyword.traffic * keywordCost * (keyword.timeOnSite || 1),
       status:
         start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
       distribution: keyword.distribution,
-      timeOnSite: keyword.timeOnSite,
+      timeOnSite: keyword.timeOnSite || 1,
       traffic: keyword.traffic || 0,
       isDeleted: false,
     };
@@ -534,7 +534,7 @@ const createKeywords = async (
       traffic: newKeyword.traffic || 0,
       device: campaign.device,
       domain: campaign.domain,
-      timeOnSite: newKeyword.timeOnSite,
+      timeOnSite: newKeyword.timeOnSite || 1,
       timeStart: campaign.startDate,
       timeEnd: campaign.endDate,
       searchTool: campaign.search,
