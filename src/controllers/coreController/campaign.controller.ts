@@ -360,7 +360,7 @@ export const calculateCampaignCosts = async (
   let keywordCostlist: number[] = [];
   if (keywords) {
     keywordCostlist = keywords.map((keyword) => {
-      return keyword.traffic * keywordCost * keyword.timeOnSite;
+      return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
     });
   }
 
@@ -690,9 +690,9 @@ const createDirectLinks = async (
       link: directLink.link,
       distribution: directLink.distribution,
       traffic: directLink.traffic,
-      cost: directLink.traffic * directLinkCost * directLink.timeOnSite,
+      cost: directLink.traffic * directLinkCost * (directLink.timeOnSite || 1),
       status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
-      timeOnSite: directLink.timeOnSite,
+      timeOnSite: directLink.timeOnSite || 1,
       isDeleted: false,
     })
   );
@@ -709,7 +709,7 @@ const createDirectLinks = async (
           distribution: directLink.distribution,
           device: campaign.device,
           searchTool: campaign.search,
-          timeOnSite: directLink.timeOnSite,
+          timeOnSite: directLink.timeOnSite || 1,
           timeStart: campaign.startDate,
           timeEnd: campaign.endDate,
         });
@@ -768,7 +768,7 @@ const calculateDirectLinkCampaignCosts = async (
     directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
   const totalCost = directLinks.reduce((sum, directLink) => {
-    return sum + directLink.traffic * directLinkCost * directLink.timeOnSite;
+    return sum + directLink.traffic * directLinkCost * (directLink.timeOnSite || 1);
   }, 0);
   return {
     totalCost,
