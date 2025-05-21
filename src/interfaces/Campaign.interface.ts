@@ -1,5 +1,5 @@
 import { CampaignStatus } from "../enums/campaign.enum";
-import { CampaignTypeAttributes } from "./CampaignType.interface";
+import { DirectLinkAttributes } from "./DirectLink.interface";
 import { KeywordAttributes } from "./Keyword.interface";
 import { LinkAttributes } from "./Link.interface";
 import { UserAttributes } from "./User.interface";
@@ -10,7 +10,7 @@ export interface CampaignAttributes  {
   users? : UserAttributes
   countryId: number;
   name: string;
-  campaignTypeId: CampaignTypeAttributes;
+  campaignTypeId: number;
   device: string;
   title: string;
   startDate: Date;
@@ -24,6 +24,7 @@ export interface CampaignAttributes  {
   keywordsCount?: number;
   keywords?: KeywordAttributes[]
   links?: LinkAttributes[];
+  directLinks?: DirectLinkAttributes[];
   isDeleted?: boolean;
   status: CampaignStatus;
   createdAt?: Date;

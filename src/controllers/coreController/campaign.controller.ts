@@ -7,6 +7,7 @@ import {
   continueCampaignRepo,
   pauseCampaignRepo,
   cancelCampaignRepo,
+  getCampaignListForLLMRepo,
 } from "../../repositories/coreRepo/campagin.repository"; // Adjust path
 import { ResponseType } from "../../types/Response.type"; // Adjust path
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
@@ -35,6 +36,8 @@ import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 import { createNotificationRepo } from "../../repositories/commonRepo/notification.repository";
 import { notificationType } from "../../enums/notification.enum";
 import { logger } from "../../config/logger.config";
+import DirectLink from "../../models/DirectLink.model";
+import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 
 // Get campaign list with filters
 
@@ -133,13 +136,17 @@ export const getCampaignList = async (
       status: true,
       message: "Campaigns retrieved successfully",
       data: {
-        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => {
+        campaigns: await Promise.all(campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
           // Calculate metrics for each campaign
-          const { totalTraffic, totalCost } = calculateCampaignMetrics(
+          let { totalTraffic, totalCost } = calculateCampaignMetrics(
             campaign.links,
             campaign.keywords
           );
-
+          if (campaign.campaignTypeId === 4) {
+            const directLink =  await calculateDirectLinkCampaignCosts(campaign.directLinks || [], campaign.startDate, campaign.endDate);
+            totalCost += directLink.totalCost;
+            totalTraffic += directLink.totalTraffic;
+          }
           return {
             id: campaign.id,
             userId: campaign.userId,
@@ -158,8 +165,9 @@ export const getCampaignList = async (
             status: campaign.status,
             createdAt: campaign.createdAt,
             updatedAt: campaign.updatedAt,
-          };
-        }),
+            };
+          })
+        ),
         total: campaigns.total,
       },
     });
@@ -264,8 +272,9 @@ export const createCampaign = async (
     // Fetch campaign with associations
     const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
       include: [
-        { model: Keyword, as: "keywords" },
-        { model: Link, as: "links" },
+        { model: Keyword, as: "keywords", required: false },
+        { model: Link, as: "links", required: false },
+        // { model: DirectLink, as: "directLinks", required: false },
       ],
     });
 
@@ -348,20 +357,25 @@ export const calculateCampaignCosts = async (
 ) => {
   const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+  let keywordCostlist: number[] = [];
+  if (keywords) {
+    keywordCostlist = keywords.map((keyword) => {
+      return keyword.traffic * keywordCost * keyword.timeOnSite;
+    });
+  }
 
-  const keywordCostlist = keywords.map((keyword) => {
-    return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
-  });
   // Calculate keyword costs based on traffic
   const totalKeywordTraffic =
     keywords?.reduce((sum, item) => sum + item.traffic, 0) || 0;
-  const keywordTotalCost = keywordCostlist.reduce((sum, item) => sum + item, 0);
+  const keywordTotalCost =
+    keywordCostlist.length > 0
+      ? keywordCostlist.reduce((sum, item) => sum + item, 0)
+      : 0;
 
   // Calculate link costs based on duration
   const campaignDurationInDays = Math.ceil(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
-  console.log("duration", campaignDurationInDays);
   const totalLinkCost =
     links?.reduce((sum) => {
       const linkTotalCost = linkCost * campaignDurationInDays;
@@ -473,21 +487,34 @@ const createCampaignWithTransaction = async (data: any) => {
       throw new Error("Failed to create campaign");
     }
 
-    await createKeywords(
-      campaign,
-      data.keywords,
-      data.start,
-      data.currentDate,
-      transaction
-    );
-    await createLinks(
-      campaign,
-      data.links,
-      data.start,
-      data.campaignDurationInDays,
-      data.currentDate,
-      transaction
-    );
+    if (data.keywords) {
+      await createKeywords(
+        campaign,
+        data.keywords,
+        data.start,
+        data.currentDate,
+        transaction
+      );
+    }
+    if (data.links) {
+      await createLinks(
+        campaign,
+        data.links,
+        data.start,
+        data.campaignDurationInDays,
+        data.currentDate,
+        transaction
+      );
+    }
+    if (data.directLinks) {
+      await createDirectLinks(
+        campaign,
+        data.directLinks,
+        data.start,
+        data.end,
+        transaction
+      );
+    }
     await createTransaction(
       data.userId,
       campaign.id,
@@ -562,7 +589,7 @@ const createLinks = async (
     traffic: 0,
     cost: (linkCost || 1) * (campaignDurationInDays || 1),
     anchorText: "",
-    status: start > currentDate ? LinkStatus.INACTIVE : link.status,
+    status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
     url: "",
     page: "",
     isDeleted: false,
@@ -648,6 +675,60 @@ const sendCampaignNotifications = async (
     });
   }
 };
+const createDirectLinks = async (
+  campaign: any,
+  directLinks: any[],
+  start: Date,
+  end: Date,
+  transaction: Transaction
+) => {
+  const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const currentDate = new Date();
+  const directLinkData = directLinks.map(
+    (directLink: DirectLinkAttributes) => ({
+      campaignId: campaign.id,
+      link: directLink.link,
+      distribution: directLink.distribution,
+      traffic: directLink.traffic,
+      cost: directLink.traffic * directLinkCost * directLink.timeOnSite,
+      status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
+      timeOnSite: directLink.timeOnSite,
+      isDeleted: false,
+    })
+  );
+  try {
+    const createdDirectLinks = await DirectLink.bulkCreate(directLinkData, {
+      transaction,
+    });
+    const pythonApiPromises = createdDirectLinks.map(async (directLink) => {
+      try {
+        await baseApiPython("direct-link/set", {
+          directLinkId: directLink.id,
+          link: directLink.link,
+          traffic: directLink.traffic,
+          distribution: directLink.distribution,
+          device: campaign.device,
+          searchTool: campaign.search,
+          timeOnSite: directLink.timeOnSite,
+          timeStart: campaign.startDate,
+          timeEnd: campaign.endDate,
+        });
+      } catch (error: any) {
+        logger.error(
+          `Failed to sync direct link ${directLink.id} with Python API: ${error.message}`
+        );
+        throw error; // Re-throw to trigger rollback
+      }
+    });
+
+    // Wait for all Python API calls to complete
+    await Promise.all(pythonApiPromises);
+    return createdDirectLinks;
+  } catch (error: any) {
+    logger.error(`Error in createDirectLinks: ${error.message}`);
+    throw error;
+  }
+};
 
 const formatCampaignResponse = (
   campaign: any,
@@ -670,10 +751,31 @@ const formatCampaignResponse = (
   status: campaign?.status,
   keywords: campaign?.keywords || [],
   links: campaign?.links || [],
+  directLinks: campaign?.directLinks || [],
   createdAt: campaign?.createdAt,
   updatedAt: campaign?.updatedAt,
 });
+const calculateDirectLinkCampaignCosts = async (
+  directLinks: any[],
+  start: Date,
+  end: Date
+) => {
+  const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const campaignDurationInDays = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const totalDirectLinkTraffic =
+    directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
+  const totalCost = directLinks.reduce((sum, directLink) => {
+    return sum + directLink.traffic * directLinkCost * directLink.timeOnSite;
+  }, 0);
+  return {
+    totalCost,
+    totalTraffic: totalDirectLinkTraffic,
+    campaignDurationInDays,
+  };
+};
 // Get campaign by ID
 export const getCampaignById = async (
   req: AuthenticatedRequest,
@@ -708,8 +810,14 @@ export const getCampaignById = async (
       return;
     }
     // Calculate total traffic and cost from links and keywords
-    const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
-
+    let metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
+    if (campaign.campaignTypeId === 4) {
+      metrics = await calculateDirectLinkCampaignCosts(
+        campaign.directLinks || [],
+        campaign.startDate,
+        campaign.endDate
+      );
+    }
     res.status(statusCode.OK).json({
       status: true,
       message: "Campaign retrieved successfully",
@@ -986,3 +1094,140 @@ export const cancelCampaign = async (
     return;
   }
 };
+
+export const createDirectLinkCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const {
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      startDate,
+      endDate,
+      domain,
+      search,
+      directLinks,
+    } = req.body;
+
+    // Validate dates
+    const { start, end, currentDate } = validateDates(startDate, endDate);
+    // console.log(start, end, currentDate);
+    if (!start || !end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid date format for startDate or endDate",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (start >= end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "startDate must be before endDate",
+        error: "Invalid date range",
+      });
+      return;
+    }
+
+    // Calculate costs and validate wallet
+    const { totalCost, totalTraffic, campaignDurationInDays } =
+      await calculateDirectLinkCampaignCosts(directLinks, start, end);
+    // console.log(totalCost, totalTraffic, keywordTotalCost, totalLinkCost);
+    const isValidWallet = await compareWalletAmount(userId, totalCost);
+    if (!isValidWallet) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Insufficient balance",
+        error: "Invalid wallet",
+      });
+      return;
+    }
+
+    // Create campaign with transaction
+    const campaign = await createCampaignWithTransaction({
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      start,
+      end,
+      domain,
+      search,
+      campaignTypeId: 4,
+      directLinks,
+      currentDate,
+      totalCost,
+      campaignDurationInDays,
+    });
+
+    // Fetch campaign with associations
+    const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
+      include: [{ model: DirectLink, as: "directLinks" }],
+    });
+
+    if (campaignWithAssociations) {
+      await sendCampaignNotifications(
+        campaignWithAssociations,
+        userId,
+        name,
+        totalCost
+      );
+    }
+
+    res.status(statusCode.CREATED).json({
+      status: true,
+      message: "Campaign created successfully",
+      data: formatCampaignResponse(
+        campaignWithAssociations,
+        totalTraffic,
+        totalCost
+      ),
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error creating campaign",
+      error: error.message,
+    });
+  }
+};
+
+export async function getCampaignListForLLMController(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const result = await getCampaignListForLLMRepo();
+    res.status(statusCode.OK).json({
+      success: true,
+      data: result,
+    });
+    return;
+  } catch (error: any) {
+    if (error instanceof ErrorType) {
+      res.status(error.code || statusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: {
+          name: error.name,
+          message: error.message,
+        },
+      });
+      return;
+    }
+
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: {
+        name: "InternalServerError",
+        message: "An unexpected error occurred",
+      },
+    });
+    return;
+  }
+}

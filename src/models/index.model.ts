@@ -18,7 +18,9 @@ import Config from "./Config.model";
 import Agency from "./Agency.model"
 import Image from "./Image.model"
 import Package from "./Package.model"
-// Initialize models (this ensures they’re loaded)
+import Report from "./Report.model"
+import DirectLink from "./DirectLink.model";
+// Initialize models (this ensures they're loaded)
 export const models = {
   Role,
   Permission,
@@ -37,7 +39,9 @@ export const models = {
   CampaignType,
   Config,
   Image,
-  Package
+  Package,
+  Report,
+  DirectLink
 };
 
 
@@ -81,6 +85,9 @@ Campaign.hasMany(Keyword, { foreignKey: "campaignId", as: "keywords", onDelete: 
 Link.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
 Campaign.hasMany(Link, { foreignKey: "campaignId", as: "links", onDelete: 'SET NULL' });
 
+DirectLink.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
+Campaign.hasMany(DirectLink, { foreignKey: "campaignId", as: "directLinks", onDelete: 'SET NULL' });
+
 Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermissions", onDelete: 'SET NULL' });
 Permission.hasMany(RolePermission, {
   foreignKey: "permissionId",
@@ -114,6 +121,8 @@ Agency.hasMany(User, {
 User.belongsTo(Image, { foreignKey: "imageId", as: "image", onDelete: 'SET NULL' });
 Image.hasMany(User, { foreignKey: "imageId", as: "users", onDelete: 'SET NULL' });
 
+User.hasMany(Report, { foreignKey: "userId", as: "reports", onDelete: 'SET NULL' });
+Report.belongsTo(User, { foreignKey: "userId", as: "users", onDelete: 'SET NULL' });
 // Export models
 export {
   Role,
@@ -134,5 +143,7 @@ export {
   Agency,
   Image,
   Package,
+  Report,
+  DirectLink,
   sequelizeSystem,
 };

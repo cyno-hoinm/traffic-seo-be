@@ -1,7 +1,6 @@
 import express from "express";
 import { authenticateToken } from "../../middleware/auth";
 import { protectedRoutes, publicRoutes } from "./config";
-
 const SystemRouter = express.Router();
 
 Object.entries(publicRoutes).forEach(([path, route]) => {
