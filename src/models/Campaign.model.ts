@@ -2,7 +2,6 @@ import { DataTypes, Model } from "sequelize";
 import { Country, sequelizeSystem, User } from "./index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
 import { CampaignAttributes } from "../interfaces/Campaign.interface";
-import { CampaignTypeAttributes } from "../interfaces/CampaignType.interface";
 import CampaignType from "./CampaignType.model";
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { LinkAttributes } from "../interfaces/Link.interface";
@@ -12,7 +11,7 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public userId!: number;
   public countryId!: number;
   public name!: string;
-  public campaignTypeId!: CampaignTypeAttributes;
+  public campaignTypeId!: number;
   public device!: string;
   public title!: string;
   public startDate!: Date;

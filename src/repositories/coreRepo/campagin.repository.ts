@@ -2,13 +2,13 @@ import { Op, Transaction } from "sequelize";
 import { CampaignStatus } from "../../enums/campaign.enum";
 import {
   Campaign,
+  DirectLink,
   Keyword,
   Link,
   sequelizeSystem,
   User,
 } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
-import { CampaignTypeAttributes } from "../../interfaces/CampaignType.interface";
 import CampaignType from "../../models/CampaignType.model";
 import { CampaignAttributes } from "../../interfaces/Campaign.interface";
 import { CampaignReportList } from "../../interfaces/CampaignReport.interface";
@@ -70,6 +70,12 @@ export const getCampaignListRepo = async (filters: {
           where: { isDeleted: false },
           required: false, // Include campaign even if no keywords
         },
+        {
+          model: DirectLink,
+          as: "directLinks",
+          where: { isDeleted: false },
+          required: false, // Include campaign even if no direct links
+        },
       ],
     };
 
@@ -105,7 +111,7 @@ export const createCampaignRepo = async (
     endDate: Date;
     domain: string;
     search: string;
-    campaignTypeId: CampaignTypeAttributes;
+    campaignTypeId: number;
     status: CampaignStatus;
     isDeleted: boolean;
   },

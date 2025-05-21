@@ -136,13 +136,17 @@ export const getCampaignList = async (
       status: true,
       message: "Campaigns retrieved successfully",
       data: {
-        campaigns: campaigns.campaigns.map((campaign: CampaignAttributes) => {
+        campaigns: await Promise.all(campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
           // Calculate metrics for each campaign
-          const { totalTraffic, totalCost } = calculateCampaignMetrics(
+          let { totalTraffic, totalCost } = calculateCampaignMetrics(
             campaign.links,
             campaign.keywords
           );
-
+          if (campaign.campaignTypeId === 4) {
+            const directLink =  await calculateDirectLinkCampaignCosts(campaign.directLinks || [], campaign.startDate, campaign.endDate);
+            totalCost += directLink.totalCost;
+            totalTraffic += directLink.totalTraffic;
+          }
           return {
             id: campaign.id,
             userId: campaign.userId,
@@ -161,8 +165,9 @@ export const getCampaignList = async (
             status: campaign.status,
             createdAt: campaign.createdAt,
             updatedAt: campaign.updatedAt,
-          };
-        }),
+            };
+          })
+        ),
         total: campaigns.total,
       },
     });
