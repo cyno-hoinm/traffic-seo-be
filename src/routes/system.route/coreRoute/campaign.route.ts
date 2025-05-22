@@ -266,6 +266,8 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                     - name
  *                     - urls
  *                     - distribution
+ *                     - keywordType
+ *                     - traffic
  *                   properties:
  *                     name:
  *                       type: string
@@ -290,6 +292,11 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                       type: integer
  *                       description: Time on site for the keyword (optional)
  *                       example: 1
+ *                     keywordType:
+ *                       type: string
+ *                       enum: [ORGANIC, VIDEO]
+ *                       description: Type of keyword
+ *                       example: "ORGANIC"
  *               links:
  *                 type: array
  *                 description: Optional array of links

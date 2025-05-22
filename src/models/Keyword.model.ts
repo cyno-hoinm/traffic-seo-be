@@ -3,7 +3,7 @@ import { Campaign, sequelizeSystem } from "./index.model"; // Assuming this poin
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { DistributionType } from "../enums/distribution.enum";
 import { logger } from "../config/logger.config";
-
+import { KeywordType } from "../enums/keywordType.enum";
 class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public id!: number;
   public campaignId!: number | null; // Nullable if not always present
@@ -12,6 +12,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public urls!: string; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public keywordType!: KeywordType;
   public timeOnSite!: number;
   public cost!: number;
   public isDeleted!: boolean;
@@ -63,6 +64,11 @@ Keyword.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
+    },
+    keywordType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: KeywordType.ORGANIC,
     },
     cost: {
       type: DataTypes.DECIMAL(10, 2),

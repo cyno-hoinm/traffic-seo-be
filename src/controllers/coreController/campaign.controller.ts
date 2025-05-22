@@ -38,6 +38,7 @@ import { notificationType } from "../../enums/notification.enum";
 import { logger } from "../../config/logger.config";
 import DirectLink from "../../models/DirectLink.model";
 import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
+import { KeywordType } from "../../enums/keywordType.enum";
 
 // Get campaign list with filters
 
@@ -136,35 +137,40 @@ export const getCampaignList = async (
       status: true,
       message: "Campaigns retrieved successfully",
       data: {
-        campaigns: await Promise.all(campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
-          // Calculate metrics for each campaign
-          let { totalTraffic, totalCost } = calculateCampaignMetrics(
-            campaign.links,
-            campaign.keywords
-          );
-          if (campaign.campaignTypeId === 4) {
-            const directLink =  await calculateDirectLinkCampaignCosts(campaign.directLinks || [], campaign.startDate, campaign.endDate);
-            totalCost += directLink.totalCost;
-            totalTraffic += directLink.totalTraffic;
-          }
-          return {
-            id: campaign.id,
-            userId: campaign.userId,
-            username: campaign.users?.username,
-            countryId: campaign.countryId,
-            name: campaign.name,
-            campaignTypeId: campaign.campaignTypeId,
-            device: campaign.device,
-            title: campaign.title,
-            startDate: campaign.startDate,
-            endDate: campaign.endDate,
-            totalTraffic, // Calculated from links and keywords
-            totalCost: totalCost, // Calculated from links and keywords
-            domain: campaign.domain,
-            search: campaign.search,
-            status: campaign.status,
-            createdAt: campaign.createdAt,
-            updatedAt: campaign.updatedAt,
+        campaigns: await Promise.all(
+          campaigns.campaigns.map(async (campaign: CampaignAttributes) => {
+            // Calculate metrics for each campaign
+            let { totalTraffic, totalCost } = calculateCampaignMetrics(
+              campaign.links,
+              campaign.keywords
+            );
+            if (campaign.campaignTypeId === 4) {
+              const directLink = await calculateDirectLinkCampaignCosts(
+                campaign.directLinks || [],
+                campaign.startDate,
+                campaign.endDate
+              );
+              totalCost += directLink.totalCost;
+              totalTraffic += directLink.totalTraffic;
+            }
+            return {
+              id: campaign.id,
+              userId: campaign.userId,
+              username: campaign.users?.username,
+              countryId: campaign.countryId,
+              name: campaign.name,
+              campaignTypeId: campaign.campaignTypeId,
+              device: campaign.device,
+              title: campaign.title,
+              startDate: campaign.startDate,
+              endDate: campaign.endDate,
+              totalTraffic, // Calculated from links and keywords
+              totalCost: totalCost, // Calculated from links and keywords
+              domain: campaign.domain,
+              search: campaign.search,
+              status: campaign.status,
+              createdAt: campaign.createdAt,
+              updatedAt: campaign.updatedAt,
             };
           })
         ),
@@ -357,10 +363,17 @@ export const calculateCampaignCosts = async (
 ) => {
   const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
   const linkCost = await getConfigValue(ConfigApp.LINK_TRAFFIC_COST);
+  const keywordVideoCost = await getConfigValue(
+    ConfigApp.KEYWORD_VIDEO_TRAFFIC_COST
+  );
   let keywordCostlist: number[] = [];
   if (keywords) {
     keywordCostlist = keywords.map((keyword) => {
-      return keyword.traffic * keywordCost * keyword.timeOnSite;
+      if (keyword.keywordType === KeywordType.VIDEO) {
+        return keyword.traffic * keywordVideoCost * (keyword.timeOnSite || 1);
+      } else {
+        return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
+      }
     });
   }
 
@@ -534,7 +547,9 @@ const createKeywords = async (
   transaction: Transaction
 ) => {
   const keywordCost = await getConfigValue(ConfigApp.KEYWORD_TRAFFIC_COST);
-
+  const keywordVideoCost = await getConfigValue(
+    ConfigApp.KEYWORD_VIDEO_TRAFFIC_COST
+  );
   if (!keywords?.length) return;
 
   for (const keyword of keywords) {
@@ -542,12 +557,16 @@ const createKeywords = async (
       campaignId: campaign.id,
       name: keyword.name,
       urls: keyword.urls,
-      cost: keyword.traffic * keywordCost * keyword.timeOnSite,
+      cost:
+        keyword.keywordType === KeywordType.VIDEO
+          ? keyword.traffic * keywordVideoCost * (keyword.timeOnSite || 1)
+          : keyword.traffic * keywordCost * (keyword.timeOnSite || 1),
       status:
         start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
       distribution: keyword.distribution,
-      timeOnSite: keyword.timeOnSite,
+      timeOnSite: keyword.timeOnSite || 1,
       traffic: keyword.traffic || 0,
+      keywordType: keyword.keywordType,
       isDeleted: false,
     };
 
@@ -561,7 +580,8 @@ const createKeywords = async (
       traffic: newKeyword.traffic || 0,
       device: campaign.device,
       domain: campaign.domain,
-      timeOnSite: newKeyword.timeOnSite,
+      timeOnSite: newKeyword.timeOnSite || 1,
+      keywordType: newKeyword.keywordType,
       timeStart: campaign.startDate,
       timeEnd: campaign.endDate,
       searchTool: campaign.search,
@@ -690,9 +710,9 @@ const createDirectLinks = async (
       link: directLink.link,
       distribution: directLink.distribution,
       traffic: directLink.traffic,
-      cost: directLink.traffic * directLinkCost * directLink.timeOnSite,
+      cost: directLink.traffic * directLinkCost * (directLink.timeOnSite || 1),
       status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
-      timeOnSite: directLink.timeOnSite,
+      timeOnSite: directLink.timeOnSite || 1,
       isDeleted: false,
     })
   );
@@ -709,7 +729,7 @@ const createDirectLinks = async (
           distribution: directLink.distribution,
           device: campaign.device,
           searchTool: campaign.search,
-          timeOnSite: directLink.timeOnSite,
+          timeOnSite: directLink.timeOnSite || 1,
           timeStart: campaign.startDate,
           timeEnd: campaign.endDate,
         });
@@ -768,7 +788,7 @@ const calculateDirectLinkCampaignCosts = async (
     directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
   const totalCost = directLinks.reduce((sum, directLink) => {
-    return sum + directLink.traffic * directLinkCost * directLink.timeOnSite;
+    return sum + directLink.traffic * directLinkCost * (directLink.timeOnSite || 1);
   }, 0);
   return {
     totalCost,

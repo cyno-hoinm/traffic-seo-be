@@ -1,5 +1,6 @@
 import { DistributionType } from "../enums/distribution.enum";
 import { CampaignAttributes } from "./Campaign.interface";
+import { KeywordType } from "../enums/keywordType.enum";
 
 export interface KeywordAttributes {
   id?: number;
@@ -11,6 +12,7 @@ export interface KeywordAttributes {
   status: string;
   timeOnSite: number;
   distribution: DistributionType;
+  keywordType: KeywordType;
   traffic: number;
   isDeleted?: boolean;
   createdAt?: Date;

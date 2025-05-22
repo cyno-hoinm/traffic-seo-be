@@ -5,7 +5,7 @@ import { ErrorType } from "../../types/Error.type";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
 import statusCode from "../../constants/statusCode";
 import { keywordStatus } from "../../enums/keywordStatus.enum";
-
+import { KeywordType } from "../../enums/keywordType.enum";
 export const getKeywordListRepo = async (filters: {
   campaignId?: number;
   distribution?: DistributionType;
@@ -58,6 +58,7 @@ export const createKeywordRepo = async (data: {
   traffic: number;
   status: string;
   distribution: DistributionType;
+  keywordType: KeywordType;
   cost: number;
   timeOnSite: number;
 }): Promise<any> => {
@@ -72,6 +73,7 @@ export const createKeywordRepo = async (data: {
       traffic: keyword.traffic,
       distribution: keyword.distribution,
       cost: keyword.cost,
+      keywordType: keyword.keywordType,
       device: campaign?.device,
       domain: campaign?.domain,
       timeStart: campaign?.startDate.toString(),

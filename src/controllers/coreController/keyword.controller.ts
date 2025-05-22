@@ -17,6 +17,7 @@ import { formatDate } from "../../utils/utils";
 import { getCampaignByIdRepo } from "../../repositories/coreRepo/campagin.repository";
 import { searchLogs, searchLogsByType } from "../../services/botService/searchLog.service";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
+import { KeywordType } from "../../enums/keywordType.enum";
 
 // Get keyword list with filters
 export const getKeywordList = async (
@@ -93,6 +94,7 @@ export const getKeywordList = async (
           status: keyword.status,
           cost: keyword.cost,
           timeOnSite: keyword.timeOnSite,
+          keywordType: keyword.keywordType,
           distribution: keyword.distribution,
           traffic: keyword.traffic,
           createdAt: keyword.createdAt,
@@ -116,7 +118,7 @@ export const createKeyword = async (
   res: Response<ResponseType<KeywordAttributes>>
 ): Promise<void> => {
   try {
-    const { campaignId, name, urls, distribution, traffic } = req.body;
+    const { campaignId, name, urls, distribution, traffic, keywordType } = req.body;
     const user = req.data;
     if (!user || !user.id) {
       res.status(statusCode.UNAUTHORIZED).json({
@@ -174,6 +176,7 @@ export const createKeyword = async (
       traffic,
       status: keywordStatus.ACTIVE,
       distribution,
+      keywordType: keywordType as KeywordType,
       cost,
       timeOnSite: 1,
     });
@@ -196,19 +199,7 @@ export const createKeyword = async (
     res.status(statusCode.CREATED).json({
       status: true,
       message: "Keyword created successfully",
-      data: {
-        id: keyword.id,
-        campaignId: keyword.campaignId,
-        name: keyword.name,
-        urls: keyword.url,
-        distribution: keyword.distribution,
-        status: keyword.status,
-        traffic: keyword.traffic,
-        timeOnSite: keyword.timeOnSite,
-        createdAt: keyword.createdAt,
-        cost: keyword.cost,
-        updatedAt: keyword.updatedAt,
-      },
+      data: keyword,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -272,19 +263,7 @@ export const getKeywordById = async (
     res.status(statusCode.OK).json({
       status: true,
       message: "Keyword retrieved successfully",
-      data: {
-        id: keyword.id,
-        campaignId: keyword.campaignId,
-        name: keyword.name,
-        urls: keyword.urls,
-        status: keyword.status,
-        distribution: keyword.distribution,
-        traffic: keyword.traffic,
-        timeOnSite: keyword.timeOnSite,
-        cost: keyword.cost,
-        createdAt: keyword.createdAt,
-        updatedAt: keyword.updatedAt,
-      },
+      data: keyword,
     });
   } catch (error: any) {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -457,6 +436,7 @@ export const getKeywordByCampaignId = async (
           updatedAt: keyword.updatedAt,
           status: keyword.status,
           timeOnSite: keyword.timeOnSite,
+          keywordType: keyword.keywordType,
           traffic: keyword.traffic,
           trafficCompleted: result.success_count, // Corrected typo
           logs: logs
