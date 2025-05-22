@@ -39,6 +39,7 @@ import { logger } from "../../config/logger.config";
 import DirectLink from "../../models/DirectLink.model";
 import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 import { KeywordType } from "../../enums/keywordType.enum";
+import { IndexStatus } from "../../enums/indexStatus.enum";
 
 // Get campaign list with filters
 
@@ -610,6 +611,7 @@ const createLinks = async (
     cost: (linkCost || 1) * (campaignDurationInDays || 1),
     anchorText: "",
     status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
+    indexStatus: IndexStatus.NOT_INDEXED,
     url: "",
     page: "",
     isDeleted: false,
@@ -619,25 +621,20 @@ const createLinks = async (
     // Create links in database
     const createdLinks = await Link.bulkCreate(linkData, { transaction });
 
-    // Send links to Python API
-    const pythonApiPromises = createdLinks.map(async (link) => {
-      try {
-        await baseApiPython("link/set", {
-          linkId: link.id,
-          link: link.link,
-          timeStart: campaign.startDate,
-          timeEnd: campaign.endDate,
-        });
-      } catch (error: any) {
-        logger.error(
-          `Failed to sync link ${link.id} with Python API: ${error.message}`
-        );
-        throw error; // Re-throw to trigger rollback
-      }
-    });
-
-    // Wait for all Python API calls to complete
-    await Promise.all(pythonApiPromises);
+    // Format links data for Python API
+    const linksForPython = createdLinks.map((link) => ({
+      linkId: link.id,
+      link: link.link,
+      timeStart: campaign.startDate,
+      timeEnd: campaign.endDate,
+    }));
+    // Send all links to Python API in a single call
+    try {
+      await baseApiPython("link/set-multiple", linksForPython);
+    } catch (error: any) {
+      logger.error(`Failed to sync links with Python API: ${error.message}`);
+      throw error; // Re-throw to trigger rollback
+    }
   } catch (error: any) {
     // If any error occurs (either in database or Python API), throw it to trigger transaction rollback
     logger.error(`Error in createLinks: ${error.message}`);
