@@ -371,7 +371,8 @@ export const calculateCampaignCosts = async (
   if (keywords) {
     keywordCostlist = keywords.map((keyword) => {
       if (keyword.keywordType === KeywordType.VIDEO) {
-        return keyword.traffic * keywordVideoCost * (keyword.timeOnSite || 1);
+        return keyword.traffic * keywordVideoCost
+        // (keyword.timeOnSite || 1);
       } else {
         return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
       }
