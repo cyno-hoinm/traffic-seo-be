@@ -23,6 +23,7 @@ import { ConfigApp } from "../constants/config.constants";
 import { createNotificationRepo } from "../repositories/commonRepo/notification.repository";
 import { notificationType } from "../enums/notification.enum";
 import { calculateCampaignCosts } from "../controllers/coreController/campaign.controller";
+import { KeywordType } from "../enums/keywordType.enum";
 
 const QUEUE_KEY = "campaign:refund:queue";
 const PROCESSED_SET_KEY = "campaign:refund:processed";
@@ -56,16 +57,18 @@ export const processCampaignRefund = async (campaignId: number) => {
     }
 
     // const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
-    const { totalCost } =
-      await calculateCampaignCosts(
-        campaign.keywords,
-        campaign.links,
-        campaign.startDate,
-        campaign.endDate
-      );
+    const { totalCost } = await calculateCampaignCosts(
+      campaign.keywords,
+      campaign.links,
+      campaign.startDate,
+      campaign.endDate
+    );
     let refundAmount = 0;
     const KEYWORD_TRAFFIC_COST = await getConfigByNameRepo(
       ConfigApp.KEYWORD_TRAFFIC_COST
+    );
+    const KEYWORD_VIDEO_TRAFFIC_COST = await getConfigByNameRepo(
+      ConfigApp.KEYWORD_VIDEO_TRAFFIC_COST
     );
     const completedTrafficPromises = campaign.keywords.map(
       async (keyword: KeywordAttributes) => {
@@ -79,7 +82,19 @@ export const processCampaignRefund = async (campaignId: number) => {
             "keyword/traffic-count-duration",
             dataPython
           );
-          return result.traffic_count * keyword.timeOnSite * Number(KEYWORD_TRAFFIC_COST?.value || 1);
+          if (keyword.keywordType === KeywordType.VIDEO) {
+            return (
+              result.traffic_count *
+              // keyword.timeOnSite *
+              Number(KEYWORD_VIDEO_TRAFFIC_COST?.value || 1)
+            );
+          } else {
+            return (
+              result.traffic_count *
+              keyword.timeOnSite *
+              Number(KEYWORD_TRAFFIC_COST?.value || 1)
+            );
+          }
         } catch (error: any) {
           logger.error(
             `Error fetching traffic for keyword ${keyword.id}: ${error.message}`
@@ -90,7 +105,7 @@ export const processCampaignRefund = async (campaignId: number) => {
     );
 
     const completedTraffic = await Promise.all(completedTrafficPromises);
-    refundAmount = (totalCost - completedTraffic[0]);
+    refundAmount = totalCost - completedTraffic[0];
     if (refundAmount > 0) {
       // Create a refund transaction
       const wallet = await Wallet.findOne({
@@ -160,13 +175,10 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
           [Op.lt]: currentDate,
         },
         campaignTypeId: {
-          [Op.eq]: 1,
+          [Op.eq]: 1 || 5,
         },
       },
-      include: [
-        { model: Keyword, as: "keywords" },
-        { model: Link, as: "links" },
-      ],
+      include: [{ model: Keyword, as: "keywords" }],
       transaction,
     });
 
