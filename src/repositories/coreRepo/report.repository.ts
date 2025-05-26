@@ -1,9 +1,10 @@
 import { Op } from "sequelize";
 import { sequelizeSystem } from "../../database/mySQL/config.database";
-import { Campaign, Keyword, Link } from "../../models/index.model";
+import { Campaign, DirectLink, Keyword, Link } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { LinkAttributes } from "../../interfaces/Link.interface";
 import { KeywordAttributes } from "../../interfaces/Keyword.interface";
+import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 import { baseApiPython } from "../../config/botAPI.config";
 import {
   calculateCampaignMetrics,
@@ -14,7 +15,7 @@ import {
 import { logger } from "../../config/logger.config";
 export const getCampaignsReportUserRepo = async (
   userId: string,
-  campaignTypeId? : number,
+  campaignTypeId?: number,
   startDate?: string,
   endDate?: string
 ): Promise<
@@ -36,7 +37,7 @@ export const getCampaignsReportUserRepo = async (
     // Campaign filter
     const campaignWhere: any = {
       userId,
-      isDeleted: false
+      isDeleted: false,
     };
     if (campaignTypeId) {
       campaignWhere.campaignTypeId = campaignTypeId;
@@ -103,10 +104,23 @@ export const getCampaignsReportUserRepo = async (
         const keywordIds: { id: string }[] = keywords.map((keyword: any) => ({
           id: keyword.id,
         }));
+
+        // Fetch active direct links for the campaign
+        const directLinks = await sequelizeSystem.models.DirectLink.findAll({
+          where: { campaignId: campaign.id },
+          attributes: ["id"],
+          raw: true,
+        });
+        const directLinkIds: { id: string }[] = directLinks.map((directLink: any) => ({
+          id: directLink.id,
+        }));
+
         let traffic: { date: string; traffic: number }[] = [];
 
         if (startDate && endDate && keywords.length > 0) {
-          traffic = await calculateTraffic(keywordIds, startDate, endDate);
+          traffic = await calculateTraffic(startDate, endDate, keywordIds, undefined);
+        } else if (startDate && endDate && directLinks.length > 0) {
+          traffic = await calculateTraffic(startDate, endDate, undefined, directLinkIds);
         }
 
         return {
@@ -139,8 +153,10 @@ export interface CampaignReport {
   linkCount: number;
   totalCost: number;
   keywordCount: number;
+  directLinkCount: number;
   links: LinkAttributes[];
   keywords: KeywordAttributes[];
+  directLinks: DirectLinkAttributes[];
   traffic: any;
 }
 
@@ -166,6 +182,12 @@ export const getOneCampaignReportRepo = async (
         where: { isDeleted: false },
         required: false, // Include even if no keywords
       },
+      {
+        model: DirectLink,
+        as: "directLinks",
+        where: { isDeleted: false },
+        required: false,
+      },
     ],
   });
 
@@ -174,8 +196,9 @@ export const getOneCampaignReportRepo = async (
   }
 
   const keywordsCampaign = campaign.keywords || [];
+  const directLinksCampaign = campaign.directLinks || [];
   const metrics = calculateCampaignMetrics(campaign.links, campaign.keywords);
-  
+
   // Post data to Python API for each keyword and collect trafficCompleted
   const updatedKeywords = await Promise.all(
     keywordsCampaign.map(async (keyword: any) => {
@@ -207,19 +230,59 @@ export const getOneCampaignReportRepo = async (
     })
   );
 
-  const keywordIds: { id: string }[] = keywordsCampaign.map(
-    (keyword: any) => ({
-      id: keyword.id,
+  // Post data to Python API for each direct link and collect trafficCompleted
+  const updatedDirectLinks = await Promise.all(
+    directLinksCampaign.map(async (directLink: any) => {
+      const dataPython = {
+        directLinkId: directLink.id,
+        time_start: formatDate(campaign.startDate),
+        time_end: formatDate(campaign.endDate),
+      };
+      const result = await baseApiPython(
+        "direct-link/success-count-duration",
+        dataPython
+      );
+      return {
+        id: directLink.id,
+        campaignId: campaign.id,
+        link: directLink.link,
+        distribution: directLink.distribution,
+        cost: directLink.cost,
+        isDeleted: directLink.isDeleted,
+        createdAt: directLink.createdAt,
+        updatedAt: directLink.updatedAt,
+        timeOnSite: directLink.timeOnSite,
+        status: directLink.status,
+        traffic: directLink.traffic,
+        trafficCompleted: result.success_count,
+      };
     })
   );
+
+  const keywordIds: { id: string }[] = keywordsCampaign.map((keyword: any) => ({
+    id: keyword.id,
+  }));
+  const directLinkIds: { id: string }[] = directLinksCampaign.map((directLink: any) => ({
+    id: directLink.id,
+  }));
   let traffic: { date: string; traffic: number }[] = [];
 
-  if (campaign.startDate && campaign.endDate && keywordsCampaign.length > 0) {
-    traffic = await calculateTraffic(
-      keywordIds,
-      formatDate(campaign.startDate.toISOString()),
-      formatInTheEndDate(campaign.endDate.toISOString())
-    );
+  if (campaign.startDate && campaign.endDate) {
+    if (keywordsCampaign.length > 0) {
+      traffic = await calculateTraffic(
+        formatDate(campaign.startDate.toISOString()),
+        formatInTheEndDate(campaign.endDate.toISOString()),
+        keywordIds,
+        undefined
+      );
+    } else if (directLinksCampaign.length > 0) {
+      traffic = await calculateTraffic(
+        formatDate(campaign.startDate.toISOString()),
+        formatInTheEndDate(campaign.endDate.toISOString()),
+        undefined,
+        directLinkIds
+      );
+    }
   }
 
   return {
@@ -233,8 +296,10 @@ export const getOneCampaignReportRepo = async (
     totalTraffic: metrics.totalTraffic || 0,
     linkCount: campaign.links.length,
     keywordCount: campaign.keywords.length,
+    directLinkCount: campaign.directLinks.length,
     links: campaign.links || [],
     keywords: updatedKeywords,
+    directLinks: updatedDirectLinks,
     traffic,
   };
 };
@@ -333,7 +398,7 @@ export const getCampaignsReportAllRepo = async (
         let traffic: { date: string; traffic: number }[] = [];
 
         if (startDate && endDate && keywords.length > 0) {
-          traffic = await calculateTraffic(keywordIds, startDate, endDate);
+          traffic = await calculateTraffic(startDate, endDate, keywordIds);
         }
 
         return {
@@ -360,9 +425,10 @@ export const getCampaignsReportAllRepo = async (
 };
 
 const calculateTraffic = async (
-  keywords: { id: string }[],
   startDate: string,
-  endDate: string
+  endDate: string,
+  keywords?: { id: string }[],
+  directLinks?: { id: string }[]
 ): Promise<{ date: string; traffic: number }[]> => {
   const currentDate = formatInTheEndDate(new Date());
 
@@ -379,40 +445,70 @@ const calculateTraffic = async (
   });
 
   // Fetch traffic data for each date and keyword
-  for (const date of dateRange) {
-    const dailyTrafficData = await Promise.all(
-      keywords.map(async (keyword: any) => {
-        const dataPython = {
-          keywordId: keyword.id,
-          time_start: formatDate(date),
-          time_end: formatInTheEndDate(date),
-        };
-        try {
-          const result = await baseApiPython(
-            "keyword/success-count-duration",
-            dataPython
-          );
-          return {
-            date,
-            traffic: Number(result.success_count) || 0,
+  if (keywords) {
+    for (const date of dateRange) {
+      const dailyTrafficData = await Promise.all(
+        keywords.map(async (keyword: any) => {
+          const dataPython = {
+            keywordId: keyword.id,
+            time_start: formatDate(date),
+            time_end: formatInTheEndDate(date),
           };
-        } catch (apiError) {
-          logger.error("Error fetching traffic data:", apiError);
-          return { date, traffic: 0 };
-        }
-      })
-    );
+          try {
+            const result = await baseApiPython(
+              "keyword/success-count-duration",
+              dataPython
+            );
+            return {
+              date,
+              traffic: Number(result.success_count) || 0,
+            };
+          } catch (apiError) {
+            logger.error("Error fetching traffic data:", apiError);
+            return { date, traffic: 0 };
+          }
+        })
+      );
 
-    // Sum traffic for the date across all keywords
-    const totalTraffic = dailyTrafficData.reduce(
-      (sum, entry) => sum + entry.traffic,
-      0
-    );
-    trafficByDate[date] = totalTraffic;
+      // Aggregate traffic for this date
+      dailyTrafficData.forEach((data) => {
+        trafficByDate[data.date] += data.traffic;
+      });
+    }
+  } else if (directLinks) {
+    for (const date of dateRange) {
+      const dailyTrafficData = await Promise.all(
+        directLinks.map(async (directLink: any) => {
+          const dataPython = {
+            directLinkId: directLink.id,
+            time_start: formatDate(date),
+            time_end: formatInTheEndDate(date),
+          };
+          try {
+            const result = await baseApiPython(
+              "direct-link/success-count-duration",
+              dataPython
+            );
+            return {
+              date,
+              traffic: Number(result.success_count) || 0,
+            };
+          } catch (apiError) {
+            logger.error("Error fetching traffic data:", apiError);
+            return { date, traffic: 0 };
+          }
+        })
+      );
+
+      // Aggregate traffic for this date
+      dailyTrafficData.forEach((data) => {
+        trafficByDate[data.date] += data.traffic;
+      });
+    }
   }
 
   return dateRange.map((date) => ({
     date,
-    traffic: trafficByDate[date],
+    traffic: trafficByDate[date] || 0,
   }));
 };

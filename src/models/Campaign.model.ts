@@ -5,7 +5,7 @@ import { CampaignAttributes } from "../interfaces/Campaign.interface";
 import CampaignType from "./CampaignType.model";
 import { KeywordAttributes } from "../interfaces/Keyword.interface";
 import { LinkAttributes } from "../interfaces/Link.interface";
-
+import { DirectLinkAttributes } from "../interfaces/DirectLink.interface";
 class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public id!: number;
   public userId!: number;
@@ -23,6 +23,7 @@ class Campaign extends Model<CampaignAttributes> implements CampaignAttributes {
   public keywordsCount!: number;
   public keywords!: KeywordAttributes[];
   public links!: LinkAttributes[];
+  public directLinks!: DirectLinkAttributes[];
   public isDeleted!: boolean;
   public status!: CampaignStatus;
   public readonly createdAt!: Date;

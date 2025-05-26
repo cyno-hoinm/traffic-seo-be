@@ -79,7 +79,7 @@ export const processCampaignRefund = async (campaignId: number) => {
             time_end: formatDate(campaign.endDate),
           };
           const result = await baseApiPython(
-            "keyword/traffic-count-duration",
+            "keyword/success-count-duration",
             dataPython
           );
           if (keyword.keywordType === KeywordType.VIDEO) {
