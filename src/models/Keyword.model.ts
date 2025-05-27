@@ -12,6 +12,7 @@ class Keyword extends Model<KeywordAttributes> implements KeywordAttributes {
   public urls!: string; // Array stored as JSON
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public videoTitle!: string;
   public keywordType!: KeywordType;
   public timeOnSite!: number;
   public cost!: number;
@@ -38,6 +39,10 @@ Keyword.init(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    videoTitle: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     urls: {
       type: DataTypes.TEXT, // Store as JSON in MySQL

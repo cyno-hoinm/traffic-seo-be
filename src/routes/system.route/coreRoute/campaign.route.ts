@@ -273,6 +273,10 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                       type: string
  *                       description: Keyword name
  *                       example: "summer sale"
+ *                     videoTitle:
+ *                       type: string
+ *                       description: Video title for the keyword
+ *                       example: "Summer Sale"
  *                     urls:
  *                       type: array
  *                       items:
@@ -384,6 +388,9 @@ router.post("/search", authorization(["search-campaigns"]), getCampaignList);
  *                           name:
  *                             type: string
  *                             example: "summer sale"
+ *                           videoTitle:
+ *                             type: string
+ *                             example: "Summer Sale"
  *                           urls:
  *                             type: array
  *                             items:

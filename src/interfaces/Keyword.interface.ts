@@ -9,6 +9,7 @@ export interface KeywordAttributes {
   name: string;
   cost: number;
   urls?: string;
+  videoTitle?: string;
   status: string;
   timeOnSite: number;
   distribution: DistributionType;

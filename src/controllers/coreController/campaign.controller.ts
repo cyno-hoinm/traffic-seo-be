@@ -566,6 +566,7 @@ const createKeywords = async (
       status:
         start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
       distribution: keyword.distribution,
+      videoTitle: keyword.videoTitle || "",
       timeOnSite: keyword.timeOnSite || 1,
       traffic: keyword.traffic || 0,
       keywordType: keyword.keywordType,
@@ -577,6 +578,7 @@ const createKeywords = async (
       keywordId: newKeyword.id,
       title: campaign.title,
       keyword: newKeyword.name,
+      videoTitle: newKeyword.videoTitle || "",
       urls: newKeyword.urls,
       distribution: newKeyword.distribution,
       traffic: newKeyword.traffic || 0,
