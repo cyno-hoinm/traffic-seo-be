@@ -36,6 +36,7 @@ export const getReportListRepository = async (
 ) => {
   const whereCondition: any = { isDeleted: false };
   if (userId) whereCondition.userId = userId;
+  // console.log(userId) ;
   if (status) whereCondition.status = status;
   if (page && limit && page > 0 && limit > 0) {
     const offset = (page - 1) * limit;

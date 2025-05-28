@@ -52,7 +52,7 @@ const upload = multer();
  */
 router.post(
   "/",
-  authorization(["create-report-user"]),
+  // authorization(["create-report-user"]),
   upload.array("images"),
   createReportController
 );
@@ -88,7 +88,7 @@ router.post(
  */
 router.post(
   "/search",
-  authorization(["search-report-user"]),
+  // authorization(["search-report-user"]),
   getReportUserController
 );
 
