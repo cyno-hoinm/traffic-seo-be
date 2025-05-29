@@ -71,10 +71,11 @@ class EmailService {
     to: string,
     subject: string,
     body: string,
-    options: EmailOptions = {}
+    options: EmailOptions = {},
+    link: string  
   ): Promise<EmailResult> {
     const { recipientName, attachments, retries = MAX_RETRIES } = options;
-    const html = generateEmailTemplate(subject, body, recipientName);
+    const html = generateEmailTemplate(subject, body, recipientName, link);
     const mailOptions: SendMailOptions = {
       from: process.env.SMTP_FROM_NAME ? `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>` : process.env.SMTP_FROM,
       to,
@@ -119,10 +120,10 @@ class EmailService {
   }
 
   private async processEmailTask(task: EmailTask): Promise<void> {
-    const { to, subject, body, options } = task;
+    const { to, subject, body, options, link } = task;
     debugQueue(`Processing email for ${to}`);
 
-    const result = await this.sendEmail(to, subject, body, options);
+    const result = await this.sendEmail(to, subject, body, options, link);
     
     if (!result.success) {
       logger.warn(`Failed to send email to ${to} after ${result.attempts} attempts`);
