@@ -264,22 +264,6 @@ export const updateUserOneField = async (
       return;
     }
 
-    const validFields: (keyof UserAttributes)[] = [
-      "username",
-      "password",
-      "email",
-      "roleId",
-      "phoneNumber",
-    ];
-    if (!validFields.includes(fieldName)) {
-      res.status(statusCode.BAD_REQUEST).json({
-        status: false,
-        message: "Validation failed",
-        error: `Invalid fieldName. Must be one of: ${validFields.join(", ")}`,
-      });
-      return;
-    }
-
     const updatedUser = await updateUserOneFieldRepo(userId, fieldName, value);
 
     if (!updatedUser) {
