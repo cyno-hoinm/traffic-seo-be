@@ -16,6 +16,7 @@ interface EmailTask {
   to: string;
   subject: string;
   body: string;
+  link: string;
   options?: EmailOptions;
   timestamp: number;
 }
@@ -75,7 +76,7 @@ class EmailService {
     const { recipientName, attachments, retries = MAX_RETRIES } = options;
     const html = generateEmailTemplate(subject, body, recipientName);
     const mailOptions: SendMailOptions = {
-      from: process.env.SMTP_FROM,
+      from: process.env.SMTP_FROM_NAME ? `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>` : process.env.SMTP_FROM,
       to,
       subject,
       html,
@@ -253,6 +254,7 @@ export async function queueEmail(
   to: string,
   subject: string,
   body: string,
+  link: string,
   options?: EmailOptions
 ): Promise<void> {
   try {
@@ -260,6 +262,7 @@ export async function queueEmail(
       to,
       subject,
       body,
+      link,
       options,
       timestamp: Date.now(),
     };

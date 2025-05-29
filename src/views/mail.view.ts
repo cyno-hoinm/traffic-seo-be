@@ -1,9 +1,10 @@
 export const generateEmailTemplate = (
-    subject: string,
-    body: string,
-    recipientName?: string
-  ): string => {
-    return `
+  subject: string,
+  body: string,
+  recipientName?: string,
+  link?: string
+): string => {
+  return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -26,7 +27,7 @@ export const generateEmailTemplate = (
               overflow: hidden;
             }
             .header {
-              background-color: #4a90e2;
+              background-color: #27BDBE;
               padding: 20px;
               text-align: center;
               color: white;
@@ -52,7 +53,7 @@ export const generateEmailTemplate = (
             .button {
               display: inline-block;
               padding: 12px 25px;
-              background-color: #4a90e2;
+              background-color: #27BDBE;
               color: white;
               text-decoration: none;
               border-radius: 5px;
@@ -68,15 +69,14 @@ export const generateEmailTemplate = (
             <div class="content">
               <p>Hello${recipientName ? " " + recipientName : ""},</p>
               <p>${body}</p>
-              <a href="https://example.com" class="button">Learn More</a>
+              <a href="${link}" class="button">Verify Email</a>
             </div>
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} Your Company. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Cyno Traffic System. All rights reserved.</p>
               <p><a href="mailto:${process.env.EMAIL_USER}">Contact Us</a></p>
             </div>
           </div>
         </body>
         </html>
       `;
-  };
-  
+};

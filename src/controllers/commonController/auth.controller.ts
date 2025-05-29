@@ -338,15 +338,14 @@ export const registerUser = async (
     // Send OTP email
     const emailContent = `
     <h1>Welcome to Cyno Traffic System</h1>
-    <p>Your OTP for email verification is: <strong>${otp}</strong></p>
-    <p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${token}">Verify Email</a></p>
-    <p>Please use this code to verify your email address.</p>
+    <p>Please confirm at ${process.env.FRONT_END_URL}/en/verify-email/${token} to verify your email address.</p>
   `;
 
     await queueEmail(
       user.email,
       "Verify Your Email - Cyno Traffic System",
-      emailContent
+      emailContent,
+      `${process.env.FRONT_END_URL}/en/verify-email/${token}`
     );
 
     // Return success response (exclude password)
@@ -673,7 +672,8 @@ export const resendOtp = async (
     await queueEmail(
       user.email,
       "Verify Your Email - Cyno Traffic System",
-      emailContent
+      emailContent,
+      `${process.env.FRONT_END_URL}/en/verify-email/${token}`
     );
 
     // Return success response
