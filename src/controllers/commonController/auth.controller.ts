@@ -493,7 +493,7 @@ export const confirmUser = async (
         finalOtp = dataFromToken.otp;
         finalType = dataFromToken.type;
       } catch (tokenError: any) {
-        res.status(statusCode.UNAUTHORIZED).json({
+        res.status(statusCode.BAD_REQUEST).json({
           status: false,
           message: "Invalid or expired token",
           error: tokenError.message,
@@ -538,7 +538,7 @@ export const confirmUser = async (
     // Verify OTP from Redis
     const storedOtp = await redisClient.get(`${finalType}:otp:${finalEmail}`);
     if (!storedOtp || storedOtp !== finalOtp) {
-      res.status(statusCode.UNAUTHORIZED).json({
+      res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Invalid or expired OTP",
         error: "Authentication failed",
