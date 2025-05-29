@@ -663,7 +663,7 @@ export const resendOtp = async (
       <p>Your OTP for email verification is: <strong>${otp}</strong></p>
       ${
         finalType === "confirmUser"
-          ? `<p>Please confirm at <a href="${process.env.FRONT_END_URL}/en/verify-email/${token}">Verify Email</a></p>`
+          ? `<p>Please confirm at ${process.env.FRONT_END_URL}/en/verify-email/${token} to verify your email address.</p>`
           : ""
       }
       <p>Please use this code to verify your email address.</p>
@@ -673,7 +673,7 @@ export const resendOtp = async (
       user.email,
       "Verify Your Email - Cyno Traffic System",
       emailContent,
-      `${process.env.FRONT_END_URL}/en/verify-email/${token}`
+      `${finalType === "confirmUser" ? process.env.FRONT_END_URL + "/en/verify-email/" + token : ""}`
     );
 
     // Return success response

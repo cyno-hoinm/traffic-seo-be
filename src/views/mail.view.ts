@@ -55,7 +55,9 @@ export const generateEmailTemplate = (
               padding: 12px 25px;
               background-color: #27BDBE;
               color: white;
+              font-weight: bold;
               text-decoration: none;
+              text-color: white;
               border-radius: 5px;
               margin-top: 20px;
             }
@@ -69,7 +71,11 @@ export const generateEmailTemplate = (
             <div class="content">
               <p>Hello${recipientName ? " " + recipientName : ""},</p>
               <p>${body}</p>
-              <a href="${link}" class="button">Verify Email</a>
+              ${
+                link != ""
+                  ? `<a href="${link}" class="button">Verify Email</a>`
+                  : ""
+              }
             </div>
             <div class="footer">
               <p>&copy; ${new Date().getFullYear()} Cyno Traffic System. All rights reserved.</p>
