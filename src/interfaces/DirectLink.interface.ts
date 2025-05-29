@@ -1,4 +1,5 @@
 import { DistributionType } from "../enums/distribution.enum";
+import { DirectLinkType } from "../enums/directLinkType.enum";
 import { CampaignAttributes } from "./Campaign.interface";
 
 export interface DirectLinkAttributes {
@@ -9,6 +10,7 @@ export interface DirectLinkAttributes {
   link: string; 
   status: string;
   timeOnSite: number;
+  type : DirectLinkType;
   distribution: DistributionType;
   traffic: number;
   isDeleted?: boolean;

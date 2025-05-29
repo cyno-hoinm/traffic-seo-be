@@ -1035,7 +1035,7 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                 example: "Summer Sale"
  *               campaignTypeId:
  *                 type: integer
- *                 description: The ID of the campaign type
+ *                 description: The ID of the campaign TYPE, type 4 (DIRECT_LINK) or type 6 (DIRECT_LINK_VIDEO_COST)
  *                 example: 4
  *               device:
  *                 type: string 
@@ -1077,6 +1077,10 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                       type: string
  *                       description: The link of the direct link
  *                       example: "https://example.com"
+ *                     type:
+ *                       type: string
+ *                       description: The type of the direct link
+ *                       example: "ORGANIC"
  *                     distribution:
  *                       type: string
  *                       description: The distribution of the direct link

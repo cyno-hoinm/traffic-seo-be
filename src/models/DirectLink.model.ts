@@ -2,7 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { Campaign, sequelizeSystem } from "./index.model"; // Assuming this points to models/index.ts
 import { DistributionType } from "../enums/distribution.enum";
 import { DirectLinkAttributes } from "../interfaces/DirectLink.interface";
-
+import { DirectLinkType } from "../enums/directLinkType.enum";  
 class DirectLink extends Model<DirectLinkAttributes> implements DirectLinkAttributes {
   public id!: number;
   public campaignId!: number | null; // Nullable if not always present
@@ -10,6 +10,7 @@ class DirectLink extends Model<DirectLinkAttributes> implements DirectLinkAttrib
   public status!: string;
   public distribution!: DistributionType; // Enum type
   public traffic!: number;
+  public type!: DirectLinkType;
   public timeOnSite!: number;
   public cost!: number;
   public isDeleted!: boolean;
@@ -56,6 +57,11 @@ DirectLink.init(
     status: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: DirectLinkType.ORGANIC,
     },
     isDeleted: {
       type: DataTypes.BOOLEAN,

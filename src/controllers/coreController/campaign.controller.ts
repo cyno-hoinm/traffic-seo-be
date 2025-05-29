@@ -40,7 +40,7 @@ import DirectLink from "../../models/DirectLink.model";
 import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 import { KeywordType } from "../../enums/keywordType.enum";
 import { IndexStatus } from "../../enums/indexStatus.enum";
-
+import { DirectLinkType } from "../../enums/directLinkType.enum";
 // Get campaign list with filters
 
 export const getCampaignList = async (
@@ -145,7 +145,7 @@ export const getCampaignList = async (
               campaign.links,
               campaign.keywords
             );
-            if (campaign.campaignTypeId === 4) {
+            if (campaign.campaignTypeId === 4 || campaign.campaignTypeId === 6) {
               const directLink = await calculateDirectLinkCampaignCosts(
                 campaign.directLinks || [],
                 campaign.startDate,
@@ -703,6 +703,9 @@ const createDirectLinks = async (
   transaction: Transaction
 ) => {
   const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const directLinkVideoCost = await getConfigValue(
+    ConfigApp.DIRECT_LINK_VIDEO_COST
+  );
   const currentDate = new Date();
   const directLinkData = directLinks.map(
     (directLink: DirectLinkAttributes) => ({
@@ -710,9 +713,12 @@ const createDirectLinks = async (
       link: directLink.link,
       distribution: directLink.distribution,
       traffic: directLink.traffic,
-      cost: directLink.traffic * directLinkCost * (directLink.timeOnSite || 1),
+      cost: directLink.type === DirectLinkType.VIDEO
+          ? directLink.traffic * directLinkVideoCost * (directLink.timeOnSite || 1)
+          : directLink.traffic * directLinkCost * (directLink.timeOnSite || 1),
       status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
       timeOnSite: directLink.timeOnSite || 1,
+      type: directLink.type,
       isDeleted: false,
     })
   );
@@ -732,6 +738,7 @@ const createDirectLinks = async (
           timeOnSite: directLink.timeOnSite || 1,
           timeStart: campaign.startDate,
           timeEnd: campaign.endDate,
+          directLinkType: directLink.type,
         });
       } catch (error: any) {
         logger.error(
@@ -781,6 +788,9 @@ const calculateDirectLinkCampaignCosts = async (
   end: Date
 ) => {
   const directLinkCost = await getConfigValue(ConfigApp.DIRECT_LINK_COST);
+  const directLinkVideoCost = await getConfigValue(
+    ConfigApp.DIRECT_LINK_VIDEO_COST
+  );
   const campaignDurationInDays = Math.ceil(
     (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -788,7 +798,9 @@ const calculateDirectLinkCampaignCosts = async (
     directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
   const totalCost = directLinks.reduce((sum, directLink) => {
-    return sum + directLink.traffic * directLinkCost * (directLink.timeOnSite || 1);
+    return sum + (directLink.type === DirectLinkType.VIDEO
+      ? directLink.traffic * directLinkVideoCost * (directLink.timeOnSite || 1)
+      : directLink.traffic * directLinkCost * (directLink.timeOnSite || 1));
   }, 0);
   return {
     totalCost,

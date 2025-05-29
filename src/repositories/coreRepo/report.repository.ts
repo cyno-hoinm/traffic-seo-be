@@ -252,6 +252,7 @@ export const getOneCampaignReportRepo = async (
         createdAt: directLink.createdAt,
         updatedAt: directLink.updatedAt,
         timeOnSite: directLink.timeOnSite,
+        type: directLink.type,
         status: directLink.status,
         traffic: directLink.traffic,
         trafficCompleted: result.success_count,
