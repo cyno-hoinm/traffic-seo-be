@@ -7,6 +7,7 @@ import {
   pauseCampaign,
   cancelCampaign,
   createDirectLinkCampaign,
+  createGoogleMapReviewCampaign,
 } from "../../../controllers/coreController/campaign.controller"; // Adjust path
 import { authorization } from "../../../middleware/auth";
 
@@ -1195,5 +1196,234 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                   example: "Internal server error"
  */
 router.post("/direct-links", authorization(["create-campaign"]), createDirectLinkCampaign);
+
+/**
+ * @swagger
+ * /campaigns/google-map-review:
+ *   post:
+ *     summary: Create a new Google Map Review campaign
+ *     description: Create a new campaign for Google Map Reviews with required fields
+ *     tags: [Campaigns]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - countryId
+ *               - name
+ *               - device
+ *               - title
+ *               - startDate
+ *               - endDate
+ *               - domain
+ *               - search
+ *               - campaignTypeId
+ *               - googleMapReviews
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user creating the campaign
+ *                 example: 1
+ *               countryId:
+ *                 type: integer
+ *                 description: ID of the country for the campaign
+ *                 example: 1
+ *               name:
+ *                 type: string
+ *                 description: Name of the campaign
+ *                 example: "Google Reviews Campaign"
+ *               device:
+ *                 type: string
+ *                 description: Device type for the campaign
+ *                 example: "Mobile"
+ *               title:
+ *                 type: string
+ *                 description: Title of the campaign
+ *                 example: "UTC"
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start date of the campaign
+ *                 example: "2025-04-10T00:00:00Z"
+ *               endDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End date of the campaign
+ *                 example: "2025-04-20T23:59:59Z"
+ *               domain:
+ *                 type: string
+ *                 description: Domain for the campaign
+ *                 example: "example.com"
+ *               search:
+ *                 type: string
+ *                 description: Search tool for the campaign
+ *                 example: "Google"
+ *               campaignTypeId:
+ *                 type: integer
+ *                 description: Type ID of the campaign (must be 7 for Google Map Review)
+ *                 example: 7
+ *               googleMapReviews:
+ *                 type: array
+ *                 description: Array of Google Map Reviews
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - content
+ *                     - location
+ *                     - googleMapUrl
+ *                     - stars
+ *                   properties:
+ *                     content:
+ *                       type: string
+ *                       description: Content of the review
+ *                       example: "Great service and friendly staff!"
+ *                     location:
+ *                       type: string
+ *                       description: Location of the review
+ *                       example: "123 Main St, City"
+ *                     googleMapUrl:
+ *                       type: string
+ *                       description: URL of the Google Map location
+ *                       example: "https://maps.google.com/..."
+ *                     imgUrls:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: Array of image URLs for the review
+ *                       example: ["https://example.com/image1.jpg"]
+ *                     stars:
+ *                       type: integer
+ *                       minimum: 1
+ *                       maximum: 5
+ *                       description: Rating stars (1-5)
+ *                       example: 5
+ *     responses:
+ *       201:
+ *         description: Google Map Review Campaign created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Google Map Review Campaign created successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     userId:
+ *                       type: integer
+ *                       example: 1
+ *                     countryId:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Google Reviews Campaign"
+ *                     campaignTypeId:
+ *                       type: integer
+ *                       example: 7
+ *                     device:
+ *                       type: string
+ *                       example: "Mobile"
+ *                     title:
+ *                       type: string
+ *                       example: "UTC"
+ *                     startDate:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-10T00:00:00Z"
+ *                     endDate:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-20T23:59:59Z"
+ *                     totalReviews:
+ *                       type: integer
+ *                       example: 10
+ *                     totalCost:
+ *                       type: number
+ *                       example: 500.00
+ *                     domain:
+ *                       type: string
+ *                       example: "example.com"
+ *                     search:
+ *                       type: string
+ *                       example: "Google"
+ *                     status:
+ *                       type: string
+ *                       example: "ACTIVE"
+ *                     googleMapReviews:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 1
+ *                           content:
+ *                             type: string
+ *                             example: "Great service!"
+ *                           location:
+ *                             type: string
+ *                             example: "123 Main St"
+ *                           googleMapUrl:
+ *                             type: string
+ *                             example: "https://maps.google.com/..."
+ *                           imgUrls:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                             example: ["https://example.com/image1.jpg"]
+ *                           stars:
+ *                             type: integer
+ *                             example: 5
+ *                           status:
+ *                             type: string
+ *                             example: "ACTIVE"
+ *       400:
+ *         description: Bad request - Invalid input data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid campaign type"
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid field"
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error creating Google Map Review campaign"
+ *                 error:
+ *                   type: string
+ *                   example: "Database error"
+ */
+router.post("/google-map-review", authorization(["create-campaign"]), createGoogleMapReviewCampaign);
 
 export default router;
