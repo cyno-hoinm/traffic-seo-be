@@ -20,6 +20,7 @@ import Image from "./Image.model"
 import Package from "./Package.model"
 import Report from "./Report.model"
 import DirectLink from "./DirectLink.model";
+import GoogleMapReview from "./GoogleMapReview.model"
 // Initialize models (this ensures they're loaded)
 export const models = {
   Role,
@@ -41,7 +42,8 @@ export const models = {
   Image,
   Package,
   Report,
-  DirectLink
+  DirectLink,
+  GoogleMapReview
 };
 
 
@@ -87,6 +89,9 @@ Campaign.hasMany(Link, { foreignKey: "campaignId", as: "links", onDelete: 'SET N
 
 DirectLink.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
 Campaign.hasMany(DirectLink, { foreignKey: "campaignId", as: "directLinks", onDelete: 'SET NULL' });
+
+GoogleMapReview.belongsTo(Campaign, { foreignKey: "campaignId", as: "campaigns", onDelete: 'SET NULL' });
+Campaign.hasMany(GoogleMapReview, { foreignKey: "campaignId", as: "googleMapReviews", onDelete: 'SET NULL' });
 
 Role.hasMany(RolePermission, { foreignKey: "roleId", as: "rolePermissions", onDelete: 'SET NULL' });
 Permission.hasMany(RolePermission, {
@@ -145,5 +150,6 @@ export {
   Package,
   Report,
   DirectLink,
+  GoogleMapReview,
   sequelizeSystem,
 };
