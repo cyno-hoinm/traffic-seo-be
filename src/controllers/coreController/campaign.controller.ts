@@ -26,6 +26,7 @@ import {
   compareWalletAmount,
   getWalletByUserIdRepo,
 } from "../../repositories/moneyRepo/wallet.repository";
+import { GoogleMapReviewAttributes } from "../../interfaces/GoogleMapReview.interface";
 
 import { createTransactionRepo } from "../../repositories/moneyRepo/transaction.repository";
 import { TransactionStatus } from "../../enums/transactionStatus.enum";
@@ -41,6 +42,8 @@ import { DirectLinkAttributes } from "../../interfaces/DirectLink.interface";
 import { KeywordType } from "../../enums/keywordType.enum";
 import { IndexStatus } from "../../enums/indexStatus.enum";
 import { DirectLinkType } from "../../enums/directLinkType.enum";
+import GoogleMapReview from "../../models/GoogleMapReview.model";
+import { GoogleMapReviewStatus } from "../../enums/googleMapReviewStatus.enum";
 // Get campaign list with filters
 
 export const getCampaignList = async (
@@ -530,6 +533,15 @@ const createCampaignWithTransaction = async (data: any) => {
         transaction
       );
     }
+    if (data.googleMapReviews) {
+      await createGoogleMapReviews(
+        campaign,
+        data.googleMapReviews,
+        data.start,
+        data.end,
+        transaction
+      );
+    }
     await createTransaction(
       data.userId,
       campaign.id,
@@ -757,6 +769,41 @@ const createDirectLinks = async (
   }
 };
 
+const createGoogleMapReviews = async (
+  campaign: CampaignAttributes,
+  googleMapReviews: GoogleMapReviewAttributes[],
+  start: Date,
+  end: Date,
+  transaction: Transaction
+) => {
+  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAP_REVIEW_COST);
+  const googleMapReviewImageCost = await getConfigValue(
+    ConfigApp.GOOGLE_MAP_REVIEW_IMAGE_COST
+  );
+  const currentDate = new Date();
+  const googleMapReviewData = googleMapReviews.map(
+    (googleMapReview: GoogleMapReviewAttributes) => ({
+      campaignId: campaign.id,
+      content: googleMapReview.content,
+      location: googleMapReview.location,
+      googleMapUrl: googleMapReview.googleMapUrl,
+      imgUrls: googleMapReview.imgUrls,
+      stars: googleMapReview.stars,
+      status: start > currentDate ? GoogleMapReviewStatus.INACTIVE : GoogleMapReviewStatus.ACTIVE,
+      cost: googleMapReviewCost + (googleMapReview.imgUrls?.length || 0) * googleMapReviewImageCost,
+      isDeleted: false,
+    }
+  ))
+  try {
+    const createdGoogleMapReviews = await GoogleMapReview.bulkCreate(googleMapReviewData, {
+      transaction,
+    });
+    return createdGoogleMapReviews;
+  } catch (error: any) {
+    logger.error(`Error in createGoogleMapReviews: ${error.message}`);
+    throw error;
+  }
+}
 const formatCampaignResponse = (
   campaign: any,
   totalTraffic: number,
@@ -1264,3 +1311,153 @@ export async function getCampaignListForLLMController(
     return;
   }
 }
+
+/**
+ * Create a new Google Map Review campaign
+ */
+export const createGoogleMapReviewCampaign = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const {
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      startDate,
+      campaignTypeId,
+      endDate,
+      domain,
+      search,
+      googleMapReviews,
+    } = req.body;
+
+    // Validate dates
+    if (campaignTypeId !== 7) { 
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid campaign type",
+        error: "Invalid field",
+      });
+      return;
+    }
+    const { start, end, currentDate } = validateDates(startDate, endDate);
+    if (!start || !end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid date format for startDate or endDate",
+        error: "Invalid field",
+      });
+      return;
+    }
+
+    if (start >= end) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "startDate must be before endDate",
+        error: "Invalid date range",
+      });
+      return;
+    }
+
+    // Calculate costs and validate wallet
+    const { totalCost, totalReviews, campaignDurationInDays } = 
+      await calculateGoogleMapReviewCampaignCosts(googleMapReviews, start, end);
+
+    const isValidWallet = await compareWalletAmount(userId, totalCost);
+    if (!isValidWallet) {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Insufficient balance",
+        error: "Invalid wallet",
+      });
+      return;
+    }
+
+    // Create campaign with transaction
+    const campaign = await createCampaignWithTransaction({
+      userId,
+      countryId,
+      name,
+      device,
+      title,
+      start,
+      end,
+      domain,
+      search,
+      campaignTypeId,
+      googleMapReviews,
+      currentDate,
+      totalCost,
+      campaignDurationInDays,
+    });
+
+    // Fetch campaign with associations
+    const campaignWithAssociations = await Campaign.findByPk(campaign.id, {
+      include: [{ model: GoogleMapReview, as: "googleMapReviews" }],
+    });
+
+    if (campaignWithAssociations) {
+      await sendCampaignNotifications(
+        campaignWithAssociations,
+        userId,
+        name,
+        totalCost
+      );
+    }
+
+    res.status(statusCode.CREATED).json({
+      status: true,
+      message: "Google Map Review Campaign created successfully",
+      data: formatCampaignResponse(
+        campaignWithAssociations,
+        totalReviews,
+        totalCost
+      ),
+    });
+  } catch (error: any) {
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      status: false,
+      message: "Error creating Google Map Review campaign",
+      error: error.message,
+    });
+  }
+};
+
+// Helper function to calculate campaign costs
+const calculateGoogleMapReviewCampaignCosts = async (
+  googleMapReviews: Array<{
+    content: string;
+    location: string;
+    googleMapUrl: string;
+    imgUrls: string[];
+    status: number;
+    cost: number;
+    stars: number;
+  }>,
+  startDate: Date,
+  endDate: Date
+): Promise<{
+  totalCost: number;
+  totalReviews: number;
+  campaignDurationInDays: number;
+}> => {
+  const campaignDurationInDays = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAP_REVIEW_COST);
+  const googleMapReviewImageCost = await getConfigValue(
+    ConfigApp.GOOGLE_MAP_REVIEW_IMAGE_COST
+  );
+
+  const totalReviews = googleMapReviews.length;
+  const totalCost = googleMapReviews.reduce((sum, review) => sum + googleMapReviewCost + (review.imgUrls?.length || 0) * googleMapReviewImageCost, 0);
+
+  return {
+    totalCost,
+    totalReviews,
+    campaignDurationInDays,
+  };
+};
