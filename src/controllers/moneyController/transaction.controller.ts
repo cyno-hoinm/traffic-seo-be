@@ -133,7 +133,7 @@ export const getListTransaction = async (
 
     // Fetch campaign details for each PAY_SERVICE transaction
     const transactionWithCampaigns = await Promise.all(
-      transactions.map(async (transaction: TransactionAttributes) => {
+      transactions.transactions.map(async (transaction: TransactionAttributes) => {
         let campaign = null;
         if (transaction.type === TransactionType.PAY_SERVICE && transaction.referenceId) {
           campaign = await getCampaignByIdRepo(parseInt(transaction.referenceId));
@@ -158,7 +158,7 @@ export const getListTransaction = async (
       message: "Transactions retrieved successfully",
       data: {
         transaction: transactionWithCampaigns,
-        total: transactions.length,
+        total: transactions.total,
       },
     });
   } catch (error: any) {

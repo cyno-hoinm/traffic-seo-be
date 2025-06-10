@@ -116,7 +116,7 @@ export const getListTransactionRepo = async (filters: {
   end_date?: Date;
   page?: number;
   limit?: number;
-}): Promise<TransactionAttributes[]> => {
+}): Promise<{ transactions: TransactionAttributes[]; total: number }> => {
   try {
     const where: any = { isDeleted: false };
 
@@ -146,17 +146,22 @@ export const getListTransactionRepo = async (filters: {
         {
           model: Wallet,
           as: "wallet",
-          attributes: ["id", "userId"], // Only fetch necessary fields
+          attributes: ["id", "userId"],
           include: [
             {
               model: User,
               as: "users",
-              attributes: ["username"], // Only fetch the username
+              attributes: ["username"],
             },
           ],
         },
       ],
     };
+
+    // Get total count first
+    const total = await TransactionModel.count({ where });
+
+    // Add pagination if provided
     if (
       filters.page &&
       filters.limit &&
@@ -168,7 +173,7 @@ export const getListTransactionRepo = async (filters: {
     }
 
     const transactions = await TransactionModel.findAll(queryOptions);
-    return transactions;
+    return { transactions, total };
   } catch (error: any) {
     throw new ErrorType(error.name, error.message, error.code);
   }
