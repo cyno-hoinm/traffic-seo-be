@@ -148,7 +148,10 @@ export const getCampaignList = async (
               campaign.links,
               campaign.keywords
             );
-            if (campaign.campaignTypeId === 4 || campaign.campaignTypeId === 6) {
+            if (
+              campaign.campaignTypeId === 4 ||
+              campaign.campaignTypeId === 6
+            ) {
               const directLink = await calculateDirectLinkCampaignCosts(
                 campaign.directLinks || [],
                 campaign.startDate,
@@ -374,7 +377,7 @@ export const calculateCampaignCosts = async (
   if (keywords) {
     keywordCostlist = keywords.map((keyword) => {
       if (keyword.keywordType === KeywordType.VIDEO) {
-        return keyword.traffic * keywordVideoCost
+        return keyword.traffic * keywordVideoCost;
         // (keyword.timeOnSite || 1);
       } else {
         return keyword.traffic * keywordCost * (keyword.timeOnSite || 1);
@@ -725,11 +728,14 @@ const createDirectLinks = async (
       link: directLink.link,
       distribution: directLink.distribution,
       traffic: directLink.traffic,
-      cost: directLink.type === DirectLinkType.VIDEO
-          ? directLink.traffic * directLinkVideoCost * (directLink.timeOnSite || 1)
+      cost:
+        directLink.type === DirectLinkType.VIDEO
+          ? directLink.traffic *
+            directLinkVideoCost *
+            (directLink.timeOnSite || 1)
           : directLink.traffic * directLinkCost * (directLink.timeOnSite || 1),
       status: start > currentDate ? LinkStatus.INACTIVE : LinkStatus.ACTIVE,
-      timeOnSite: directLink.timeOnSite || 1,
+      timeOnSite: directLink.timeOnSite,
       type: directLink.type,
       isDeleted: false,
     })
@@ -776,7 +782,9 @@ const createGoogleMapReviews = async (
   end: Date,
   transaction: Transaction
 ) => {
-  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAPS_REVIEW_COST);
+  const googleMapReviewCost = await getConfigValue(
+    ConfigApp.GOOGLE_MAPS_REVIEW_COST
+  );
   const googleMapReviewImageCost = await getConfigValue(
     ConfigApp.GOOGLE_MAPS_REVIEW_IMAGE_COST
   );
@@ -789,21 +797,29 @@ const createGoogleMapReviews = async (
       googleMapUrl: googleMapReview.googleMapUrl,
       imgUrls: googleMapReview.imgUrls,
       stars: googleMapReview.stars,
-      status: start > currentDate ? GoogleMapReviewStatus.INACTIVE : GoogleMapReviewStatus.ACTIVE,
-      cost: googleMapReviewCost + (googleMapReview.imgUrls?.length || 0) * googleMapReviewImageCost,
+      status:
+        start > currentDate
+          ? GoogleMapReviewStatus.INACTIVE
+          : GoogleMapReviewStatus.ACTIVE,
+      cost:
+        googleMapReviewCost +
+        (googleMapReview.imgUrls?.length || 0) * googleMapReviewImageCost,
       isDeleted: false,
-    }
-  ))
+    })
+  );
   try {
-    const createdGoogleMapReviews = await GoogleMapReview.bulkCreate(googleMapReviewData, {
-      transaction,
-    });
+    const createdGoogleMapReviews = await GoogleMapReview.bulkCreate(
+      googleMapReviewData,
+      {
+        transaction,
+      }
+    );
     return createdGoogleMapReviews;
   } catch (error: any) {
     logger.error(`Error in createGoogleMapReviews: ${error.message}`);
     throw error;
   }
-}
+};
 const formatCampaignResponse = (
   campaign: any,
   totalTraffic: number,
@@ -845,9 +861,14 @@ const calculateDirectLinkCampaignCosts = async (
     directLinks?.reduce((sum, item) => sum + item.traffic, 0) || 0;
 
   const totalCost = directLinks.reduce((sum, directLink) => {
-    return sum + (directLink.type === DirectLinkType.VIDEO
-      ? directLink.traffic * directLinkVideoCost * (directLink.timeOnSite || 1)
-      : directLink.traffic * directLinkCost * (directLink.timeOnSite || 1));
+    return (
+      sum +
+      (directLink.type === DirectLinkType.VIDEO
+        ? directLink.traffic *
+          directLinkVideoCost *
+          (directLink.timeOnSite || 1)
+        : directLink.traffic * directLinkCost * (directLink.timeOnSite || 1))
+    );
   }, 0);
   return {
     totalCost,
@@ -1335,7 +1356,7 @@ export const createGoogleMapReviewCampaign = async (
     } = req.body;
 
     // Validate dates
-    if (campaignTypeId !== 7) { 
+    if (campaignTypeId !== 7) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "Invalid campaign type",
@@ -1363,7 +1384,7 @@ export const createGoogleMapReviewCampaign = async (
     }
 
     // Calculate costs and validate wallet
-    const { totalCost, totalReviews, campaignDurationInDays } = 
+    const { totalCost, totalReviews, campaignDurationInDays } =
       await calculateGoogleMapReviewCampaignCosts(googleMapReviews, start, end);
 
     const isValidWallet = await compareWalletAmount(userId, totalCost);
@@ -1447,13 +1468,21 @@ const calculateGoogleMapReviewCampaignCosts = async (
   const campaignDurationInDays = Math.ceil(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
-  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAPS_REVIEW_COST);
+  const googleMapReviewCost = await getConfigValue(
+    ConfigApp.GOOGLE_MAPS_REVIEW_COST
+  );
   const googleMapReviewImageCost = await getConfigValue(
     ConfigApp.GOOGLE_MAPS_REVIEW_IMAGE_COST
   );
 
   const totalReviews = googleMapReviews.length;
-  const totalCost = googleMapReviews.reduce((sum, review) => sum + googleMapReviewCost + (review.imgUrls?.length || 0) * googleMapReviewImageCost, 0);
+  const totalCost = googleMapReviews.reduce(
+    (sum, review) =>
+      sum +
+      googleMapReviewCost +
+      (review.imgUrls?.length || 0) * googleMapReviewImageCost,
+    0
+  );
 
   return {
     totalCost,
