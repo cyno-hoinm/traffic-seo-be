@@ -175,13 +175,13 @@ export const enqueueCampaignsForRefund = async (): Promise<number> => {
           [Op.lt]: currentDate,
         },
         campaignTypeId: {
-          [Op.eq]: 1 || 5,
+          [Op.in]: [1, 5],
         },
       },
       include: [{ model: Keyword, as: "keywords" }],
       transaction,
     });
-
+    console.log(campaigns);
     logger.info(
       `Found ${
         campaigns.length
