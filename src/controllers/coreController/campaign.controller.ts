@@ -776,9 +776,9 @@ const createGoogleMapReviews = async (
   end: Date,
   transaction: Transaction
 ) => {
-  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAP_REVIEW_COST);
+  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAPS_REVIEW_COST);
   const googleMapReviewImageCost = await getConfigValue(
-    ConfigApp.GOOGLE_MAP_REVIEW_IMAGE_COST
+    ConfigApp.GOOGLE_MAPS_REVIEW_IMAGE_COST
   );
   const currentDate = new Date();
   const googleMapReviewData = googleMapReviews.map(
@@ -1447,9 +1447,9 @@ const calculateGoogleMapReviewCampaignCosts = async (
   const campaignDurationInDays = Math.ceil(
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
   );
-  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAP_REVIEW_COST);
+  const googleMapReviewCost = await getConfigValue(ConfigApp.GOOGLE_MAPS_REVIEW_COST);
   const googleMapReviewImageCost = await getConfigValue(
-    ConfigApp.GOOGLE_MAP_REVIEW_IMAGE_COST
+    ConfigApp.GOOGLE_MAPS_REVIEW_IMAGE_COST
   );
 
   const totalReviews = googleMapReviews.length;
