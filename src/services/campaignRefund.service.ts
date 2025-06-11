@@ -6,7 +6,6 @@ import {
   Keyword,
   Link,
   sequelizeSystem,
-  TransactionModel,
   Wallet,
 } from "../models/index.model";
 import { CampaignStatus } from "../enums/campaign.enum";
@@ -24,6 +23,7 @@ import { createNotificationRepo } from "../repositories/commonRepo/notification.
 import { notificationType } from "../enums/notification.enum";
 import { calculateCampaignCosts } from "../controllers/coreController/campaign.controller";
 import { KeywordType } from "../enums/keywordType.enum";
+import { createTransactionRepo } from "../repositories/moneyRepo/transaction.repository";
 
 const QUEUE_KEY = "campaign:refund:queue";
 const PROCESSED_SET_KEY = "campaign:refund:processed";
@@ -114,7 +114,7 @@ export const processCampaignRefund = async (campaignId: number) => {
         transaction,
       });
       if (wallet) {
-        await TransactionModel.create(
+        await createTransactionRepo(
           {
             walletId: wallet.id,
             amount: refundAmount,
@@ -122,7 +122,7 @@ export const processCampaignRefund = async (campaignId: number) => {
             status: TransactionStatus.COMPLETED,
             referenceId: campaign.id.toString(),
           },
-          { transaction }
+          transaction
         );
         await wallet.update(
           { balance: Number(wallet.balance) + Number(refundAmount) },
