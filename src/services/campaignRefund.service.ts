@@ -48,10 +48,10 @@ export const processCampaignRefund = async (campaignId: number) => {
 
     if (
       campaign.status !== CampaignStatus.COMPLETED &&
-      campaign.status !== CampaignStatus.PROCESSING
+      campaign.status !== CampaignStatus.CANCEL
     ) {
       logger.warn(
-        `Campaign ${campaignId} is not COMPLETED or PROCESSING, skipping refund`
+        `Campaign ${campaignId} is not COMPLETED or CANCEL, skipping refund`
       );
       return;
     }
