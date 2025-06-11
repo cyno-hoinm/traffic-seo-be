@@ -105,6 +105,7 @@ export const processCampaignRefund = async (campaignId: number) => {
     );
 
     const completedTraffic = await Promise.all(completedTrafficPromises);
+    console.log("completedTraffic", completedTraffic);
     refundAmount = totalCost - completedTraffic[0];
     if (refundAmount > 0) {
       // Create a refund transaction
