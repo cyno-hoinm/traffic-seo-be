@@ -362,7 +362,7 @@ export const startCampaignRefundService = async () => {
     }
   };
   await enqueueCampaignsForRefund();
-  await processQueue();
+  // await processQueue();
   // Schedule task to enqueue and process campaigns daily at midnight
   cron.schedule("0 1 * * *", async () => {
     logger.info("Running daily campaign refund check...");
