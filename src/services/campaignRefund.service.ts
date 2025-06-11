@@ -84,13 +84,13 @@ export const processCampaignRefund = async (campaignId: number) => {
           );
           if (keyword.keywordType === KeywordType.VIDEO) {
             return (
-              result.traffic_count *
+              result.success_count *
               // keyword.timeOnSite *
               Number(KEYWORD_VIDEO_TRAFFIC_COST?.value || 1)
             );
           } else {
             return (
-              result.traffic_count *
+              result.success_count *
               keyword.timeOnSite *
               Number(KEYWORD_TRAFFIC_COST?.value || 1)
             );
