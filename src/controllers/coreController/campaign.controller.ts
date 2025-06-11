@@ -576,7 +576,7 @@ const createKeywords = async (
       urls: keyword.urls,
       cost:
         keyword.keywordType === KeywordType.VIDEO
-          ? keyword.traffic * keywordVideoCost * (keyword.timeOnSite || 1)
+          ? keyword.traffic * keywordVideoCost
           : keyword.traffic * keywordCost * (keyword.timeOnSite || 1),
       status:
         start > currentDate ? keywordStatus.INACTIVE : keywordStatus.ACTIVE,
