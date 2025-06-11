@@ -3,6 +3,7 @@ import { NotificationAttributes } from "../../interfaces/Notification.interface"
 import { Notification } from "../../models/index.model";
 import { ErrorType } from "../../types/Error.type";
 import { logger } from "../../config/logger.config";
+import { Op, Sequelize } from "sequelize";
 
 // Create a new notification
 export const createNotificationRepo = async (data: {
@@ -60,17 +61,20 @@ export const getNotificationsByUserIdAndTypeRepo = async (filters: {
   limit?: number;
 }): Promise<{ notifications: NotificationAttributes[]; total: number }> => {
   try {
-    const where: any = { userId: filters.userId };
+    const where: any = {
+      [Op.and]: [
+        Sequelize.literal(`JSON_CONTAINS(userId, '${JSON.stringify([filters.userId])}')`),
+      ]
+    };
 
     if (filters.type) {
       where.type = filters.type;
     }
-
     const queryOptions: any = {
       where,
       order: [["createdAt", "DESC"]],
     };
-
+    // console.log("queryOptions", queryOptions);
     // Apply pagination only if page and limit are not 0
     if (
       filters.page &&

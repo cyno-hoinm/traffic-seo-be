@@ -69,7 +69,7 @@ export const getNotificationsByUserIdAndType = async (
   res: Response<ResponseType<{ notifications: NotificationAttributes[]; total: number }>>
 ): Promise<void> => {
   try {
-    const { userId, type } = req.body;
+    const { userId, type, page, limit } = req.body;
     
     if (req.data?.id != userId) {
       res.status(statusCode.FORBIDDEN).json({
@@ -83,8 +83,10 @@ export const getNotificationsByUserIdAndType = async (
     const filters = {
       userId: Number(userId),
       type: type as string | undefined,
+      page: page as number | undefined,
+      limit: limit as number | undefined,
     };
-
+    console.log("filters", filters);
     const { notifications, total } = await getNotificationsByUserIdAndTypeRepo(filters);
     
     res.status(statusCode.OK).json({
