@@ -106,7 +106,7 @@ if (cluster.isPrimary && !isDev) {
         process.exit(1);
       }
     };
-    startCampaignRefundService();
+    // startCampaignRefundService();
     startServer();
     // startEmailService();
     process.on("SIGTERM", async () => {
