@@ -124,10 +124,6 @@ export const processCampaignRefund = async (campaignId: number) => {
           },
           transaction
         );
-        await wallet.update(
-          { balance: Number(wallet.balance) + Number(refundAmount) },
-          { transaction }
-        );
         await createNotificationRepo({
           userId: [campaign.userId],
           name: "Campaign refund",

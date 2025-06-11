@@ -75,7 +75,10 @@ export const createTransactionRepo = async (
           );
         }
         wallet.balance = balance - amount;
-      } else if (data.type === TransactionType.DEPOSIT) {
+      } else if (
+        data.type === TransactionType.DEPOSIT ||
+        data.type === TransactionType.REFUND_SERVICE
+      ) {
         wallet.balance = balance + amount;
       } else {
         throw new ErrorType(
