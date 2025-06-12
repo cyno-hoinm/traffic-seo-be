@@ -106,8 +106,9 @@ export const processCampaignRefund = async (campaignId: number) => {
 
     const completedTraffic = await Promise.all(completedTrafficPromises);
     console.log("completedTraffic", completedTraffic);
-    refundAmount = totalCost - completedTraffic[0];
-    if (refundAmount > 0) {
+    refundAmount = totalCost - (completedTraffic[0] || 0);
+    console.log("refundAmount", refundAmount);
+    if (refundAmount >= 0) {
       // Create a refund transaction
       const wallet = await Wallet.findOne({
         where: { userId: campaign.userId },
@@ -362,7 +363,7 @@ export const startCampaignRefundService = async () => {
     }
   };
   await enqueueCampaignsForRefund();
-  // await processQueue();
+  await processQueue();
   // Schedule task to enqueue and process campaigns daily at midnight
   cron.schedule("0 1 * * *", async () => {
     logger.info("Running daily campaign refund check...");
