@@ -29,6 +29,25 @@ export const createTransactionRepo = async (
       throw new ErrorType("NotFoundError", "Wallet not found");
     }
 
+    // Check for existing transaction with same referenceId and type
+    if (data.referenceId) {
+      const existingTransaction = await TransactionModel.findOne({
+        where: {
+          referenceId: data.referenceId,
+          type: data.type,
+          isDeleted: false
+        },
+        transaction: _transaction
+      });
+
+      if (existingTransaction) {
+        throw new ErrorType(
+          "DuplicateTransactionError",
+          `Transaction already exists for reference ${data.referenceId}`
+        );
+      }
+    }
+
     // Ensure balance and amount are numbers
     const balance = parseFloat(wallet.balance.toString());
     const amount = parseFloat(data.amount.toString());
