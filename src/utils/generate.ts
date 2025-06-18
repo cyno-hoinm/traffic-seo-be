@@ -69,3 +69,14 @@ export const generateOtp = (length = 6) => {
   }
   return otp;
 };
+
+export const generateInviteCode = (userId: number) => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Loại bỏ O, I, l, 0, 1
+  let result = '';
+
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  result+=String(userId)
+  return result;
+};

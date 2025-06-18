@@ -11,7 +11,7 @@ import {
   searchAgencyRepo,
   getAgenciesByUserIdRepo,
 } from "../../repositories/coreRepo/agency.repository";
-import {  uuIDv4 } from "../../utils/generate";
+import {  generateInviteCode, uuIDv4 } from "../../utils/generate";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
 
 
@@ -35,9 +35,9 @@ export const createAgency = async (
       bankAccount,
       accountHolder
     } = req.body
-    const inviteCode = uuIDv4()
-    const userId = user.id
 
+    const userId = user.id
+    const inviteCode= generateInviteCode(userId)
     const agency = await createAgencyRepo({
       userId,
       inviteCode,
