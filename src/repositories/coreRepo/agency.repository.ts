@@ -201,3 +201,15 @@ export const getAgencyByInviteCodeRepo = async (
     throw new Error(`Error finding agency by invite code: ${(error as Error).message}`);
   }
 };
+
+export const findAgencyByInviteCodeRepo = async (
+  inviteCode: string
+): Promise<AgencyAttributes | null> => {
+  const agency = await Agency.findOne({
+    where: {
+      inviteCode,
+      isDeleted: false,
+    },
+  });
+  return agency;
+};
