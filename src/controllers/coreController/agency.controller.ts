@@ -10,6 +10,7 @@ import {
   deleteAgencyRepo,
   searchAgencyRepo,
   getAgenciesByUserIdRepo,
+  findAgencyByInviteCodeRepo,
 } from "../../repositories/coreRepo/agency.repository";
 import {  generateInviteCode, uuIDv4 } from "../../utils/generate";
 import { AuthenticatedRequest } from "../../types/AuthenticateRequest.type";
@@ -362,6 +363,45 @@ export const searchAgencies = async (
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const checkInviteCode = async (
+  req: Request,
+  res: Response<ResponseType<any>>
+): Promise<void> => {
+  try {
+    const { inviteCode } = req.body;
+
+    if (!inviteCode || typeof inviteCode !== "string") {
+      res.status(statusCode.BAD_REQUEST).json({
+        status: false,
+        message: "Invalid input",
+        error: "inviteCode is required and must be a string",
+      });
+      return;
+    }
+
+    const existingAgency = await findAgencyByInviteCodeRepo(inviteCode);
+
+    if (existingAgency) {
+      res.status(statusCode.OK).json({
+        status: true,
+        message: "Invite code is valid",
+      });
+    } else {
+      res.status(statusCode.NOT_FOUND).json({
+        status: false,
+        message: "Invalid invite code",
+        error: "Invite code does not exist",
+      });
+    }
+  } catch (error: any) {
+    res.status(statusCode.NOT_FOUND).json({
+      status: false,
+      message: "Not found",
       error: error.message,
     });
   }

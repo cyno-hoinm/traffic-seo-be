@@ -10,6 +10,7 @@ import {
 } from "../../../controllers/commonController/auth.controller";
 import { authenticateToken } from "../../../middleware/auth";
 import { getUserImage } from "../../../controllers/commonController/user.controller";
+import { checkInviteCode } from "../../../controllers/coreController/agency.controller";
 
 const router = express.Router();
 /**
@@ -692,4 +693,53 @@ router.post("/confirm", confirmUser);
  *               error: Internal server error
  */
 router.post("/resend-otp", resendOtp);
+
+
+/**
+ * @swagger
+ * /auth/checkInviteCode:
+ *   post:
+ *     summary: Check if the invite code is valid
+ *     tags: [Agencies]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             inviteCode: "ABC123"
+ *     responses:
+ *       200:
+ *         description: Invite code is valid
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: true
+ *               message: Invite code is valid
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: false
+ *               message: Invalid input
+ *               error: inviteCode is required and must be a string
+ *       404:
+ *         description: Invite code not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: false
+ *               message: Not found
+ *               error: Invite code does not exist
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: false
+ *               message: Internal server error
+ *               error: Something went wrong
+ */
+router.post("/checkInviteCode",checkInviteCode)
+
 export default router;
