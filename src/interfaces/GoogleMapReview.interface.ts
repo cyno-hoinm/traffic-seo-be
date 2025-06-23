@@ -2,7 +2,7 @@ import { CampaignAttributes } from "./Campaign.interface";
 
 export interface GoogleMapReviewAttributes {
   id?: number;
-  googleMapUrl: string;
+  googleMapsUrl: string;
   stars: number;
   location: string;
   campaignId: number | null; // Nullable if not always present

@@ -46,7 +46,7 @@ export const createGoogleMapReviewRepo = async (data: {
   campaignId: number;
   content: string;
   location: string;
-  googleMapUrl: string;
+  googleMapsUrl: string;
   imgUrls: string[];
   status: string;
   cost: number;

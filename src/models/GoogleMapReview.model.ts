@@ -9,7 +9,7 @@ class GoogleMapReview extends Model<GoogleMapReviewAttributes> implements Google
     public campaignId!: number;
     public content!: string;
     public location!: string;
-    public googleMapUrl!: string;
+    public googleMapsUrl!: string;
     public status!: string;
     public cost!: number;
     public stars!: number;
@@ -25,7 +25,7 @@ GoogleMapReview.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    googleMapUrl: {
+    googleMapsUrl: {
       type: DataTypes.STRING,
       allowNull: false,
     },

@@ -794,7 +794,7 @@ const createGoogleMapReviews = async (
       campaignId: campaign.id,
       content: googleMapReview.content,
       location: googleMapReview.location,
-      googleMapUrl: googleMapReview.googleMapUrl,
+      googleMapsUrl: googleMapReview.googleMapsUrl,
       imgUrls: googleMapReview.imgUrls || [],
       stars: googleMapReview.stars,
       status:
@@ -820,7 +820,7 @@ const createGoogleMapReviews = async (
         await baseApiPython("google-maps-review/set", {
           googleMapsReviewId: googleMapsReview.id,
           content: googleMapsReview.content,
-          googleMapsUrl: googleMapsReview.googleMapUrl,
+          googleMapsUrl: googleMapsReview.googleMapsUrl,
           stars: googleMapsReview.stars,
           device: campaign.device,
           timeStart: campaign.startDate,
@@ -1474,7 +1474,7 @@ const calculateGoogleMapReviewCampaignCosts = async (
   googleMapReviews: Array<{
     content: string;
     location: string;
-    googleMapUrl: string;
+    googleMapsUrl: string;
     imgUrls: string[];
     status: number;
     cost: number;

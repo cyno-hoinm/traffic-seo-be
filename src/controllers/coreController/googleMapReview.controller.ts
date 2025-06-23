@@ -34,7 +34,7 @@ export const getGoogleMapReviewList = async (
     if (page) filters.page = page;
     if (limit) filters.limit = limit;
     if (campaignId) filters.campaignId = Number(campaignId);
-    
+
     if (distribution && Object.values(DistributionType).includes(distribution as DistributionType)) {
       filters.distribution = distribution as DistributionType;
     } else if (distribution) {
@@ -93,7 +93,7 @@ export const createGoogleMapReview = async (
   res: Response<ResponseType<GoogleMapReviewAttributes>>
 ): Promise<void> => {
   try {
-    const { campaignId, content, location, googleMapUrl, imgUrls, status, cost, stars } = req.body;
+    const { campaignId, content, location, googleMapsUrl, imgUrls, status, cost, stars } = req.body;
     const user = req.data;
 
     if (!user || !user.id) {
@@ -122,7 +122,7 @@ export const createGoogleMapReview = async (
       return;
     }
 
-    if (!campaignId || !content || !location || !googleMapUrl || !imgUrls || !status || !cost || !stars) {
+    if (!campaignId || !content || !location || !googleMapsUrl || !imgUrls || !status || !cost || !stars) {
       res.status(statusCode.BAD_REQUEST).json({
         status: false,
         message: "All fields are required",
@@ -135,7 +135,7 @@ export const createGoogleMapReview = async (
       campaignId,
       content,
       location,
-      googleMapUrl,
+      googleMapsUrl,
       imgUrls,
       status,
       cost,
@@ -344,4 +344,4 @@ export const getGoogleMapReviewsByCampaignId = async (
       error: error.message,
     });
   }
-}; 
+};
