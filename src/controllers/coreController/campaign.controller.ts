@@ -43,7 +43,7 @@ import { KeywordType } from "../../enums/keywordType.enum";
 import { IndexStatus } from "../../enums/indexStatus.enum";
 import { DirectLinkType } from "../../enums/directLinkType.enum";
 import GoogleMapReview from "../../models/GoogleMapReview.model";
-import { GoogleMapReviewStatus } from "../../enums/googleMapReviewStatus.enum";
+import { GoogleMapsReviewStatus } from "../../enums/googleMapsReviewStatus.enum";
 // Get campaign list with filters
 
 export const getCampaignList = async (
@@ -799,8 +799,8 @@ const createGoogleMapReviews = async (
       stars: googleMapReview.stars,
       status:
         start > currentDate
-          ? GoogleMapReviewStatus.INACTIVE
-          : GoogleMapReviewStatus.ACTIVE,
+          ? GoogleMapsReviewStatus.INACTIVE
+          : GoogleMapsReviewStatus.ACTIVE,
       cost:
         googleMapReviewCost +
         (googleMapReview.imgUrls?.length || 0) * googleMapReviewImageCost,

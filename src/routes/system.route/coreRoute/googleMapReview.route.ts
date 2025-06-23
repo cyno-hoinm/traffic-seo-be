@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /googleMapReviews/search:
+ * /googleMapsReviews/search:
  *   post:
  *     summary: Get a list of GoogleMapReviews with filters
  *     description: Retrieve GoogleMapReviews filtered by campaignId, distribution, and createdAt date range.
