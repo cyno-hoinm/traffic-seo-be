@@ -536,10 +536,10 @@ const createCampaignWithTransaction = async (data: any) => {
         transaction
       );
     }
-    if (data.googleMapReviews) {
+    if (data.reviews) {
       await createGoogleMapReviews(
         campaign,
-        data.googleMapReviews,
+        data.reviews,
         data.start,
         data.end,
         transaction
