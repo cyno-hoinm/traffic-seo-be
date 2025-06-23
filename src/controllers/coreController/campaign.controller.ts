@@ -1352,7 +1352,7 @@ export const createGoogleMapReviewCampaign = async (
       endDate,
       domain,
       search,
-      googleMapReviews,
+      reviews,
     } = req.body;
 
     // Validate dates
@@ -1385,7 +1385,7 @@ export const createGoogleMapReviewCampaign = async (
 
     // Calculate costs and validate wallet
     const { totalCost, totalReviews, campaignDurationInDays } =
-      await calculateGoogleMapReviewCampaignCosts(googleMapReviews, start, end);
+      await calculateGoogleMapReviewCampaignCosts(reviews, start, end);
 
     const isValidWallet = await compareWalletAmount(userId, totalCost);
     if (!isValidWallet) {
@@ -1409,7 +1409,7 @@ export const createGoogleMapReviewCampaign = async (
       domain,
       search,
       campaignTypeId,
-      googleMapReviews,
+      reviews,
       currentDate,
       totalCost,
       campaignDurationInDays,
