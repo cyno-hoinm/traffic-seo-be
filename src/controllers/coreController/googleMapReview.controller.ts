@@ -5,9 +5,8 @@ import {
   createGoogleMapReviewRepo,
   getGoogleMapReviewByIdRepo,
   updateGoogleMapReviewRepo,
-  getCampaignUserIdByGoogleMapReviewIdRepo,
   getGoogleMapReviewByCampaignIdRepo,
-} from "../../repositories/coreRepo/googleMapReview.repository";
+} from "../../repositories/coreRepo/googleMapsReview.repository";
 import { ResponseType } from "../../types/Response.type";
 import { GoogleMapReviewAttributes } from "../../interfaces/GoogleMapReview.interface";
 import { DistributionType } from "../../enums/distribution.enum";
