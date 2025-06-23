@@ -1,5 +1,5 @@
-export enum GoogleMapReviewStatus {
+export enum GoogleMapsReviewStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
-  
+
 }

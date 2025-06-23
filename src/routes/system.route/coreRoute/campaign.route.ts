@@ -1020,13 +1020,13 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *               - search
  *               - campaignTypeId
  *               - status
- *               - directLinks    
+ *               - directLinks
  *             properties:
  *               userId:
  *                 type: integer
  *                 description: The ID of the user
  *                 example: 1
- *               countryId:   
+ *               countryId:
  *                 type: integer
  *                 description: The ID of the country
  *                 example: 1
@@ -1039,7 +1039,7 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                 description: The ID of the campaign TYPE, type 4 (DIRECT_LINK) or type 6 (DIRECT_LINK_VIDEO_COST)
  *                 example: 4
  *               device:
- *                 type: string 
+ *                 type: string
  *                 description: The device of the campaign
  *                 example: "Mobile"
  *               title:
@@ -1071,7 +1071,7 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *               directLinks:
  *                 type: array
  *                 description: The direct links of the campaign
- *                 items: 
+ *                 items:
  *                   type: object
  *                   properties:
  *                     link:
@@ -1089,7 +1089,7 @@ router.put("/cancel/:id", authorization(["read-campaign"]), cancelCampaign);
  *                     timeOnSite:
  *                       type: integer
  *                       description: The time on site of the direct link
- *                     traffic: 
+ *                     traffic:
  *                       type: integer
  *                       description: The traffic of the direct link
  *     responses:
@@ -1199,7 +1199,7 @@ router.post("/direct-links", authorization(["create-campaign"]), createDirectLin
 
 /**
  * @swagger
- * /campaigns/google-map-review:
+ * /campaigns/google-maps-review:
  *   post:
  *     summary: Create a new Google Map Review campaign
  *     description: Create a new campaign for Google Map Reviews with required fields
@@ -1424,6 +1424,6 @@ router.post("/direct-links", authorization(["create-campaign"]), createDirectLin
  *                   type: string
  *                   example: "Database error"
  */
-router.post("/google-map-review", authorization(["create-campaign"]), createGoogleMapReviewCampaign);
+router.post("/google-maps-review", authorization(["create-campaign"]), createGoogleMapReviewCampaign);
 
 export default router;

@@ -22,6 +22,7 @@ import authRoute from "./commonRoute/auth.route";
 import notificationRoute from "./commonRoute/notification.route";
 import campaignRoute from "./coreRoute/campaign.route";
 import directLinkRoute from "./coreRoute/directLink.route";
+import googleMapsReviewRoute from "./coreRoute/googleMapReview.route"
 export const publicRoutes = {
   "/auth": authRoute,
 };
@@ -48,4 +49,5 @@ export const protectedRoutes = {
   "/packages": packageRoute,
   "/report-user": reportUserRoute,
   "/direct-link": directLinkRoute,
+  "google-maps-review": googleMapsReviewRoute
 };
