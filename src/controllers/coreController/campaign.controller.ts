@@ -814,6 +814,28 @@ const createGoogleMapReviews = async (
         transaction,
       }
     );
+
+     const pythonApiPromises = createdGoogleMapReviews.map(async (googleMapsReview) => {
+      try {
+        await baseApiPython("google-maps-review/set", {
+          googleMapsReviewId: googleMapsReview.id,
+          content: googleMapsReview.content,
+          googleMapsUrl: googleMapsReview.googleMapUrl,
+          stars: googleMapsReview.stars,
+          device: campaign.device,
+          timeStart: campaign.startDate,
+          timeEnd: campaign.endDate,
+        });
+      } catch (error: any) {
+        logger.error(
+          `Failed to sync direct link ${googleMapsReview.id} with Python API: ${error.message}`
+        );
+        throw error; // Re-throw to trigger rollback
+      }
+    });
+
+    // Wait for all Python API calls to complete
+    await Promise.all(pythonApiPromises);
     return createdGoogleMapReviews;
   } catch (error: any) {
     logger.error(`Error in createGoogleMapReviews: ${error.message}`);
