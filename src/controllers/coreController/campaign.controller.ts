@@ -795,7 +795,7 @@ const createGoogleMapReviews = async (
       content: googleMapReview.content,
       location: googleMapReview.location,
       googleMapUrl: googleMapReview.googleMapUrl,
-      imgUrls: googleMapReview.imgUrls,
+      imgUrls: googleMapReview.imgUrls || [],
       stars: googleMapReview.stars,
       status:
         start > currentDate
